@@ -10,6 +10,7 @@
 #' @return A named list of data frames, where each data frame corresponds to a SAS dataset.
 #' The names of the list are derived from the dataset filenames (without the `.sas7bdat` extension).
 #'
+#' @export
 #' @importFrom haven read_sas
 #' @importFrom purrr map
 #' @importFrom stringr str_to_upper
@@ -48,6 +49,7 @@ read_sas_datasets <- function(folder, datasets=NA) {
 #'
 #' @return A list of filtered data frames. If a data frame does not contain the specified variable, it is returned unmodified.
 #'
+#' @export
 #' @importFrom purrr map
 #' @importFrom dplyr filter
 #'
