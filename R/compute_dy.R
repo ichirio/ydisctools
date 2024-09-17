@@ -8,7 +8,7 @@
 #' @examples
 #' compute_dy("2023-09-15", "2023-09-20")
 #' @export
-#' @importFrom lubridate interval as.Date
+#' @importFrom lubridate interval
 #' @importFrom dplyr if_else
 compute_dy <- function(refdate, eventdate) {
   interval(as.Date(refdate), as.Date(eventdate)) %>%

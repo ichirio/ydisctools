@@ -34,5 +34,5 @@ catx(" ", "Hello", "", NA, "World")
 
 # Concatenating multiple vectors with commas
 catx(",", c("A", NA), c("", "B"), "C")
-# Returns: "A,B,C"
+# Returns: "A,C" "B"
 }

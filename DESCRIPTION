@@ -1,11 +1,10 @@
 Package: ydisctools
 Type: Package
 Title: Your CDISC Related Tools
-Version: 0.0.1
+Version: 0.0.2
 Author: Yoichi Masui
 Maintainer: Yoichi Masui <masui.yoichi@gmail.com>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: Tools for CDISC(SDTM at the moment) programming
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

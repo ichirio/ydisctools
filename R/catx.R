@@ -20,7 +20,7 @@
 #'
 #' # Concatenating multiple vectors with commas
 #' catx(",", c("A", NA), c("", "B"), "C")
-#' # Returns: "A,B,C"
+#' # Returns: "A,C" "B"
 #' @export
 #' @importFrom purrr pmap_chr
 catx <- function(sep = "", ...) {
