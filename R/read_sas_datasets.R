@@ -13,7 +13,6 @@
 #' @export
 #' @importFrom haven read_sas
 #' @importFrom purrr map
-#' @importFrom stringr str_to_upper
 #'
 #' @examples
 #' \dontrun{
