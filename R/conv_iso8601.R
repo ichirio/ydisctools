@@ -9,9 +9,7 @@
 #'
 #' @return A character vector in ISO 8601 format.
 #'
-#' @importFrom purrr map_chr
-#' @importFrom stringr str_length str_sub str_split
-#' @importFrom magrittr %>%
+#' @import stringr purrr dplyr magrittr
 #'
 #' @export
 conv_iso8601 <- function(datetime, time = NA, type = "DMY") {
@@ -146,7 +144,7 @@ conv_iso8601 <- function(datetime, time = NA, type = "DMY") {
 #' conv_iso8601_num_d(as.Date("2023-09-15"))
 #' conv_iso8601_num_d("2023-09-15")
 #' @export
-#' @importFrom lubridate is.Date
+#' @import lubridate
 conv_iso8601_num_d <- function(date) {
   if (is.Date(date)) return(format(date, "%Y-%m-%d"))
   return(as.character(date))
@@ -162,7 +160,7 @@ conv_iso8601_num_d <- function(date) {
 #' conv_iso8601_num_hm(as.POSIXct("2023-09-15 14:30:00"))
 #' conv_iso8601_num_hm("2023-09-15T14:30")
 #' @export
-#' @importFrom lubridate is.POSIXct
+#' @import lubridate
 conv_iso8601_num_hm <- function(date) {
   if (is.POSIXct(date)) return(format(date, "%Y-%m-%dT%H:%M"))
   return(as.character(date))
@@ -178,7 +176,7 @@ conv_iso8601_num_hm <- function(date) {
 #' conv_iso8601_num_hms(as.POSIXct("2023-09-15 14:30:45"))
 #' conv_iso8601_num_hms("2023-09-15T14:30:45")
 #' @export
-#' @importFrom lubridate is.POSIXct
+#' @import lubridate
 conv_iso8601_num_hms <- function(date) {
   if (is.POSIXct(date)) return(format(date, "%Y-%m-%dT%H:%M:%S"))
   return(as.character(date))

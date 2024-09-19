@@ -11,8 +11,7 @@
 #' The names of the list are derived from the dataset filenames (without the `.sas7bdat` extension).
 #'
 #' @export
-#' @importFrom haven read_sas
-#' @importFrom purrr map
+#' @import haven purrr
 #'
 #' @examples
 #' \dontrun{
@@ -49,8 +48,7 @@ read_sas_datasets <- function(folder, datasets=NA) {
 #' @return A list of filtered data frames. If a data frame does not contain the specified variable, it is returned unmodified.
 #'
 #' @export
-#' @importFrom purrr map
-#' @importFrom dplyr filter
+#' @import purrr dplyr
 #'
 #' @examples
 #' \dontrun{

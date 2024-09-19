@@ -22,7 +22,7 @@
 #' catx(",", c("A", NA), c("", "B"), "C")
 #' # Returns: "A,C" "B"
 #' @export
-#' @importFrom purrr pmap_chr
+#' @import purrr
 catx <- function(sep = "", ...) {
   pmap_chr(list(...), ~ paste(c(...)[c(...) != "" & !is.na(c(...))], collapse = sep))
 }
