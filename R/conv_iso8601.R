@@ -5,7 +5,7 @@
 #'
 #' @param datetime A character vector representing the date or datetime.
 #' @param time A character vector representing the time (optional).
-#' @param type A character to specify the format of the date ("YMD", "DMY").
+#' @param type A character to specify the format of the date ("DMY", "YMD", "MDY", "YDM").
 #'
 #' @return A character vector in ISO 8601 format.
 #'
