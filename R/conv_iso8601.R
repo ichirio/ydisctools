@@ -5,12 +5,13 @@
 #'
 #' @param datetime A character vector representing the date or datetime.
 #' @param time A character vector representing the time (optional).
-#' @param type An integer (1 or 2) to specify the format of the date (1 = YMD, 2 = DMY).
+#' @param type A character to specify the format of the date ("YMD", "DMY").
 #'
 #' @return A character vector in ISO 8601 format.
 #'
 #' @importFrom purrr map_chr
 #' @importFrom stringr str_length str_sub str_split
+#' @importFrom magrittr %>%
 #'
 #' @export
 conv_iso8601 <- function(datetime, time = NA, type = "DMY") {

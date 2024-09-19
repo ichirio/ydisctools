@@ -11,7 +11,7 @@ conv_iso8601(datetime, time = NA, type = "DMY")
 
 \item{time}{A character vector representing the time (optional).}
 
-\item{type}{An integer (1 or 2) to specify the format of the date (1 = YMD, 2 = DMY).}
+\item{type}{A character to specify the format of the date ("YMD", "DMY").}
 }
 \value{
 A character vector in ISO 8601 format.
