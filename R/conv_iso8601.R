@@ -9,7 +9,7 @@
 #'
 #' @return A character vector in ISO 8601 format.
 #'
-#' @import stringr purrr dplyr magrittr
+#' @import stringr purrr dplyr
 #'
 #' @export
 conv_iso8601 <- function(datetime, time = NA, type = "DMY") {
@@ -115,7 +115,7 @@ conv_iso8601 <- function(datetime, time = NA, type = "DMY") {
 
   list_date_parts <- str_split(datetime, " |-|/|\\.|,")
 
-  list_date_parts %>%
+  list_date_parts |>
     map_chr(~{
       vec_date_parts <- .[!is.na(.) & . != ""]
       n <- length(vec_date_parts)
