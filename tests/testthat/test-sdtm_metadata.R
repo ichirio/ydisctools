@@ -43,7 +43,7 @@ test_that("read_sdtm_meta_supp Test 3: Read SDTM Supplemental Qualifiers Metadat
 
 ## Test 4: read_sdtm_meta_supp: Read SDTM Supplemental Qualifiers Metadata from Excel File ----
 test_that("read_sdtm_meta_supp Test 4: Read SDTM Supplemental Qualifiers Metadata from Excel File(RDOMAIN)", {
-  supp_meta3 <- read_sdtm_meta_supp("test_spec.xls", supp_sheet = "Suppqual3", dataset_col = "RDOMAIN")
+  supp_meta3 <- read_sdtm_meta_supp("test_spec.xls", supp_sheet = "SUPPQUAL3", dataset_col = "RDOMAIN")
 
   expect_equal(supp_meta3, result2)
 })

@@ -161,8 +161,18 @@ read_sdtm_meta_supp <- function(spec, supp_sheet = "Suppqual", dataset_col = "Da
   }
 
   tryCatch({
+    # Get sheet names
+    sheets <- readxl::excel_sheets(spec)
+
+    # Find the sheet name that matches supp_sheet (case insensitive)
+    matched_sheet <- sheets[tolower(sheets) == tolower(supp_sheet)]
+    if (length(matched_sheet) == 0) {
+      stop("The specified sheet does not exist in the Excel file.")
+    }
+
+
     # Excelファイルを読み込む
-    meta_supp <- readxl::read_excel(spec, sheet = supp_sheet)
+    meta_supp <- readxl::read_excel(spec, sheet = matched_sheet[1])
 
     # dataset列をRDOMAINに変換
     if (!is.null(dataset_col)) {
