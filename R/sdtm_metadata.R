@@ -27,7 +27,6 @@ read_sdtm_metadata_p21 <- function(spec) {
     # Get sheet names for a domain/variable/supp sheet
     domain_sheet <- sheets[grep("dataset", sheets, ignore.case = TRUE)]
     variable_sheet <- sheets[grep("variable", sheets, ignore.case = TRUE)]
-    supp_sheet <- sheets[grep("supp", sheets, ignore.case = TRUE)]
 
     # Read datasets metadata
     sdtm_meta$datasets <- read_meta_datasets_p21(spec, domain_sheet)
