@@ -25,14 +25,14 @@ read_sdtm_metadata_p21 <- function(spec) {
     sheets <- readxl::excel_sheets(spec)
 
     # Get sheet names for a domain/variable/supp sheet
-    domain_sheet <- sheets[grep("dataset", sheets, ignore.case = TRUE)]
-    variable_sheet <- sheets[grep("variable", sheets, ignore.case = TRUE)]
+    domain_sheet <- sheets[grep("^dataset$|^datasets$", sheets, ignore.case = TRUE)]
+    variable_sheet <- sheets[grep("^variable$|^variables$", sheets, ignore.case = TRUE)]
 
     # Read datasets metadata
-    sdtm_meta$datasets <- read_meta_datasets_p21(spec, domain_sheet)
+    sdtm_meta$datasets <- read_meta_datasets_p21(spec, domain_sheet[1])
 
     # Read variables metadata
-    sdtm_meta$variables <- read_meta_variables_p21(spec, variable_sheet)
+    sdtm_meta$variables <- read_meta_variables_p21(spec, variable_sheet[1])
   }, error = function(e) {
     stop("Error in processing Excel file: ", e$message)
   })
