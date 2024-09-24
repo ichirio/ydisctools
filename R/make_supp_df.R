@@ -1,7 +1,7 @@
 #' Create a suppqual DataFrame
 #'
 #' @description
-#' This function creates a suppqual dataframe using the specified dataframe and suppqual metadata dataframe.
+#' This function creates a suppqual dataframe using the specified dataframe and suppqual metadata dataframe. AP domains are not supported.
 #'
 #' @param df DataFrame. The original sdtm dataframe with supp variables.
 #' @param suppmeta DataFrame. The dataframe containing supp variables metadata. The suppmeta have to have the following columns: RDOMAIN, IDVAR, QNAM, QLABEL, QORIG, QEVAL.
@@ -108,4 +108,3 @@ make_supp_df <- function(df, suppmeta, idver = NULL) {
 
   df_long
 }
-

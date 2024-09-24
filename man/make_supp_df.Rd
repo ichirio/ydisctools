@@ -17,7 +17,7 @@ make_supp_df(df, suppmeta, idver = NULL)
 DataFrame. The supplementary dataframe.
 }
 \description{
-This function creates a suppqual dataframe using the specified dataframe and suppqual metadata dataframe.
+This function creates a suppqual dataframe using the specified dataframe and suppqual metadata dataframe. AP domains are not supported.
 }
 \examples{
 dm <- data.frame(
