@@ -60,7 +60,7 @@ text_width_arial <- function(text, points = 12, bold = FALSE) {
     if (char %in% names(char_widths)) {
       width <- width + char_widths[[char]]
     } else {
-      warning(paste("Character", char, "not found in width table."))
+      warning(paste("Character", replace_control_chars(char), "not found in width table."))
       width <- width + default_width
     }
   }
