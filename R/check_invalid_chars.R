@@ -1,3 +1,31 @@
+#' Check for Invalid Characters in Multiple Datasets
+#'
+#' This function checks for invalid characters in multiple datasets and combines the results into a single data frame.
+#'
+#' @param datasets A list of data frames in which to check for invalid characters.
+#' @param question A logical value indicating whether to detect and remove the question mark character. Default is FALSE.
+#' @return A data frame with the results of the invalid character checks for all datasets combined.
+#' @examples
+#' library(dplyr)
+#' library(purrr)
+#' df1 <- data.frame(text = c("Hello\x01World", "Example\x0AString"))
+#' df2 <- data.frame(text = c("Another\x0DTest", "More\x0AData"))
+#' datasets <- list(df1, df2)
+#' check_invalid_chars_in_datasets(datasets)
+#' check_invalid_chars_in_datasets(datasets, question = TRUE)
+#' @import dplyr
+#' @import purrr
+#' @export
+check_invalid_chars_in_datasets <- function(datasets, question=FALSE, report_file = NULL) {
+  result <- map2(datasets, names(datasets), ~ check_invalid_chars(.x, .y, question = question)) |>
+    bind_rows()
+
+  if(!is.null(report_file)) {
+    write_csv(result, report_file)
+  }
+  return(result)
+}
+
 #' Check for Invalid Characters in a Data Frame(SDTM)
 #'
 #' This function checks for invalid characters in a specified column of a data frame and provides various transformations of the invalid characters.
@@ -13,15 +41,28 @@
 #' check_invalid_chars(df, target = text, question = TRUE)
 #' @import dplyr
 #' @export
-check_invalid_chars <- function(df, target=text, question=FALSE) {
+check_invalid_chars <- function(df, df_name, target=text, question=FALSE) {
   result <- df |>
+    convert_df_longer() |>
+    mutate(dataset = df_name, .before = 1) |>
+    mutate(inv_chars      = detect_invalid_chars({{target}}, question)) |>
+    filter(inv_chars != "") |>
     mutate(
-      inv_chars      = detect_invalid_chars({{target}}, question),
-      inv_chars_hex  = detect_invalid_chars({{target}}, question) |> to_hex(),
-      inv_chars_ctrl = detect_invalid_chars({{target}}, question) |> replace_control_chars(),
-      inv_if_latin1  = detect_invalid_chars({{target}}, question) |> iconv(from = "latin1", to = "UTF-8"),
-      inv_if_sjis    = detect_invalid_chars({{target}}, question) |> iconv(from = "SJIS", to = "UTF-8")
+      inv_chars_hex  = to_hex(inv_chars),
+      inv_chars_ctrl = replace_control_chars(inv_chars),
+      inv_if_latin1  = iconv(inv_chars, from = "latin1", to = "UTF-8"),
+      inv_if_sjis    = iconv(inv_chars, from = "SJIS", to = "UTF-8")
     )
+
+  return(result)
+}
+
+convert_df_longer <- function(df) {
+  result <- df |>
+    select_if(is.character) |>
+    mutate(row_no = row_number()) |>
+    pivot_longer(cols = -row_no, names_to = "variable_name", values_to = "text")
+
   return(result)
 }
 

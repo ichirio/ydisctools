@@ -24,13 +24,45 @@
 read_sas_datasets <- function(folder, datasets=NA) {
   sas_files <- dir(pattern = "\\.(?i)sas7bdat$", folder)
   if(!all(is.na(datasets))) {
-    sas_files <- sas_files[toupper(sasfiles) %in% toupper(paste0(datasets, ".sas7bdat"))]
+    sas_files <- sas_files[toupper(sas_files) %in% toupper(paste0(datasets, ".sas7bdat"))]
   }
 
   result <- sas_files %>%
     map(~read_sas(file.path(folder, .)))
 
   names(result) <- sub("\\.(?i)sas7bdat$", "", sas_files)
+
+  result
+}
+
+#' Read XPT Files from a Folder
+#'
+#' This function reads XPT files from a specified folder and returns them as a list of data frames. Optionally, a subset of XPT files can be specified.
+#'
+#' @param folder A character string specifying the path to the folder containing the XPT files.
+#' @param xpts A character vector specifying the names of the XPT files to read (without the .xpt extension). If NA, all XPT files in the folder are read. Default is NA.
+#' @return A named list of data frames, where each data frame corresponds to an XPT file.
+#' @examples
+#' \dontrun{
+#' # Read all XPT files from a folder
+#' data_list <- read_xpts("path/to/folder")
+#'
+#' # Read specific XPT files from a folder
+#' data_list <- read_xpts("path/to/folder", xpts = c("file1", "file2"))
+#' }
+#' @import purrr
+#' @import haven
+#' @export
+read_xpts <- function(folder, xpts=NA) {
+  sas_files <- dir(pattern = "\\.(?i)xpt$", folder)
+  if(!all(is.na(datasets))) {
+    sas_files <- sas_files[toupper(sas_files) %in% toupper(paste0(xpts, ".xpt"))]
+  }
+
+  result <- sas_files %>%
+    map(~read_xpt(file.path(folder, .)))
+
+  names(result) <- sub("\\.(?i)xpt$", "", sas_files)
 
   result
 }
