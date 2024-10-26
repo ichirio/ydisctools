@@ -55,7 +55,7 @@ read_sas_datasets <- function(folder, datasets=NA) {
 #' @export
 read_xpts <- function(folder, xpts=NA) {
   sas_files <- dir(pattern = "\\.(?i)xpt$", folder)
-  if(!all(is.na(datasets))) {
+  if(!all(is.na(xpts))) {
     sas_files <- sas_files[toupper(sas_files) %in% toupper(paste0(xpts, ".xpt"))]
   }
 
