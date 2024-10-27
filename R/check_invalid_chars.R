@@ -103,8 +103,14 @@ detect_invalid_chars <- function(text, question = FALSE) {
 #  return(map_chr(text, ~ paste(charToRaw(.), collapse = " ")))
 #}
 to_hex <- function(text) {
+  return(map_chr(text, ~ to_hex2(.)))
+}
+
+to_hex2 <- function(text) {
   if (length(text) == 0) {
     return(text)
+  }else if(length(text) != 1){
+    stop("Input must be a single character")
   }
   chars <- strsplit(text, NULL)[[1]]
 
