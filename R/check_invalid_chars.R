@@ -99,8 +99,17 @@ detect_invalid_chars <- function(text, question = FALSE) {
 #' to_hex("World")
 #' @import purrr
 #' @export
+#to_hex <- function(text) {
+#  return(map_chr(text, ~ paste(charToRaw(.), collapse = " ")))
+#}
 to_hex <- function(text) {
-  return(map_chr(text, ~ paste(charToRaw(.), collapse = " ")))
+  chars <- strsplit(text, NULL)[[1]]
+
+  hex_codes <- map_chr(chars, ~ paste(charToRaw(.), collapse = ":"))
+
+  spaced_hex <- paste(hex_codes, collapse = " ")
+
+  return(spaced_hex)
 }
 
 
