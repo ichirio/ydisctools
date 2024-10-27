@@ -103,6 +103,9 @@ detect_invalid_chars <- function(text, question = FALSE) {
 #  return(map_chr(text, ~ paste(charToRaw(.), collapse = " ")))
 #}
 to_hex <- function(text) {
+  if (length(text) == 0) {
+    return(text)
+  }
   chars <- strsplit(text, NULL)[[1]]
 
   hex_codes <- map_chr(chars, ~ paste(charToRaw(.), collapse = ":"))
