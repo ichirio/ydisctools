@@ -32,6 +32,7 @@ check_invalid_chars_in_datasets <- function(datasets, question=FALSE, report_fil
 #' This function checks for invalid characters in a specified column of a data frame and provides various transformations of the invalid characters.
 #'
 #' @param df A data frame in which to check for invalid characters.
+#' @param df_name A data frame name to be used in a report. Default is the name of the input data frame.
 #' @param target A symbol specifying the column to check for invalid characters. Default is `text`.
 #' @param question A logical value indicating whether to detect and remove the question mark character. Default is FALSE.
 #' @return A data frame with additional columns showing the invalid characters and their transformations.
@@ -42,7 +43,7 @@ check_invalid_chars_in_datasets <- function(datasets, question=FALSE, report_fil
 #' check_invalid_chars(df, target = text, question = TRUE)
 #' @import dplyr
 #' @export
-check_invalid_chars <- function(df, df_name, target=text, question=FALSE) {
+check_invalid_chars <- function(df, df_name = deparse(substitute(df)), target=text, question=FALSE) {
   result <- df |>
     convert_df_longer() |>
     mutate(dataset = df_name, .before = 1) |>
