@@ -15,6 +15,7 @@
 #' check_invalid_chars_in_datasets(datasets, question = TRUE)
 #' @import dplyr
 #' @import purrr
+#' @import readr
 #' @export
 check_invalid_chars_in_datasets <- function(datasets, question=FALSE, report_file = NULL) {
   result <- map2(datasets, names(datasets), ~ check_invalid_chars(.x, .y, question = question)) |>
