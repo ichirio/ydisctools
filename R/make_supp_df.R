@@ -108,3 +108,50 @@ make_supp_df <- function(df, suppmeta, idver = NULL) {
 
   df_long
 }
+
+
+#' Split the QVAL column in a supplementary data frame
+#'
+#' This function splits the QVAL column in a supplementary data frame into multiple rows, ensuring that each split part does not exceed 200 bytes size.
+#'
+#' @param supp_df A tibble containing the supplementary data frame with a QVAL column.
+#' @return A tibble with the QVAL column split into multiple rows.
+#' @examples
+#' library(dplyr)
+#' library(tidyr)
+#' library(purrr)
+#' supp_df <- tibble(
+#'   ID = 1:3,
+#'   QVAL = c("This is a very long text that needs to be split into smaller parts. This is a very long text that needs to be split into smaller parts. This is a very long text that needs to be split into smaller parts. This is a very long text that needs to be split into smaller parts.",
+#'            "Another long text that needs splitting.",
+#'            "Short text"),
+#'   QNAM = c("Q1", "Q2", "Q3")
+#' )
+#' result <- split_supp_qval(supp_df)
+#' print(result)
+#' @importFrom dplyr mutate rowwise
+#' @importFrom tidyr unnest
+#' @importFrom purrr map
+#' @export
+split_supp_qval <- function(supp_df) {
+  ## Check if supp_df is a tibble
+  if (!is_tibble(supp_df)) {
+    stop("supp_df must be a tibble")
+  }
+
+  ## Check if QVAL is in supp_df
+  if (!"QVAL" %in% colnames(supp_df)) {
+    stop("QVAL must be in supp_df")
+  }
+
+  sep_texts <- map(supp_df$QVAL, ~ split_text_by_max_bytes(., max_bytes = 200))
+
+  ## Loop through each row of supp_df
+  supp_df_split <- supp_df %>%
+    mutate(QVAL = sep_texts) %>%
+    rowwise() %>%
+    mutate(QNAM = list(get_split_var_names(QNAM, length(QVAL)))) %>%
+    unnest(cols = c(QNAM, QVAL))
+
+  return(supp_df_split)
+}

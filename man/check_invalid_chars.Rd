@@ -4,10 +4,17 @@
 \alias{check_invalid_chars}
 \title{Check for Invalid Characters in a Data Frame(SDTM)}
 \usage{
-check_invalid_chars(df, df_name, target = text, question = FALSE)
+check_invalid_chars(
+  df,
+  df_name = deparse(substitute(df)),
+  target = text,
+  question = FALSE
+)
 }
 \arguments{
 \item{df}{A data frame in which to check for invalid characters.}
+
+\item{df_name}{A data frame name to be used in a report. Default is the name of the input data frame.}
 
 \item{target}{A symbol specifying the column to check for invalid characters. Default is \code{text}.}
 
