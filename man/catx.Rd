@@ -4,10 +4,10 @@
 \alias{catx}
 \title{Concatenate strings with a separator, excluding empty strings and NA values}
 \usage{
-catx(sep = "", ...)
+catx(sep, ...)
 }
 \arguments{
-\item{sep}{A character string used to separate the concatenated values. Default is an empty string (\code{""}).}
+\item{sep}{A character string used to separate the concatenated values.}
 
 \item{...}{Vectors or character strings to concatenate. Empty strings and \code{NA} values are ignored.}
 }

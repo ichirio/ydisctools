@@ -3,7 +3,7 @@
 #' `catx` concatenates multiple vectors or character strings using a specified separator, while
 #' excluding any empty strings (`""`) and `NA` values.
 #'
-#' @param sep A character string used to separate the concatenated values. Default is an empty string (`""`).
+#' @param sep A character string used to separate the concatenated values.
 #' @param ... Vectors or character strings to concatenate. Empty strings and `NA` values are ignored.
 #' @return A character vector where each element is a concatenation of the input strings, separated by `sep`.
 #' @details This function is useful when you want to concatenate multiple values but avoid including
@@ -23,6 +23,6 @@
 #' # Returns: "A,C" "B"
 #' @export
 #' @import purrr
-catx <- function(sep = "", ...) {
+catx <- function(sep, ...) {
   pmap_chr(list(...), ~ paste(c(...)[c(...) != "" & !is.na(c(...))], collapse = sep))
 }
