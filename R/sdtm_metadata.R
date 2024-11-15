@@ -194,6 +194,7 @@ read_sdtm_meta_supp <- function(spec, supp_sheet = "Suppqual", dataset_col = "Da
         QORIG   = !!sym(qorig_col),
         IDVAR   = if (idvar_col %in% colnames(.)) !!sym(idvar_col) else ""
       ) %>%
+      filter(!is.na(RDOMAIN) & RDOMAIN != "") %>%
       select(RDOMAIN, QNAM, QLABEL, QEVAL, QORIG, IDVAR)
 
   }, error = function(e) {
