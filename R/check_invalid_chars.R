@@ -154,6 +154,8 @@ replace_control_chars <- function(text) {
 }
 
 get_char_positions <- function(text, chars) {
+  print(text)
+  print(chars)
   if(!is.null(text) && !is.null(chars) && is.character(text) && is.character(chars) && str_length(chars) > 0) {
     char_vec <- unique(unlist(strsplit(chars, split = "")))
 
