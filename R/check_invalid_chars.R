@@ -52,7 +52,7 @@ check_invalid_chars <- function(df, df_name = deparse(substitute(df)), target=te
     mutate(
       inv_chars_hex  = to_hex(inv_chars),
       inv_chars_ctrl = replace_control_chars(inv_chars),
-      inv_chars_positions = get_char_positions({{target}}, inv_chars),
+      inv_chars_positions = map2_chr({{target}}, inv_chars, get_char_positions),
       inv_if_latin1  = iconv(inv_chars, from = "latin1", to = "UTF-8"),
       inv_if_sjis    = iconv(inv_chars, from = "SJIS", to = "UTF-8")
     )
