@@ -52,6 +52,7 @@ check_invalid_chars <- function(df, df_name = deparse(substitute(df)), target=te
     mutate(
       inv_chars_hex  = to_hex(inv_chars),
       inv_chars_ctrl = replace_control_chars(inv_chars),
+      inv_chars_positions = get_char_positions({{target}}, inv_chars),
       inv_if_latin1  = iconv(inv_chars, from = "latin1", to = "UTF-8"),
       inv_if_sjis    = iconv(inv_chars, from = "SJIS", to = "UTF-8")
     )
@@ -151,4 +152,18 @@ replace_control_chars <- function(text) {
   }
   return(text)
 }
+
+get_char_positions <- function(text, chars) {
+  if(!is.null(text) && !is.null(chars) && is.character(text) && is.character(chars) && str_length(chars) > 0) {
+    char_vec <- unique(unlist(strsplit(chars, split = "")))
+
+    all_positions <- unlist(map(char_vec, ~ {
+      positions <- gregexpr(., text)[[1]]
+      positions[positions > 0]
+    }))
+    return(sort(unique(all_positions)))
+  }
+  return("")
+}
+
 
