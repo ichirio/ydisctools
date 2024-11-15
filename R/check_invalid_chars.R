@@ -162,7 +162,7 @@ get_char_positions <- function(text, chars) {
       positions <- gregexpr(., text)[[1]]
       positions[positions > 0]
     }))
-    return(paste(sort(unique(all_positions)), collapse = " "))
+    return(paste(as.character(sort(unique(all_positions))), collapse = " "))
   }
   return("")
 }
