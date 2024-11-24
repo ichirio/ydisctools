@@ -51,6 +51,7 @@ read_meta_datasets_p21 <- function(spec, domain_sheet) {
   # datasetとlabelの列を探す
   dataset_col <- grep("^dataset$", colnames(meta_domain), ignore.case = TRUE, value = TRUE)
   label_col <- grep("^label$", colnames(meta_domain), ignore.case = TRUE, value = TRUE)
+  key_col <- grep("^key variables$", colnames(meta_domain), ignore.case = TRUE, value = TRUE)
 
   # 完全一致がない場合、domainまたはlabelから始まる列名を探し、最初の列を採用する
   if (length(dataset_col) == 0) {
@@ -65,11 +66,17 @@ read_meta_datasets_p21 <- function(spec, domain_sheet) {
       label_col <- label_col[1]
     }
   }
+  if (length(key_col) == 0) {
+    key_col <- grep("^key", colnames(meta_domain), ignore.case = TRUE, value = TRUE)
+    if (length(key_col) > 0) {
+      key_col <- key_col[1]
+    }
+  }
 
   # 必要な列を選択
   meta_domain |>
-    select(dataset_col[1], label_col[1]) |>
-    rename(dataset = dataset_col[1], label = label_col[1])
+    select(dataset_col[1], label_col[1], key_col[1]) |>
+    rename(dataset = dataset_col[1], label = label_col[1], key = key_col[1])
 }
 
 read_meta_variables_p21 <- function(spec, variables_sheet) {
