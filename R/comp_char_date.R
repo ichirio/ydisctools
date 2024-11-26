@@ -16,6 +16,7 @@
 #' @export
 comp_char_date <- function(x, y, mark = "<=") {
   if(is.null(x) | is.null(y)) return(NA)
+  if(is.na(x) | is.na(y)) return(NA)
   if(!(mark %in% c("<", "<=", ">", ">=", "==", "!="))) return(NA)
 
   len <- min(str_length(x), str_length(y))
