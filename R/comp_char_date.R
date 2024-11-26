@@ -26,3 +26,27 @@ comp_char_date <- function(x, y, mark = "<=") {
 
   return(eval(parse(text = paste("x_sub", mark, "y_sub"))))
 }
+
+
+#' Compare Character Date Vectors
+#'
+#' This function compares two character date vectors element-wise based on a specified comparison operator.
+#'
+#' @param x A character vector representing the first set of dates.
+#' @param y A character vector representing the second set of dates.
+#' @param mark A character string representing the comparison operator.
+#'             Must be one of "<", "<=", ">", ">=", "==", "!=". Default is "<=".
+#' @return A logical vector indicating the result of the comparison for each element, or an error if the input vectors have different lengths.
+#' @examples
+#' x <- c("2023-10-01", "2023-10-02")
+#' y <- c("2023-10-01", "2023-10-03")
+#' comp_char_dates(x, y, "<=") # TRUE, TRUE
+#' comp_char_dates(x, y, ">")  # FALSE, FALSE
+#'
+#' @import purrr
+#' @export
+comp_char_dates <- function(x, y, mark = "<=") {
+  if(length(x) != length(y)) stop("The input vectors must have the same length.")
+
+  return(map_lgl(seq_along(x), ~ comp_char_date(x[.x], y[.x], mark)))
+}
