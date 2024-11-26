@@ -75,10 +75,10 @@ test_that("make_supp_df Test 2: Create a suppqual DataFrame(suppae)", {
 
 ## Test 3: make_supp_df: Create a suppqual DataFrame ----
 test_that("make_supp_df Test 2: Create a suppqual DataFrame(suppcm)", {
-  cm <- data.frame(
+  apcm <- data.frame(
     STUDYID = c("HOGE-01", "HOGE-01", "HOGE-01"),
-    DOMAIN = c("CM", "CM", "CM"),
-    USUBJID = c("HOGE-01-001", "HOGE-01-002", "HOGE-01-003"),
+    DOMAIN = c("APCM", "APCM", "APCM"),
+    APID = c("HOGE-01-001-P", "HOGE-01-002-P", "HOGE-01-003-P"),
     CMSPID = c("CM-001", "CM-002", "CM-003"),
     CMTRT = c("trt1", "trt2", "trt3"),
     SUPP1 = c("supp1a", "supp1b", "supp1c"),
@@ -87,7 +87,7 @@ test_that("make_supp_df Test 2: Create a suppqual DataFrame(suppcm)", {
   )
 
   suppmeta <- data.frame(
-    RDOMAIN = c("DM", "DM", "DM", "AE", "AE", "AE", "CM", "CM", "CM"),
+    RDOMAIN = c("DM", "DM", "DM", "AE", "AE", "AE", "APCM", "APCM", "APCM"),
     IDVAR = c("", "", "", "AESEQ", "AESEQ", "AESEQ", "CMSPID", "CMSPID", "CMSPID"),
     QNAM = c("SUPP1", "SUPP2", "SUPP3", "SUPP1", "SUPP2", "SUPP3", "SUPP1", "SUPP2", "SUPP3"),
     QLABEL = c("Supp Label 1", "Supp Label 2", "Supp Label 3", "Supp Label 1", "Supp Label 2", "Supp Label 3", "Supp Label 1", "Supp Label 2", "Supp Label 3"),
@@ -95,10 +95,10 @@ test_that("make_supp_df Test 2: Create a suppqual DataFrame(suppcm)", {
     QEVAL = c("", "", "", "", "", "", "", "", "")
   )
 
-  suppcm <- tibble::tibble(
+  sqapcm <- tibble::tibble(
     STUDYID = c("HOGE-01", "HOGE-01", "HOGE-01", "HOGE-01", "HOGE-01"),
-    RDOMAIN = c("CM", "CM", "CM", "CM", "CM"),
-    USUBJID = c("HOGE-01-001", "HOGE-01-001", "HOGE-01-002", "HOGE-01-002", "HOGE-01-003"),
+    RDOMAIN = c("APCM", "APCM", "APCM", "APCM", "APCM"),
+    APID = c("HOGE-01-001-P", "HOGE-01-001-P", "HOGE-01-002-P", "HOGE-01-002-P", "HOGE-01-003-P"),
     IDVAR = c("CMSPID", "CMSPID", "CMSPID", "CMSPID", "CMSPID"),
     IDVARVAL = c("CM-001", "CM-001", "CM-002", "CM-002", "CM-003"),
     QNAM = c("SUPP1", "SUPP2", "SUPP1", "SUPP2", "SUPP1"),
@@ -108,5 +108,5 @@ test_that("make_supp_df Test 2: Create a suppqual DataFrame(suppcm)", {
     QEVAL = c("", "", "", "", "")
   )
 
-  expect_equal(make_supp_df(cm, suppmeta), suppcm)
+  expect_equal(make_supp_df(apcm, suppmeta), sqapcm)
 })

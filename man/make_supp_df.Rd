@@ -41,10 +41,10 @@ ae <- data.frame(
   SUPP3 = c("supp3a", "supp3b", NA)
 )
 
-cm <- data.frame(
+apcm <- data.frame(
   STUDYID = c("HOGE-01", "HOGE-01", "HOGE-01"),
-  DOMAIN = c("CM", "CM", "CM"),
-  USUBJID = c("HOGE-01-001", "HOGE-01-002", "HOGE-01-003"),
+  DOMAIN = c("APCM", "APCM", "APCM"),
+  APID = c("HOGE-01-001-P", "HOGE-01-002-P", "HOGE-01-003-P"),
   CMSPID = c("CM-001", "CM-002", "CM-003"),
   CMTRT = c("trt1", "trt2", "trt3"),
   SUPP1 = c("supp1a", "supp1b", "supp1c"),
@@ -53,7 +53,7 @@ cm <- data.frame(
 )
 
 suppmeta <- data.frame(
-  RDOMAIN = c("DM", "DM", "DM", "AE", "AE", "AE", "CM", "CM", "CM"),
+  RDOMAIN = c("DM", "DM", "DM", "AE", "AE", "AE", "APCM", "APCM", "APCM"),
   IDVAR = c("", "", "", "AESEQ", "AESEQ", "AESEQ", "CMSPID", "CMSPID", "CMSPID"),
   QNAM = c("SUPP1", "SUPP2", "SUPP3", "SUPP1", "SUPP2", "SUPP3", "SUPP1", "SUPP2", "SUPP3"),
   QLABEL = c("Supp Label 1", "Supp Label 2", "Supp Label 3", "Supp Label 1", "Supp Label 2", "Supp Label 3", "Supp Label 1", "Supp Label 2", "Supp Label 3"),
@@ -64,5 +64,5 @@ suppmeta <- data.frame(
 library(tidyverse)
 suppdm <- make_supp_df(dm, suppmeta)
 suppae <- make_supp_df(ae, suppmeta)
-suppcm <- make_supp_df(cm, suppmeta)
+suppcm <- make_supp_df(apcm, suppmeta)
 }
