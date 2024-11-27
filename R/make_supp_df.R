@@ -85,8 +85,8 @@ make_supp_df <- function(df, suppmeta, idver = NULL) {
   if(!is.null(idver)) {
     suppmeta$IDVAR <- idver
   }
-#  supp_vars <- suppmeta$QNAM[suppmeta$RDOMAIN == domain]
 
+  act_supp_qnam <- intersect(colnames(df), suppmeta$QNAM)
 
   #  Pivot the df to long format and join with suppmeta
   suppqual_vars <- c("STUDYID", "RDOMAIN", "USUBJID", "IDVAR", "IDVARVAL", "QNAM", "QLABEL", "QVAL", "QORIG", "QEVAL")
@@ -95,7 +95,7 @@ make_supp_df <- function(df, suppmeta, idver = NULL) {
   }
   tryCatch({
     df_long <- df |>
-      pivot_longer(cols = suppmeta$QNAM, names_to = "QNAM", values_to = "QVAL") |>
+      pivot_longer(cols = act_supp_qnam, names_to = "QNAM", values_to = "QVAL") |>
       filter(!is.na(QVAL) & QVAL != "") |>
       left_join(suppmeta, by = c("DOMAIN" = "RDOMAIN", "QNAM" = "QNAM")) |>
       rowwise() |>
