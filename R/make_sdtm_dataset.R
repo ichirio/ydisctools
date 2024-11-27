@@ -50,7 +50,7 @@ make_sdtm_all_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
 
   if(!is.null(xpt_path)) {
     target |>
-      write.xport(file.path(xpt_path, target_file), version = 5, name = target_domain)
+      write_xpt(file.path(xpt_path, target_file), version = 5, name = target_domain)
   }
 
   return(target)
@@ -100,7 +100,7 @@ make_sdtm_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
 
   if(!is.null(xpt_path)) {
     target |>
-      write.xport(file.path(xpt_path, target_file), version = 5, name = target_domain)
+      write_xpt(file.path(xpt_path, target_file), version = 5, name = target_domain)
   }
 
   return(target)
@@ -152,7 +152,7 @@ make_sdtm_supp_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
 
   if(!is.null(xpt_path)) {
     target |>
-      write.xport(file.path(xpt_path, target_file), version = 5, name = target_domain)
+      write_xpt(file.path(xpt_path, target_file), version = 5, name = target_domain)
   }
 
   return(target)
