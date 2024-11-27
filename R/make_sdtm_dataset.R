@@ -33,7 +33,7 @@ make_sdtm_all_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
 
   variables_meta <- supp_meta |>
     filter(RDOMAIN == target_domain) |>
-    mutate(type = "text", order = NA) |>
+    mutate(type = "text", order = NA_character_) |>
     select(dataset = RDOMAIN, variable = QNAM, label = QLABEL, type, order) |>
     bind_rows(variables_meta)
 
