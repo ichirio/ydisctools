@@ -76,8 +76,23 @@ make_supp_df <- function(df, suppmeta, idver = NULL) {
 
   # Get a domain from df, if the domain is not unique, return an error message
   domain <- unique(df$DOMAIN)
-  if (length(domain) != 1) {
+  if (length(domain) > 1) {
     stop("DOMAIN must be unique")
+  }
+  if(is.null(domain) || is.na(domain) || length(domain) == 0) {
+    df_result <- data.frame(
+      STUDYID = character(),
+      RDOMAIN = character(),
+      USUBJID = character(),
+      IDVAR = character(),
+      IDVARVAL = character(),
+      QNAM = character(),
+      QLABEL = character(),
+      QVAL = character(),
+      QORIG = character(),
+      QEVAL = character()
+    )
+    return(df_result)
   }
 
   # Get a QNAM(SUPP variable) vector from suppmeta when RDOMAIN is domain
