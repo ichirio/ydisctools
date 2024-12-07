@@ -110,7 +110,7 @@ make_supp_df <- function(df, suppmeta, idver = NULL) {
   }
   tryCatch({
     df_long <- df |>
-      pivot_longer(cols = act_supp_qnam, names_to = "QNAM", values_to = "QVAL") |>
+      pivot_longer(cols = any_of(act_supp_qnam), names_to = "QNAM", values_to = "QVAL") |>
       filter(!is.na(QVAL) & QVAL != "") |>
       left_join(suppmeta, by = c("DOMAIN" = "RDOMAIN", "QNAM" = "QNAM")) |>
       rowwise() |>
@@ -119,7 +119,8 @@ make_supp_df <- function(df, suppmeta, idver = NULL) {
         RDOMAIN = DOMAIN
         ) |>
       ungroup() |>
-      select(all_of(suppqual_vars))
+      select(all_of(suppqual_vars)) |>
+      distinct()
   }, error = function(e) {
     stop(paste0("ERROR: Making a supp: ", e$message))
   })
