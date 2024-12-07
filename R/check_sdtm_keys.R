@@ -96,7 +96,7 @@ check_sdtm_keys <- function(sdtms, dataset_meta) {
 #' split_key_text("ID, NAME")
 #' @export
 split_key_text <- function(key_text) {
-  if(is.null(key_text) || is.na(key_text) || key_text == "") {
+  if(is.null(key_text) || length(key_text) == 0 || is.na(key_text) || key_text == "") {
     return(NA)
   }
 
