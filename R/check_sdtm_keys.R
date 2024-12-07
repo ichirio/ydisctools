@@ -39,7 +39,7 @@ check_sdtm_keys <- function(sdtms, dataset_meta) {
 
       #
       key_vec <- dataset_meta |>
-        filter(dataset == .x) |>
+        filter(tolower(dataset) == tolower(.x)) |>
         pull(key) |>
         split_key_text()
 
