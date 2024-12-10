@@ -10,13 +10,7 @@
 #' @export
 #' @import lubridate dplyr
 compute_dy <- function(refdate, eventdate) {
-  result <- tryCatch({
     interval(as.Date(refdate, format = "%Y-%m-%d"), as.Date(eventdate, format = "%Y-%m-%d")) %>%
     as.numeric(units = "days") %>%
     if_else(. >= 0, . + 1, .)
-  }, error = function(e) {
-    NA
-  })
-
-  return(result)
 }
