@@ -33,7 +33,7 @@ check_invalid_chars_in_datasets <- function(datasets, question=FALSE, report_fil
 #'
 #' @param df A data frame in which to check for invalid characters.
 #' @param df_name A data frame name to be used in a report. Default is the name of the input data frame.
-#' @param target A symbol specifying the column to check for invalid characters. Default is `text`.
+#' @param target (Not used) A symbol specifying the column to check for invalid characters. Default is NULL.
 #' @param question A logical value indicating whether to detect and remove the question mark character. Default is FALSE.
 #' @return A data frame with additional columns showing the invalid characters and their transformations.
 #' @examples
@@ -43,16 +43,16 @@ check_invalid_chars_in_datasets <- function(datasets, question=FALSE, report_fil
 #' check_invalid_chars(df, target = text, question = TRUE)
 #' @import dplyr
 #' @export
-check_invalid_chars <- function(df, df_name = deparse(substitute(df)), target=text, question=FALSE) {
+check_invalid_chars <- function(df, df_name = deparse(substitute(df)), target=NULL, question=FALSE) {
   result <- df |>
     convert_df_longer() |>
     mutate(dataset = df_name, .before = 1) |>
-    mutate(inv_chars      = detect_invalid_chars({{target}}, question)) |>
+    mutate(inv_chars      = detect_invalid_chars(text, question)) |>
     filter(inv_chars != "") |>
     mutate(
       inv_chars_hex  = to_hex(inv_chars),
       inv_chars_ctrl = replace_control_chars(inv_chars),
-      inv_chars_positions = map2_chr({{target}}, inv_chars, get_char_positions),
+      inv_chars_positions = map2_chr(text, inv_chars, get_char_positions),
       inv_if_latin1  = iconv(inv_chars, from = "latin1", to = "UTF-8"),
       inv_if_sjis    = iconv(inv_chars, from = "SJIS", to = "UTF-8")
     )

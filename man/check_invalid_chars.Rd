@@ -7,7 +7,7 @@
 check_invalid_chars(
   df,
   df_name = deparse(substitute(df)),
-  target = text,
+  target = NULL,
   question = FALSE
 )
 }
@@ -16,7 +16,7 @@ check_invalid_chars(
 
 \item{df_name}{A data frame name to be used in a report. Default is the name of the input data frame.}
 
-\item{target}{A symbol specifying the column to check for invalid characters. Default is \code{text}.}
+\item{target}{(Not used) A symbol specifying the column to check for invalid characters. Default is NULL.}
 
 \item{question}{A logical value indicating whether to detect and remove the question mark character. Default is FALSE.}
 }
