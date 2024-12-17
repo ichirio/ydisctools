@@ -27,12 +27,15 @@ read_sdtm_metadata_p21 <- function(spec) {
     # Get sheet names for a domain/variable/supp sheet
     domain_sheet <- sheets[grep("^dataset$|^datasets$", sheets, ignore.case = TRUE)]
     variable_sheet <- sheets[grep("^variable$|^variables$", sheets, ignore.case = TRUE)]
+    codelists_sheet <- sheets[grep("^codelist$|^codelists$", sheets, ignore.case = TRUE)]
 
     # Read datasets metadata
     sdtm_meta$datasets <- read_meta_datasets_p21(spec, domain_sheet[1])
 
     # Read variables metadata
     sdtm_meta$variables <- read_meta_variables_p21(spec, variable_sheet[1])
+
+    sdtm_meta$codelists <- read_meta_codelists_p21(spec, codelists_sheet[1])
   }, error = function(e) {
     stop("Error in processing Excel file: ", e$message)
   })
@@ -92,6 +95,7 @@ read_meta_variables_p21 <- function(spec, variables_sheet) {
   label_col <- grep("^label$", colnames(meta_variables), value = TRUE)
   type_col <- grep("^data type$", colnames(meta_variables), value = TRUE)
   order_col <- grep("^order$", colnames(meta_variables), value = TRUE)
+  format_col <- grep("^format$", colnames(meta_variables), value = TRUE)
 
   # 完全一致がない場合、各列名から始まる列名を探し、最初の列を採用する
   if (length(dataset_col) == 0) {
@@ -124,14 +128,83 @@ read_meta_variables_p21 <- function(spec, variables_sheet) {
       order_col <- order_col[1]
     }
   }
+  if (length(format_col) == 0) {
+    format_col <- grep("^format", colnames(meta_variables), value = TRUE)
+    if (length(format_col) > 0) {
+      format_col <- format_col[1]
+    }
+  }
 
   # 必要な列を選択
   meta_variables <- meta_variables |>
-    select(dataset_col[1], variable_col[1], label_col[1], type_col[1], order_col[1]) |>
-    rename(dataset = dataset_col[1], variable = variable_col[1], label = label_col[1], type = type_col[1], order = order_col[1])
+    select(dataset_col[1], variable_col[1], label_col[1], type_col[1], order_col[1], format_col[1]) |>
+    rename(dataset = dataset_col[1], variable = variable_col[1], label = label_col[1], type = type_col[1], order = order_col[1], format = format_col[1])
   # 結果を返す
   return(meta_variables)
 }
+
+
+read_meta_codelists_p21 <- function(spec, codelists_sheet) {
+  # Excelファイルを読み込む
+  meta_codelists <- readxl::read_excel(spec, sheet = codelists_sheet)
+
+  # 列名を小文字に変換
+  colnames(meta_codelists) <- tolower(colnames(meta_codelists))
+
+  # 必要な列を探す
+  id_col <- grep("^id$", colnames(meta_codelists), value = TRUE)
+  name_col <- grep("^name$", colnames(meta_codelists), value = TRUE)
+  type_col <- grep("^data type$", colnames(meta_codelists), value = TRUE)
+  order_col <- grep("^order$", colnames(meta_codelists), value = TRUE)
+  term_col <- grep("^term$", colnames(meta_codelists), value = TRUE)
+  decode_col <- grep("^decoded value$", colnames(meta_codelists), value = TRUE)
+
+  # 完全一致がない場合、各列名から始まる列名を探し、最初の列を採用する
+  if (length(id_col) == 0) {
+    id_col <- grep("^dataset", colnames(meta_codelists), value = TRUE)
+    if (length(id_col) > 0) {
+      id_col <- id_col[1]
+    }
+  }
+  if (length(name_col) == 0) {
+    name_col <- grep("^variable", colnames(meta_codelists), value = TRUE)
+    if (length(name_col) > 0) {
+      name_col <- name_col[1]
+    }
+  }
+  if (length(type_col) == 0) {
+    type_col <- grep("^type", colnames(meta_codelists), value = TRUE)
+    if (length(type_col) > 0) {
+      type_col <- type_col[1]
+    }
+  }
+  if (length(order_col) == 0) {
+    order_col <- grep("^order", colnames(meta_codelists), value = TRUE)
+    if (length(order_col) > 0) {
+      order_col <- order_col[1]
+    }
+  }
+  if (length(term_col) == 0) {
+    term_col <- grep("^term", colnames(meta_codelists), value = TRUE)
+    if (length(term_col) > 0) {
+      term_col <- term_col[1]
+    }
+  }
+  if (length(decode_col) == 0) {
+    decode_col <- grep("^decode", colnames(meta_codelists), value = TRUE)
+    if (length(decode_col) > 0) {
+      decode_col <- decode_col[1]
+    }
+  }
+
+  # 必要な列を選択
+  meta_codelists <- meta_codelists |>
+    select(id_col[1], name_col[1], type_col[1], order_col[1], term_col[1], decode_col[1]) |>
+    rename(id = id_col[1], name = name_col[1], type = type_col[1], order = order_col[1], term = term_col[1], decode = decode_col[1])
+# 結果を返す
+return(meta_codelists)
+}
+
 
 #' Read SDTM Supplemental Qualifiers Metadata from Excel File
 #'
