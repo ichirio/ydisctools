@@ -46,6 +46,8 @@ get_ct_decode <- function(ct_meta, id, term, reverse = FALSE) {
   # term is a character vector
   if (!is.character(term)) {
     stop("term must be a character vector")
+  }else if (length(term) == 0) {
+    return(character(0))
   }
 
   if(reverse) {
