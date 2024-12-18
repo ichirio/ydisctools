@@ -82,7 +82,7 @@ test_that("make_supp_df Test 2: Create a suppqual DataFrame(suppcm)", {
     CMSPID = c("CM-001", "CM-002", "CM-003"),
     CMTRT = c("trt1", "trt2", "trt3"),
     SUPP1 = c("supp1a", "supp1b", "supp1c"),
-    SUPP2 = c("supp2a", "supp2b", ""),
+    SUPP2 = c(1, 2, NA),
     SUPP3 = c("", "", "")
   )
 
@@ -103,7 +103,7 @@ test_that("make_supp_df Test 2: Create a suppqual DataFrame(suppcm)", {
     IDVARVAL = c("CM-001", "CM-001", "CM-002", "CM-002", "CM-003"),
     QNAM = c("SUPP1", "SUPP2", "SUPP1", "SUPP2", "SUPP1"),
     QLABEL = c("Supp Label 1", "Supp Label 2", "Supp Label 1", "Supp Label 2", "Supp Label 1"),
-    QVAL = c("supp1a", "supp2a", "supp1b", "supp2b", "supp1c"),
+    QVAL = c("supp1a", "1", "supp1b", "2", "supp1c"),
     QORIG = c("CRF", "CRF", "CRF", "CRF", "CRF"),
     QEVAL = c("", "", "", "", "")
   )

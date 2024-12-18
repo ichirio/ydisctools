@@ -110,6 +110,7 @@ make_supp_df <- function(df, suppmeta, idver = NULL) {
   }
   tryCatch({
     df_long <- df |>
+      mutate_at(vars(one_of(act_supp_qnam)), as.character) |>
       pivot_longer(cols = any_of(act_supp_qnam), names_to = "QNAM", values_to = "QVAL") |>
       filter(!is.na(QVAL) & QVAL != "") |>
       left_join(suppmeta, by = c("DOMAIN" = "RDOMAIN", "QNAM" = "QNAM")) |>
