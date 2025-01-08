@@ -150,21 +150,29 @@ split_text_by_max_bytes <- function(text, max_bytes = 200, splitter = " |;|,|\\.
 #' print(var_names)
 #' @export
 get_split_var_names <- function(var_name, len, max_len = len) {
-  if(max_len - 1 >= 10) {
-    var_name_base <- substr(var_name, 1, 6)
+  var_name_base <- var_name
+
+  start_no <- 0
+  if(str_sub(var_name, -1, -1) == "1") {
+    start_no = 1
+    var_name_base <- str_sub(var_name_base, 1, -2)
+  }
+
+  if(max_len - 1 + start_no >= 10) {
+    var_name_base <- substr(var_name_base, 1, 6)
   }else {
-    var_name_base <- substr(var_name, 1, 7)
+    var_name_base <- substr(var_name_base, 1, 7)
   }
 
   var_names <- c()
   for(i in seq_len(len)) {
-    if(i == 1) {
+    if(i == 1 & start_no == 0) {
       var_names <- c(var_names, var_name)
     }else {
-      if(max_len - 1 < 10) {
-        var_names <- c(var_names, paste0(var_name_base, i - 1))
+      if(max_len - 1 + start_no >= 10) {
+        var_names <- c(var_names, paste0(var_name_base, sprintf("%02d", i - 1 + start_no)))
       }else {
-        var_names <- c(var_names, paste0(var_name_base, sprintf("%02d", i - 1)))
+        var_names <- c(var_names, paste0(var_name_base, i - 1 + start_no))
       }
     }
   }
