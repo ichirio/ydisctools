@@ -25,7 +25,7 @@ comp_char_date <- function(x, y, mark = "<=", mode = "S") {
   if(!(mark %in% c("<", "<=", ">", ">=", "==", "!="))) return(NA)
 
   if(mode %in% c("IMAX", "IMIN")) {
-    add_char <- if(mode == "IMAX") "Z" else "\x09"
+    add_char <- if(mode == "IMAX") "Z" else "'"
     if(str_length(x) > str_length(y)) {
       x_sub <- x
       y_sub <- paste0(y, add_char)
