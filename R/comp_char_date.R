@@ -28,7 +28,7 @@ comp_char_date <- function(x, y, mark = "<=", mode = "S") {
     add_char <- if(mode == "IMAX") "Z" else "\x09"
     if(str_length(x) > str_length(y)) {
       x_sub <- x
-      y_sub <- paste0(x, add_char)
+      y_sub <- paste0(y, add_char)
     }else if(str_length(x) < str_length(y)) {
       x_sub <- paste0(x, add_char)
       y_sub <- y
