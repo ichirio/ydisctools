@@ -4,7 +4,7 @@
 \alias{comp_char_date}
 \title{Compare Character Dates}
 \usage{
-comp_char_date(x, y, mark = "<=")
+comp_char_date(x, y, mark = "<=", mode = "S")
 }
 \arguments{
 \item{x}{A character string representing the first date.}
@@ -13,6 +13,12 @@ comp_char_date(x, y, mark = "<=")
 
 \item{mark}{A character string representing the comparison operator.
 Must be one of "<", "<=", ">", ">=", "==", "!=". Default is "<=".}
+
+\item{mode}{A character string representing the comparison mode.
+Must be one of "S", "IMAX", "IMIN". Default is "<=".
+S: Cmpare the dates with shorter length.
+IMAX: Cmpare the dates imputing as max value. e.g.) 2025-01 can be imputed as 2025-01-99
+IMIN: Cmpare the dates imputing as min value. e.g.) 2025-01 can be imputed as 2025-01-00}
 }
 \value{
 A logical value indicating the result of the comparison, or NA if the input is invalid.
