@@ -64,7 +64,7 @@ read_meta_datasets_p21 <- function(spec, domain_sheet) {
     }
   }
   if (length(label_col) == 0) {
-    label_col <- grep("^label", colnames(meta_domain), ignore.case = TRUE, value = TRUE)
+    label_col <- grep("^(label)|(description)", colnames(meta_domain), ignore.case = TRUE, value = TRUE)
     if (length(label_col) > 0) {
       label_col <- label_col[1]
     }
@@ -96,6 +96,7 @@ read_meta_variables_p21 <- function(spec, variables_sheet) {
   type_col <- grep("^data type$", colnames(meta_variables), value = TRUE)
   order_col <- grep("^order$", colnames(meta_variables), value = TRUE)
   format_col <- grep("^format$", colnames(meta_variables), value = TRUE)
+  origin_col <- grep("^origin$", colnames(meta_variables), value = TRUE)
 
   # 完全一致がない場合、各列名から始まる列名を探し、最初の列を採用する
   if (length(dataset_col) == 0) {
@@ -134,11 +135,17 @@ read_meta_variables_p21 <- function(spec, variables_sheet) {
       format_col <- format_col[1]
     }
   }
+  if (length(origin_col) == 0) {
+    format_col <- grep("^origin", colnames(meta_variables), value = TRUE)
+    if (length(format_col) > 0) {
+      format_col <- format_col[1]
+    }
+  }
 
   # 必要な列を選択
   meta_variables <- meta_variables |>
-    select(dataset_col[1], variable_col[1], label_col[1], type_col[1], order_col[1], format_col[1]) |>
-    rename(dataset = dataset_col[1], variable = variable_col[1], label = label_col[1], type = type_col[1], order = order_col[1], format = format_col[1])
+    select(dataset_col[1], variable_col[1], label_col[1], type_col[1], order_col[1], format_col[1], origin_col[1]) |>
+    rename(dataset = dataset_col[1], variable = variable_col[1], label = label_col[1], type = type_col[1], order = order_col[1], format = format_col[1], origin = origin_col[1])
   # 結果を返す
   return(meta_variables)
 }

@@ -24,6 +24,9 @@ comp_char_date <- function(x, y, mark = "<=", mode = "S") {
   if(is.na(x) | is.na(y)) return(NA)
   if(!(mark %in% c("<", "<=", ">", ">=", "==", "!="))) return(NA)
 
+  len <- min(str_length(x), str_length(y))
+  if(len < 4) return(NA)
+
   if(mode %in% c("IMAX", "IMIN")) {
     add_char <- if(mode == "IMAX") "Z" else "'"
     if(str_length(x) > str_length(y)) {
@@ -37,8 +40,6 @@ comp_char_date <- function(x, y, mark = "<=", mode = "S") {
       y_sub <- y
     }
   } else {
-    len <- min(str_length(x), str_length(y))
-    if(len < 4) return(NA)
     x_sub <- str_sub(x, 1, len)
     y_sub <- str_sub(y, 1, len)
   }
