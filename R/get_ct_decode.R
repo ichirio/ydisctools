@@ -61,3 +61,35 @@ get_ct_decode <- function(ct_meta, id, term, reverse = FALSE) {
   }
 }
 
+#' Get Term Value from CT Metadata
+#'
+#' This function retrieves the term value from a metadata `data.frame` based on the specified ID and decode value.
+#'
+#' @param ct_meta A `data.frame` containing the metadata with columns `id`, `term`, and `decode`. The metadata can be read using `read_sdtm_metadata_p21()` from a P21 specification file.
+#' @param id A single character string representing the ID.
+#' @param term A character vector representing the decode value(s).
+#'
+#' @return A character vector of term values corresponding to the specified ID and decode value(s).
+#'
+#' @examples
+#' library(dplyr)
+#'
+#' # Create a sample metadata data.frame
+#' ct_meta <- data.frame(
+#'   id = c("LATESTCD", "LBTESTCD", "LBTESTCD"),
+#'   term = c("RBC", "MONO", "LYM"),
+#'   decode = c("Erythrocyte Count", "Monocyte Count", "Lymphocyte Count"),
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' df <- data.frame(USUBJID = rep(1:3), LBTEST = c("Erythrocyte Count", "Monocyte Count", "Lymphocyte Count"))
+#'
+#' # Get term value
+#' df |> mutate(LBTESTCD = get_ct_term(ct_meta, "LBTESTCD", LBTEST))
+#'
+#' @import dplyr
+#' @export
+get_ct_term <- function(ct_meta, id, decode) {
+  return(get_ct_decode(ct_meta, id, decode, reverse = TRUE))
+}
+

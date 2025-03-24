@@ -43,6 +43,22 @@ read_sdtm_metadata_p21 <- function(spec) {
   return(sdtm_meta)
 }
 
+#' Read P21 Metadata Spec
+#'
+#' @description
+#' This function reads SDTM/ADaM metadata from a P21 Excel file, extracting dataset and variable metadata.
+#'
+#' @param spec A character string specifying the path to the P21 Excel file.
+#'
+#' @return A list containing two data frames: `datasets` and `variables`, which hold the metadata for datasets and variables respectively.
+#'
+#' @import readxl
+#' @import dplyr
+#' @export
+read_metadata_spec_p21 <- function(spec) {
+  return(read_sdtm_metadata_p21(spec))
+}
+
 
 read_meta_datasets_p21 <- function(spec, domain_sheet) {
   # Excelファイルを読み込む
@@ -96,6 +112,7 @@ read_meta_variables_p21 <- function(spec, variables_sheet) {
   type_col <- grep("^data type$", colnames(meta_variables), value = TRUE)
   order_col <- grep("^order$", colnames(meta_variables), value = TRUE)
   format_col <- grep("^format$", colnames(meta_variables), value = TRUE)
+  codelist_col <- grep("^codelist$", colnames(meta_variables), value = TRUE)
   origin_col <- grep("^origin$", colnames(meta_variables), value = TRUE)
 
   # 完全一致がない場合、各列名から始まる列名を探し、最初の列を採用する
@@ -135,17 +152,26 @@ read_meta_variables_p21 <- function(spec, variables_sheet) {
       format_col <- format_col[1]
     }
   }
+  if (length(codelist_col) == 0) {
+    codelist_col <- grep("^codelist", colnames(meta_variables), value = TRUE)
+    if (length(codelist_col) > 0) {
+      codelist_col <- codelist_col[1]
+    }
+  }
   if (length(origin_col) == 0) {
-    format_col <- grep("^origin", colnames(meta_variables), value = TRUE)
-    if (length(format_col) > 0) {
-      format_col <- format_col[1]
+    origin_col <- grep("^origin", colnames(meta_variables), value = TRUE)
+    if (length(origin_col) > 0) {
+      origin_col <- origin_col[1]
     }
   }
 
   # 必要な列を選択
   meta_variables <- meta_variables |>
-    select(dataset_col[1], variable_col[1], label_col[1], type_col[1], order_col[1], format_col[1], origin_col[1]) |>
-    rename(dataset = dataset_col[1], variable = variable_col[1], label = label_col[1], type = type_col[1], order = order_col[1], format = format_col[1], origin = origin_col[1])
+    select(dataset_col[1], variable_col[1], label_col[1], type_col[1], order_col[1],
+           format_col[1], codelist_col[1], origin_col[1]) |>
+    rename(dataset = dataset_col[1], variable = variable_col[1], label = label_col[1],
+           type = type_col[1], order = order_col[1], format = format_col[1],
+           codelist = codelist_col[1], origin = origin_col[1])
   # 結果を返す
   return(meta_variables)
 }
