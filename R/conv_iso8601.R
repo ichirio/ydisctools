@@ -181,3 +181,58 @@ conv_iso8601_num_hms <- function(date) {
   if (is.POSIXct(date)) return(format(date, "%Y-%m-%dT%H:%M:%S"))
   return(as.character(date))
 }
+
+#' Derive POSIXct Datetime from Partial ISO 8601 Datetime String
+#'
+#' This function converts a partial ISO 8601 datetime string (`DTC`) into a complete `POSIXct` datetime object.
+#' Missing components (e.g., month, day, time) are imputed based on the specified `inpute_type`.
+#'
+#' @param dtc A character vector containing partial ISO 8601 datetime strings (e.g., "2023", "2023-01", "2023-01-01T12").
+#' @param inpute_type A character string specifying how to impute missing components.
+#'   - `"first"`: Impute the earliest possible values (e.g., "2023" becomes "2023-01-01T00:00:00").
+#'   - `"last"`: Impute the latest possible values (e.g., "2023" becomes "2023-12-31T23:59:59").
+#'   Default is `"first"`.
+#' @param tz A character string specifying the time zone for the resulting `POSIXct` object. Default is an empty string (`""`), which uses the system's default time zone.
+#'
+#' @return A `POSIXct` vector representing the complete datetime values.
+#'   If `dtc` contains invalid datetime strings, an error is raised.
+#'
+#' @details
+#' The function validates the input `dtc` against a regular expression to ensure it conforms to the ISO 8601 format.
+#' Missing components are imputed based on the `inpute_type` parameter:
+#' - `"first"`: Imputes the earliest possible values (e.g., "2023" becomes "2023-01-01T00:00:00").
+#' - `"last"`: Imputes the latest possible values (e.g., "2023" becomes "2023-12-31T23:59:59").
+#'
+#' @examples
+#' # Example 1: Impute earliest possible values
+#' derive_dtm_from_dtc(c("2023", "2023-01", "2023-01-01"), inpute_type = "first")
+#'
+#' # Example 2: Impute latest possible values
+#' derive_dtm_from_dtc(c("2023", "2023-01", "2023-01-01"), inpute_type = "last")
+#'
+#' # Example 3: Handle time zone
+#' derive_dtm_from_dtc(c("2023-01-01T12:34:56"), tz = "UTC")
+#'
+#' @import stringr
+#' @export
+derive_dtm_from_dtc <- function(dtc, inpute_type ="first", tz = "") {
+  # If all results are not TRUE, return an error
+  pattern <- "^\\d{4}(-\\d{2}(-\\d{2}(T\\d{2}(:\\d{2}(:\\d{2}(\\.\\d+)?)?)?)?)?)?$"
+  if (!all(grepl(pattern, dtc[!is.na(dtc) & dtc != ""]))) {
+    stop("Invalid datetime string")
+  }
+
+  if(inpute_type == "last") dtc_format <- "XXXX-12-31T23:59:59"
+  else dtc_format <- "XXXX-01-01T00:00:00"
+
+  result <- as.POSIXct(
+    ifelse(!is.na(dtc) & str_length(dtc) >= 4,
+           paste0(dtc, str_sub(dtc_format, str_length(dtc) + 1, -1)),
+           NA),
+    tz = tz,
+    format = "%Y-%m-%dT%H:%M:%OS"
+  )
+
+  return(result)
+}
+
