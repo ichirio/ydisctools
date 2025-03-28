@@ -236,3 +236,91 @@ derive_dtm_from_dtc <- function(dtc, inpute_type ="first", tz = "") {
   return(result)
 }
 
+#' Derive DTF (Date Imputation Flag) Variable from DTC
+#'
+#' This function creates the DTF (Date Imputation Flag) variable for ADaM datasets.
+#' It determines the level of date imputation (e.g., year, month, or day) based on the length of the input datetime string (`dtc`).
+#'
+#' @param dtc A character vector containing datetime strings. Each string should follow the ISO 8601 format (e.g., `YYYY`, `YYYY-MM`, `YYYY-MM-DD`).
+#' @param null_all_na A logical value indicating whether to return `NULL` if all results are `NA`. Defaults to `TRUE`.
+#'
+#' @return A character vector indicating the level of date imputation:
+#'   - `"M"` for month-level imputation (e.g., `YYYY` -> `YYYY-MM-DD`).
+#'   - `"D"` for day-level imputation (e.g., `YYYY-MM` -> `YYYY-MM-DD`).
+#'   If `null_all_na` is `TRUE` and all results are `NA`, the function returns `NULL`.
+#'
+#' @examples
+#' # Example with valid datetime strings
+#' derive_dtf_from_dtc(c("2023", "2023-05", "2023-05-15"))
+#' # Returns: c("D", "M", NA)
+#'
+#' # Example with non-inputed dates
+#' derive_dtf_from_dtc(c("2023-01-01", "2023-05-01", "2023-05-15"))
+#' # Returns: NULL (if all results are NA after processing)
+#'
+#' # Example with non-inputed dates with null_all_na = FALSE
+#' derive_dtf_from_dtc(c("2023-01-01", "2023-05-01", "2023-05-15"))
+#' # Returns: c(NA, NA, NA)
+#'
+#' @export
+derive_dtf_from_dtc <- function(dtc, null_all_na = TRUE) {
+  # If all results are not TRUE, return an error
+  pattern <- "^\\d{4}(-\\d{2}(-\\d{2}(T\\d{2}(:\\d{2}(:\\d{2}(\\.\\d+)?)?)?)?)?)?$"
+  if (!all(grepl(pattern, dtc[!is.na(dtc) & dtc != ""]))) {
+    stop("Invalid datetime string")
+  }
+
+  result <- case_match(str_length(dtc),
+    4  ~ "M",
+    7  ~ "D",
+    .default = NA
+  )
+  return(if(null_all_na & all(is.na(result))) NULL else result)
+}
+
+#' Derive TMF (Time Imputation Flag) Variable from DTC
+#'
+#' This function creates the TMF (Time Imputation Flag) variable for ADaM datasets.
+#' It determines the level of time imputation (e.g., hour, minute, or second) based on the length of the input datetime string (`dtc`).
+#'
+#' @param dtc A character vector containing datetime strings. Each string should follow the ISO 8601 format (e.g., `YYYY-MM-DDTHH`, `YYYY-MM-DDTHH:MM`, `YYYY-MM-DDTHH:MM:SS`).
+#' @param null_all_na A logical value indicating whether to return `NULL` if all results are `NA`. Defaults to `TRUE`.
+#'
+#' @return A character vector indicating the level of time imputation:
+#'   - `"H"` for hour-level imputation (e.g., `YYYY-MM-DD` -> `YYYY-MM-DDTHH:MM:SS`).
+#'   - `"M"` for minute-level imputation (e.g., `YYYY-MM-DDTHH` -> `YYYY-MM-DDTHH:MM:SS`).
+#'   - `"S"` for second-level imputation (e.g., `YYYY-MM-DDTHH:MM` -> `YYYY-MM-DDTHH:MM:SS`).
+#'   - `NA` for non-imputation (e.g., `YYYY-MM-DDTHH:MM:SS` -> `YYYY-MM-DDTHH:MM:SS`).
+#'   If `null_all_na` is `TRUE` and all results are `NA`, the function returns `NULL`.
+#'
+#' @examples
+#' # Example with valid datetime strings
+#' derive_tmf_from_dtc(c("2023", "2023-05-15", "2023-05-15T12:30", "2023-05-15T12:30:45"))
+#' # Returns: c("H", "H", "S", NA)
+#'
+#' # Example with non-imputed times
+#' derive_tmf_from_dtc(c("2023-01-01T12:00:00", "2023-05-01T12:30:00", "2023-05-15T12:30:45"))
+#' # Returns: NULL (if all results are NA after processing)
+#'
+#' # Example with non-imputed times and null_all_na = FALSE
+#' derive_tmf_from_dtc(c("2023-01-01T12:00:00", "2023-05-01T12:30:00", "2023-05-15T12:30:45"), null_all_na = FALSE)
+#' # Returns: c(NA, NA, NA)
+#'
+#' @export
+derive_tmf_from_dtc <- function(dtc, null_all_na = TRUE) {
+  # If all results are not TRUE, return an error
+  pattern <- "^\\d{4}(-\\d{2}(-\\d{2}(T\\d{2}(:\\d{2}(:\\d{2}(\\.\\d+)?)?)?)?)?)?$"
+  if (!all(grepl(pattern, dtc[!is.na(dtc) & dtc != ""]))) {
+    stop("Invalid datetime string")
+  }
+
+  result <- case_match(str_length(dtc),
+                       4   ~ "H",
+                       4   ~ "H",
+                       10  ~ "H",
+                       13  ~ "M",
+                       16  ~ "S",
+                       .default = NA
+  )
+  return(if(null_all_na & all(is.na(result))) NULL else result)
+}
