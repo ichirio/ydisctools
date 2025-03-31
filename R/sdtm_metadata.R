@@ -110,6 +110,7 @@ read_meta_variables_p21 <- function(spec, variables_sheet) {
   variable_col <- grep("^variable$", colnames(meta_variables), value = TRUE)
   label_col <- grep("^label$", colnames(meta_variables), value = TRUE)
   type_col <- grep("^data type$", colnames(meta_variables), value = TRUE)
+  length_col <- grep("^length$", colnames(meta_variables), value = TRUE)
   order_col <- grep("^order$", colnames(meta_variables), value = TRUE)
   format_col <- grep("^format$", colnames(meta_variables), value = TRUE)
   codelist_col <- grep("^codelist$", colnames(meta_variables), value = TRUE)
@@ -140,6 +141,12 @@ read_meta_variables_p21 <- function(spec, variables_sheet) {
       type_col <- type_col[1]
     }
   }
+  if (length(length_col) == 0) {
+    length_col <- grep("^type", colnames(meta_variables), value = TRUE)
+    if (length(length_col) > 0) {
+      length_col <- length_col[1]
+    }
+  }
   if (length(order_col) == 0) {
     order_col <- grep("^order", colnames(meta_variables), value = TRUE)
     if (length(order_col) > 0) {
@@ -167,11 +174,11 @@ read_meta_variables_p21 <- function(spec, variables_sheet) {
 
   # 必要な列を選択
   meta_variables <- meta_variables |>
-    select(dataset_col[1], variable_col[1], label_col[1], type_col[1], order_col[1],
-           format_col[1], codelist_col[1], origin_col[1]) |>
+    select(dataset_col[1], variable_col[1], label_col[1], type_col[1], length_col[1],
+           order_col[1], format_col[1], codelist_col[1], origin_col[1]) |>
     rename(dataset = dataset_col[1], variable = variable_col[1], label = label_col[1],
-           type = type_col[1], order = order_col[1], format = format_col[1],
-           codelist = codelist_col[1], origin = origin_col[1])
+           type = type_col[1], length = length_col[1], order = order_col[1],
+           format = format_col[1], codelist = codelist_col[1], origin = origin_col[1])
   # 結果を返す
   return(meta_variables)
 }
