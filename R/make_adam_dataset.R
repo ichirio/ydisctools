@@ -41,6 +41,9 @@
 #'
 #' result <- make_adam_dataset(df, domain = "ADSL", adam_meta = adam_meta)
 #'
+#' @import dplyr
+#' @importFrom xportr xportr_df_label xportr_order xportr_type xportr_label xportr_format xportr_length
+#' @importFrom haven write_xpt
 #' @export
 make_adam_dataset <- function(df, domain, adam_meta, xpt_path = NULL, meta_length = TRUE) {
   target_domain <- toupper(domain)
@@ -52,6 +55,10 @@ make_adam_dataset <- function(df, domain, adam_meta, xpt_path = NULL, meta_lengt
   domain_vars <- na.omit(variables_meta$variable[variables_meta$dataset == target_domain])
   key_vars <- datasets_meta$key[datasets_meta$dataset == target_domain]
 
+  num_type <- getOption("xportr.numeric_metadata_type")
+  chr_type <- getOption("xportr.character_metadata_type")
+  options(xportr.numeric_metadata_type = c(num_type, "time"))
+  options(xportr.character_metadata_type = chr_type[chr_type != "time"])
 
   target <- df |>
     select(all_of(domain_vars)) |>
@@ -59,7 +66,11 @@ make_adam_dataset <- function(df, domain, adam_meta, xpt_path = NULL, meta_lengt
     xportr_df_label(metadata = datasets_meta, domain = target_domain) |>
     xportr_order(metadata = variables_meta, domain = target_domain) |>
     xportr_type(metadata = variables_meta, domain = target_domain) |>
+    xportr_format(metadata = variables_meta, domain = target_domain) |>
     xportr_label(metadata = variables_meta, domain = target_domain)
+
+  options(xportr.numeric_metadata_type = num_type)
+  options(xportr.character_metadata_type = chr_type)
 
   if(meta_length) {
     target <- target |>
