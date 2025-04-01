@@ -55,10 +55,10 @@ make_adam_dataset <- function(df, domain, adam_meta, xpt_path = NULL, meta_lengt
   domain_vars <- na.omit(variables_meta$variable[variables_meta$dataset == target_domain])
   key_vars <- datasets_meta$key[datasets_meta$dataset == target_domain]
 
-  num_type <- getOption("xportr.numeric_metadata_type")
-  chr_type <- getOption("xportr.character_metadata_type")
-  options(xportr.numeric_metadata_type = c(num_type, "time"))
-  options(xportr.character_metadata_type = chr_type[chr_type != "time"])
+  num_type <- getOption("xportr.numeric_metadata_types")
+  chr_type <- getOption("xportr.character_metadata_types")
+  options(xportr.numeric_metadata_types = c(num_type, "time"))
+  options(xportr.character_metadata_types = chr_type[chr_type != "time"])
 
   target <- df |>
     select(all_of(domain_vars)) |>
@@ -69,8 +69,8 @@ make_adam_dataset <- function(df, domain, adam_meta, xpt_path = NULL, meta_lengt
     xportr_format(metadata = variables_meta, domain = target_domain) |>
     xportr_label(metadata = variables_meta, domain = target_domain)
 
-  options(xportr.numeric_metadata_type = num_type)
-  options(xportr.character_metadata_type = chr_type)
+  options(xportr.numeric_metadata_types = num_type)
+  options(xportr.character_metadata_types = chr_type)
 
   if(meta_length) {
     target <- target |>
