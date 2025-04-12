@@ -2,9 +2,10 @@ library(dplyr)
 ## Test 1: conv_iso8601: Convert date and time(DMY) to ISO 8601 format ----
 test_that("conv_iso8601 Test 1: Convert date and time(DMY) to ISO 8601 format", {
   df_test <- data.frame(
-    SUBJID = sprintf("%03d", 1:13),
+    SUBJID = sprintf("%03d", 1:14),
     testdate = c(
       "01-May-2024",
+      "01-5月-2024",
       "01/May/2024 23:01",
       "01/May/2024 23:1:1",
       "01/May/2024 23:1:1.000",
@@ -19,9 +20,10 @@ test_that("conv_iso8601 Test 1: Convert date and time(DMY) to ISO 8601 format", 
       "May 2024")
   )
   df_result <- data.frame(
-    SUBJID = sprintf("%03d", 1:13),
+    SUBJID = sprintf("%03d", 1:14),
     testdate = c(
       "01-May-2024",
+      "01-5月-2024",
       "01/May/2024 23:01",
       "01/May/2024 23:1:1",
       "01/May/2024 23:1:1.000",
@@ -35,6 +37,7 @@ test_that("conv_iso8601 Test 1: Convert date and time(DMY) to ISO 8601 format", 
       "24",
       "May 2024"),
     TESTDTC = c(
+      "2024-05-01",
       "2024-05-01",
       "2024-05-01T23:01",
       "2024-05-01T23:01:01",
