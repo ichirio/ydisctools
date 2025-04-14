@@ -1,5 +1,4 @@
-#' @name read_p21_spec
-#' @title Read P21 Specification Files
+#' Read P21 Specification Files
 #'
 #' @description
 #' These functions read metadata from P21 specification Excel files. They handle different
@@ -27,8 +26,6 @@ read_p21_spec <- function(spec) {
     stop("The file is not an Excel file.")
   }
 
-  p21_meta <- list()
-
   tryCatch({
     # Get sheet names
     sheets <- readxl::excel_sheets(spec)
@@ -42,12 +39,11 @@ read_p21_spec <- function(spec) {
     methods_sheet <- sheets[grep("^method$|^methods$", sheets, ignore.case = TRUE)]
     comments_sheet <- sheets[grep("^comment$|^comments$", sheets, ignore.case = TRUE)]
     documents_sheet <- sheets[grep("^document$|^documents$", sheets, ignore.case = TRUE)]
-    define_sheet <- sheets[grep("^define$", sheets, ignore.case = TRUE)]
+    define_sheet <- sheets[grep("^define$|^study$", sheets, ignore.case = TRUE)]
 
     # Check if all required sheets exist
-    required_sheets <- c("Methods", "Comments")
-    missing_sheets <- required_sheets[!tolower(required_sheets) %in% tolower(sheets)]
-    if (length(missing_sheets) > 0) {
+    if (is.na(domain_sheet[1]) || is.na(variable_sheet[1]) ||
+        is.na(codelists_sheet[1])) {
       stop("This file does not appear to be a P21 specification file. Missing required sheets: ",
            paste(missing_sheets, collapse = ", "))
     }
@@ -57,12 +53,24 @@ read_p21_spec <- function(spec) {
     result$datasets <- read_p21_spec_datasets(spec, domain_sheet[1])
     result$variables <- read_p21_spec_variables(spec, variable_sheet[1])
     result$codelists <- read_p21_spec_codelists(spec, codelists_sheet[1])
-    result$valuelevels <- read_p21_spec_valuelevels(spec, valuelevels_sheet[1])
-    result$dictionaries <- read_p21_spec_dictionaries(spec, dictionaries_sheet[1])
-    result$methods <- read_p21_spec_methods(spec, methods_sheet[1])
-    result$comments <- read_p21_spec_comments(spec, comments_sheet[1])
-    result$documents <- read_p21_spec_documents(spec, documents_sheet[1])
-    result$define <- read_p21_spec_define(spec, define_sheet[1])
+    if(length(valuelevels_sheet) > 0) {
+      result$valuelevels <- read_p21_spec_valuelevels(spec, valuelevels_sheet[1])
+    }
+    if(length(dictionaries_sheet) > 0) {
+      result$dictionaries <- read_p21_spec_dictionaries(spec, dictionaries_sheet[1])
+    }
+    if(length(methods_sheet) > 0) {
+      result$methods <- read_p21_spec_methods(spec, methods_sheet[1])
+    }
+    if(length(comments_sheet) > 0) {
+      result$comments <- read_p21_spec_comments(spec, comments_sheet[1])
+    }
+    if(length(documents_sheet) > 0) {
+      result$documents <- read_p21_spec_documents(spec, documents_sheet[1])
+    }
+    if(length(define_sheet) > 0) {
+      result$define <- read_p21_spec_define(spec, define_sheet[1])
+    }
 
     # Add ORIGINAL list containing all sheets without any modification
     result$ORIGINAL <- read_excel_all_sheets(spec)
@@ -365,6 +373,8 @@ read_p21_spec_comments <- function(spec, comments_sheet) {
   return(result)
 }
 
+#' @rdname read_p21_spec
+#' @export
 read_p21_spec_documents <- function(spec, documents_sheet) {
   # Excelファイルを読み込む
   meta_documents <- readxl::read_excel(spec, sheet = documents_sheet)
@@ -406,6 +416,8 @@ read_p21_spec_documents <- function(spec, documents_sheet) {
   return(meta_documents)
 }
 
+#' @rdname read_p21_spec
+#' @export
 read_p21_spec_define <- function(spec, define_sheet) {
   # Excelファイルを読み込む
   meta_define <- readxl::read_excel(spec, sheet = define_sheet)

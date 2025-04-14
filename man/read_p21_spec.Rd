@@ -9,6 +9,8 @@
 \alias{read_p21_spec_dictionaries}
 \alias{read_p21_spec_methods}
 \alias{read_p21_spec_comments}
+\alias{read_p21_spec_documents}
+\alias{read_p21_spec_define}
 \title{Read P21 Specification Files}
 \usage{
 read_p21_spec(spec)
@@ -26,6 +28,10 @@ read_p21_spec_dictionaries(spec, dictionaries_sheet)
 read_p21_spec_methods(spec, methods_sheet)
 
 read_p21_spec_comments(spec, comments_sheet)
+
+read_p21_spec_documents(spec, documents_sheet)
+
+read_p21_spec_define(spec, define_sheet)
 }
 \arguments{
 \item{spec}{A character string specifying the path to the P21 Excel file.}
