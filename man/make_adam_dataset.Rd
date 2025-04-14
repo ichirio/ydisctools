@@ -4,7 +4,14 @@
 \alias{make_adam_dataset}
 \title{Create an ADaM Dataset}
 \usage{
-make_adam_dataset(df, domain, adam_meta, xpt_path = NULL, meta_length = TRUE)
+make_adam_dataset(
+  df,
+  domain,
+  adam_meta,
+  xpt_path = NULL,
+  meta_length = TRUE,
+  sort_by_spec_key = FALSE
+)
 }
 \arguments{
 \item{df}{A data frame containing the input data to be transformed into an ADaM dataset.}

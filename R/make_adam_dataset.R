@@ -45,7 +45,8 @@
 #' @importFrom xportr xportr_df_label xportr_order xportr_type xportr_label xportr_format xportr_length
 #' @importFrom haven write_xpt
 #' @export
-make_adam_dataset <- function(df, domain, adam_meta, xpt_path = NULL, meta_length = TRUE) {
+make_adam_dataset <- function(df, domain, adam_meta, xpt_path = NULL,
+                              meta_length = TRUE, sort_by_spec_key = FALSE) {
   target_domain <- toupper(domain)
   target_file <- paste0(tolower(target_domain), ".xpt")
 
@@ -53,7 +54,6 @@ make_adam_dataset <- function(df, domain, adam_meta, xpt_path = NULL, meta_lengt
   variables_meta <- adam_meta[[grep("^variable$|^variables$", names(adam_meta), ignore.case = TRUE)]]
 
   domain_vars <- na.omit(variables_meta$variable[variables_meta$dataset == target_domain])
-#  key_vars <- datasets_meta$key[datasets_meta$dataset == target_domain]
 
   num_type <- getOption("xportr.numeric_metadata_types")
   chr_type <- getOption("xportr.character_metadata_types")
@@ -62,12 +62,17 @@ make_adam_dataset <- function(df, domain, adam_meta, xpt_path = NULL, meta_lengt
 
   target <- df |>
     select(all_of(domain_vars)) |>
-#    arrange(key_vars) |>
     xportr_df_label(metadata = datasets_meta, domain = target_domain) |>
     xportr_order(metadata = variables_meta, domain = target_domain) |>
     xportr_type(metadata = variables_meta, domain = target_domain) |>
     xportr_format(metadata = variables_meta, domain = target_domain) |>
     xportr_label(metadata = variables_meta, domain = target_domain)
+
+  if(sort_by_spec_key) {
+    key_vars <- split_key_text(datasets_meta$key[datasets_meta$dataset == target_domain])
+    target <- target |>
+      arrange(pick(any_of(key_vars)))
+  }
 
   options(xportr.numeric_metadata_types = num_type)
   options(xportr.character_metadata_types = chr_type)
