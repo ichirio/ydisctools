@@ -21,14 +21,17 @@
 #' # Read specific datasets
 #' datasets <- read_sas_datasets("path/to/folder", datasets = c("dataset1", "dataset2"))
 #' }
-read_sas_datasets <- function(folder, datasets=NA) {
+read_sas_datasets <- function(folder, datasets=NA, tz="") {
   sas_files <- dir(pattern = "\\.(?i)sas7bdat$", folder)
   if(!all(is.na(datasets))) {
     sas_files <- sas_files[toupper(sas_files) %in% toupper(paste0(datasets, ".sas7bdat"))]
   }
 
   result <- sas_files %>%
-    map(~read_sas(file.path(folder, .)))
+    map(~{
+      read_sas(file.path(folder, .)) |>
+        mutate(across(where(is.POSIXct), ~as.POSIXct(as.POSIXlt(., tz = "UTC"), tz = tz)))
+  })
 
   names(result) <- sub("\\.(?i)sas7bdat$", "", sas_files)
 
@@ -53,14 +56,17 @@ read_sas_datasets <- function(folder, datasets=NA) {
 #' @import purrr
 #' @import haven
 #' @export
-read_xpts <- function(folder, xpts=NA) {
+read_xpts <- function(folder, xpts=NA, tz="") {
   sas_files <- dir(pattern = "\\.(?i)xpt$", folder)
   if(!all(is.na(xpts))) {
     sas_files <- sas_files[toupper(sas_files) %in% toupper(paste0(xpts, ".xpt"))]
   }
 
   result <- sas_files %>%
-    map(~read_xpt(file.path(folder, .)))
+    map(~{
+      read_xpt(file.path(folder, .)) |>
+        mutate(across(where(is.POSIXct), ~as.POSIXct(as.POSIXlt(., tz = "UTC"), tz = tz)))
+    })
 
   names(result) <- sub("\\.(?i)xpt$", "", sas_files)
 

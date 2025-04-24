@@ -4,7 +4,7 @@
 \alias{read_sas_datasets}
 \title{Read Multiple SAS Datasets from a Folder}
 \usage{
-read_sas_datasets(folder, datasets = NA)
+read_sas_datasets(folder, datasets = NA, tz = "")
 }
 \arguments{
 \item{folder}{A character string specifying the path to the folder containing the SAS datasets.}

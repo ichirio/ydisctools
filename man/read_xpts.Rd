@@ -4,7 +4,7 @@
 \alias{read_xpts}
 \title{Read XPT Files from a Folder}
 \usage{
-read_xpts(folder, xpts = NA)
+read_xpts(folder, xpts = NA, tz = "")
 }
 \arguments{
 \item{folder}{A character string specifying the path to the folder containing the XPT files.}
