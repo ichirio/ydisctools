@@ -143,7 +143,8 @@ make_sdtm_supp_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
 
   target <- df |>
     make_supp_df(supp_meta) |>
-    arrange(pick(all_of(sort_key))) |>
+    # arrange(pick(all_of(sort_key))) |>
+    arrange(across(all_of(sort_key), ~ if (grepl("SEQ$", cur_column())) as.numeric(.) else .)) |>
     xportr_df_label(metadata = datasets_meta, domain = target_domain) |>
     xportr_order(metadata = variables_meta, domain = target_domain) |>
     xportr_type(metadata = variables_meta, domain = target_domain) |>
