@@ -139,8 +139,11 @@ make_sdtm_supp_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
 
   supp_vars <- na.omit(supp_meta$QNAM[supp_meta$RDOMAIN == gsub("SUPP|SQ", "", target_domain, ignore.case = TRUE)])
 
+  sort_key <- split_key_text(datasets_meta$key[datasets_meta$dataset == target_domain])
+
   target <- df |>
     make_supp_df(supp_meta) |>
+    arrange(pick(all_of(sort_key))) |>
     xportr_df_label(metadata = datasets_meta, domain = target_domain) |>
     xportr_order(metadata = variables_meta, domain = target_domain) |>
     xportr_type(metadata = variables_meta, domain = target_domain) |>
