@@ -31,6 +31,10 @@ split_column_by_max_bytes <- function(df, var_name, max_bytes = 200, label = NUL
     stop("label must be a character and less than 40 characters")
   }
 
+  if(nrow(df) == 0) {
+    return(df)
+  }
+
   # Keep original text
   if(keep_org) original_text <- df[[var_name]]
 
