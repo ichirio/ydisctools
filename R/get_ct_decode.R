@@ -93,3 +93,35 @@ get_ct_term <- function(ct_meta, id, decode) {
   return(get_ct_decode(ct_meta, id, decode, reverse = TRUE))
 }
 
+# Make a factor value according to an order of a speficified codelist
+make_factor_by_term <- function(ct_meta, id, term, upcase = FALSE) {
+  # Check if ct_meta is a data.frame with columns id, term, decode
+  if (!all(c("id", "term", "decode") %in% names(ct_meta))) {
+    stop("ct_meta must be a data.frame with columns id, term, decode")
+  }
+
+  # id is a single character string
+  if (!is.character(id) && length(id) != 1) {
+    stop("id must be a character vector with length 1")
+  }
+
+  # term is a character vector
+  if (!is.character(term)) {
+    stop("term must be a character vector")
+  }else if (length(term) == 0) {
+    return(factor(character(0)))
+  }
+
+  target_ct <- ct_meta |>
+    filter(id == id) |>
+    arrange(order) |>
+    pull()
+
+  if (upcase) {
+    term <- toupper(term)
+    target_ct <- toupper(target_ct)
+  }
+
+  result <- factor(term, levels = target_ct, ordered = TRUE)
+  return(result)
+}

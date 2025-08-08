@@ -1,10 +1,12 @@
 Package: ydisctools
 Type: Package
 Title: Your CDISC Related Tools
-Version: 0.0.78
+Version: 0.0.79
 Author: Yoichi Masui
 Maintainer: Yoichi Masui <masui.yoichi@gmail.com>
-Description: Tools for CDISC(SDTM at the moment) programming
+Description: Tools for CDISC(SDTM at the moment) programming. 
+    RTF table generation functions are based on the r2rtf package 
+    (Wang et al., 2020).
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
@@ -18,4 +20,5 @@ Imports:
     purrr,
     stringr,
     lubridate,
-    haven
+    haven,
+    r2rtf
