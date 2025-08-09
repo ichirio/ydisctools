@@ -108,8 +108,8 @@ rtf_encode_table2 <- function(tbl, verbose = FALSE) {
   new_page_rtftext <- r2rtf:::as_rtf_new_page()
 
   ## rtf encode for column header
-  colheader_rtftext_1 <- paste(unlist(r2rtf:::as_rtf_colheader(tbl_1)), collapse = "\n") # First page
-  colheader_rtftext <- paste(unlist(r2rtf:::as_rtf_colheader(tbl)), collapse = "\n") # Rest of page
+  colheader_rtftext_1 <- paste(unlist(as_rtf_colheader(tbl_1)), collapse = "\n") # First page
+  colheader_rtftext <- paste(unlist(as_rtf_colheader(tbl)), collapse = "\n") # Rest of page
 
   ## rtf encode for footnote
   footnote_rtftext_1 <- paste(r2rtf:::as_rtf_footnote(tbl_1), collapse = "\n") # Last page
@@ -500,5 +500,16 @@ rtf_table_content <- function(tbl,
   )
 
   rbind(row_begin, border_rtf, t(cell_rtf), row_end)
+}
+
+as_rtf_colheader <- function(tbl) {
+  rtf_colheader <- attr(tbl, "rtf_colheader")
+
+  rtf_code <- lapply(rtf_colheader, rtf_table_content,
+                     use_border_bottom = TRUE,
+                     col_total_width = attr(tbl, "page")$col_width
+  )
+
+  unlist(rtf_code)
 }
 

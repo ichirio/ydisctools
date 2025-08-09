@@ -28,36 +28,36 @@ test_that("rtf_encode_table2 handles table with subgroups", {
   expect_true("end" %in% names(result))
 })
 
+if(FALSE) {
+  library(r2rtf)
+  library(dplyr)
+  library(tidyr)
+  library(magrittr)
 
-# library(r2rtf)
-# library(dplyr)
-# library(tidyr)
-# library(magrittr)
-#
-# tbl <- r2rtf_adae %>%
-#   count(TRTA, AEDECOD) %>%
-#   pivot_wider(names_from = TRTA, values_from = n, values_fill = 0)
-#
-# tbl_obj <- head(tbl) %>%
-#   rtf_body()
-#
-# attr(tbl_obj, "page")$border_first <- "single"
-# attr(tbl_obj, "page")$border_last <- ""
-#
-#
-# attr(tbl_obj, "border_left")[] <- ""
-# attr(tbl_obj, "border_right")[] <- ""
-# attr(tbl_obj, "border_top")[] <- ""
-# attr(tbl_obj, "border_bottom")[] <- ""
-#
-# attr(attr(tbl_obj, "rtf_colheader")[[1]], "border_left")[] <- ""
-# attr(attr(tbl_obj, "rtf_colheader")[[1]], "border_right")[] <- ""
-#
-#
-#
-# tbl_encode <- tbl_obj %>%
-#   rtf_encode_table2()
-#
-# tbl_encode %>%
-#   write_rtf("c:/Yrepo/intro-ae1.rtf") # Step 3 Write to a .rtf file
+  tbl <- r2rtf_adae %>%
+    count(TRTA, AEDECOD) %>%
+    pivot_wider(names_from = TRTA, values_from = n, values_fill = 0)
 
+  tbl_obj <- head(tbl) %>%
+    rtf_body()
+
+  attr(tbl_obj, "page")$border_first <- "single"
+  attr(tbl_obj, "page")$border_last <- ""
+
+
+  attr(tbl_obj, "border_left")[] <- ""
+  attr(tbl_obj, "border_right")[] <- ""
+  attr(tbl_obj, "border_top")[] <- ""
+  attr(tbl_obj, "border_bottom")[] <- ""
+
+  attr(attr(tbl_obj, "rtf_colheader")[[1]], "border_left")[] <- ""
+  attr(attr(tbl_obj, "rtf_colheader")[[1]], "border_right")[] <- ""
+
+
+
+  tbl_encode <- tbl_obj %>%
+    rtf_encode_table2()
+
+  tbl_encode %>%
+    write_rtf("c:/Yrepo/intro-ae1.rtf") # Step 3 Write to a .rtf file
+}
