@@ -452,10 +452,10 @@ rtf_table_content <- function(tbl,
   cell_size <- foo(cell_size)
 
   # Delete borders if they are not set
-  if(is.null(border_left)) border_left_rtf <- NULL
-  if(is.null(border_right)) border_right_rtf <- NULL
-  if(is.null(border_top)) border_top_rtf <- NULL
-  if(is.null(border_bottom)) border_bottom_rtf <- NULL
+  border_left_rtf[as.vector(t(border_left)) == ""] <- ""
+  border_right_rtf[as.vector(t(border_right)) == ""] <- ""
+  border_top_rtf[as.vector(t(border_top)) == ""] <- ""
+  border_bottom_rtf[as.vector(t(border_bottom)) == ""] <- ""
 
 
   # Combine Cell Attributes of cell justification, cell border type, cell border width, cell border color, cell background color and cell size.
