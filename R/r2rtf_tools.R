@@ -105,7 +105,8 @@ rtf_encode_table2 <- function(tbl, verbose = FALSE) {
   subline_rtftext <- r2rtf:::as_rtf_subline(tbl)
 
 
-  new_page_rtftext <- r2rtf:::as_rtf_new_page()
+  # new_page_rtftext <- r2rtf:::as_rtf_new_page()
+  new_page_rtftext <- as_rtf_new_page()
 
   ## rtf encode for column header
   colheader_rtftext_1 <- paste(unlist(as_rtf_colheader(tbl_1)), collapse = "\n") # First page
@@ -206,6 +207,151 @@ rtf_encode_table2 <- function(tbl, verbose = FALSE) {
       start = start_rtf,
       page = page_rtftext,
       margin = margin_rtftext,
+      header = header_rtftext,
+      subline = subline_rtftext,
+      sublineby = sublineby_rtftext,
+      colheader = c(colheader_rtftext_1, rep(colheader_rtftext, n_page - 1)),
+      body = body_rtftext,
+      footnote = footnote_rtftext,
+      source = source_rtftext,
+      end = end,
+      info = info
+    )
+  } else {
+    rtf <- list(start = start_rtf, body = rtf_feature, end = end)
+  }
+
+  rtf
+}
+
+rtf_encode_table3 <- function(tbl, verbose = FALSE) {
+  # Update First and Last Border
+  tbl_1 <- r2rtf:::update_border_first(tbl)
+  tbl_1 <- r2rtf:::update_border_last(tbl_1)
+
+  # Get content
+  page <- attr(tbl, "page")
+  pageby <- attr(tbl, "rtf_pageby")
+
+  start_rtf <- paste(
+
+    as_rtf_init(),
+    as_rtf_font(),
+    r2rtf:::as_rtf_color(tbl),
+    sep = "\n"
+  )
+
+  ## get rtf code for page, margin, header, footnote, source, new_page
+  page_rtftext        <- as_rtf_page(tbl)
+  page_header_rtftext <- as_rtf_header(tbl)
+  page_footer_rtftext <- as_rtf_footer(tbl)
+  header_rtftext      <- r2rtf:::as_rtf_title(tbl)
+  subline_rtftext     <- r2rtf:::as_rtf_subline(tbl)
+
+
+  new_page_rtftext <- r2rtf:::as_rtf_new_page()
+
+  ## rtf encode for column header
+  colheader_rtftext_1 <- paste(unlist(as_rtf_colheader(tbl_1)), collapse = "\n") # First page
+  colheader_rtftext <- paste(unlist(as_rtf_colheader(tbl)), collapse = "\n") # Rest of page
+
+  ## rtf encode for footnote
+  footnote_rtftext_1 <- paste(r2rtf:::as_rtf_footnote(tbl_1), collapse = "\n") # Last page
+  footnote_rtftext <- paste(r2rtf:::as_rtf_footnote(tbl), collapse = "\n") # Rest of pages
+
+  ## rtf encode for source
+  source_rtftext_1 <- paste(r2rtf:::as_rtf_source(tbl_1), collapse = "\n") # Last page
+  source_rtftext <- paste(r2rtf:::as_rtf_source(tbl), collapse = "\n") # Rest of pages
+
+  ## RTF encode for table body
+  if (is.null(pageby$by_var)) {
+    table_rtftext <- as_rtf_table(tbl_1)
+  } else {
+    table_rtftext <- r2rtf:::as_rtf_pageby(tbl_1)
+  }
+
+  ## RTF encoding for subline_by row
+  info <- attr(table_rtftext, "info")
+
+  if (is.null(attr(tbl, "rtf_by_subline")$by_var)) {
+    sublineby_rtftext <- NULL
+  } else {
+    info_dict <- unique(info[, c("subline", "page")])
+    sublineby_index <- as.numeric(factor(info_dict$subline, levels = unique(info_dict$subline)))
+
+    sublineby_rtftext <- r2rtf:::as_rtf_paragraph(attr(tbl, "rtf_by_subline_row"), combine = FALSE)
+
+    if (!is.null(dim(sublineby_rtftext))) {
+      sublineby_rtftext <- apply(sublineby_rtftext, 1, paste, collapse = "\n")
+    }
+
+    sublineby_rtftext <- sublineby_rtftext[sublineby_index]
+  }
+
+  # if (pageby$new_page) {
+  #   body_rtftext <- tapply(table_rtftext, paste0(info$id, info$page), FUN = function(x) paste(x, collapse = "\n"))
+  # } else {
+  body_rtftext <- tapply(table_rtftext, info$page, FUN = function(x) paste(x, collapse = "\n"))
+  # }
+
+  n_page <- length(body_rtftext)
+
+  # Page Title Display Location
+  if (page$page_title == "first") {
+    if (!is.null(header_rtftext)) header_rtftext <- c(header_rtftext, rep("", n_page - 1))
+    if (!is.null(subline_rtftext)) subline_rtftext <- c(subline_rtftext, rep("", n_page - 1))
+  }
+
+  if (page$page_title == "last") {
+    if (!is.null(header_rtftext)) header_rtftext <- c(rep("", n_page - 1), header_rtftext)
+    if (!is.null(subline_rtftext)) subline_rtftext <- c(rep("", n_page - 1), subline_rtftext)
+  }
+
+  # Title RTF encoding by page
+
+  # Footnote RTF encoding by page
+  footnote_rtftext <- switch(page$page_footnote,
+                             first = c(footnote_rtftext, rep("", n_page - 1)),
+                             last  = c(rep("", n_page - 1), footnote_rtftext_1),
+                             all   = c(rep(footnote_rtftext, n_page - 1), footnote_rtftext_1)
+  )
+
+  # Source RTF encoding by page
+  source_rtftext <- switch(page$page_source,
+                           first = c(source_rtftext, rep("", n_page - 1)),
+                           last  = c(rep("", n_page - 1), source_rtftext_1),
+                           all   = c(rep(source_rtftext, n_page - 1), source_rtftext_1)
+  )
+
+
+  # Combine RTF body encoding
+  rtf_feature <- paste(
+    page_rtftext,
+    page_header_rtftext,
+    page_footer_rtftext,
+    header_rtftext,
+    subline_rtftext,
+    sublineby_rtftext,
+    c(colheader_rtftext_1, rep(colheader_rtftext, n_page - 1)),
+    body_rtftext,
+    footnote_rtftext,
+    source_rtftext,
+    c(rep(new_page_rtftext, n_page - 1), ""),
+    sep = "\n"
+  )
+
+  rtf_feature <- paste(unlist(rtf_feature), collapse = "\n")
+
+  ## Post Processing for total page number
+  rtf_feature <- gsub("\\totalpage", n_page, rtf_feature, fixed = TRUE) # total page number
+
+  end <- r2rtf:::as_rtf_end()
+  if (verbose) {
+    rtf <- list(
+      start = start_rtf,
+      page = page_rtftext,
+      page_header = page_header_rtftext,
+      page_footer = page_footer_rtftext,
       header = header_rtftext,
       subline = subline_rtftext,
       sublineby = sublineby_rtftext,
@@ -513,3 +659,157 @@ as_rtf_colheader <- function(tbl) {
   unlist(rtf_code)
 }
 
+
+# RTF commantds generators
+as_rtf_init <- function ()
+{
+  paste0("{", "\\rtf1\\ansi\\ansicpg65001\\uc1\\deff0\\deflang1033\\deflangfe1041")
+}
+
+as_rtf_font <- function ()
+{
+  font_type  <- font_type()
+  font_rtf   <- factor(c(1:10), levels = font_type$type, labels = font_type$rtf_code)
+  font_style <- factor(c(1:10), levels = font_type$type, labels = font_type$style)
+  font_name  <- factor(c(1:10), levels = font_type$type, labels = font_type$name)
+  char_set   <- factor(c(1:10), levels = font_type$type, labels = font_type$char_set)
+  font_table <- paste0(
+    "{\\fonttbl",
+    paste(paste0("{", font_rtf, font_style, char_set, "\\fprq2 ", font_name, ";}\n"), collapse = ""),
+    "}"
+  )
+  font_table
+}
+
+font_type <- function ()
+{
+  data.frame(
+    type = 1:10,
+    name = c(
+      "Times New Roman",
+      "Times New Roman Greek",
+      "Arial Greek",
+      "Arial",
+      "Helvetica",
+      "Georgia",
+      "Cambria",
+      "Courier New",
+      "Courier",
+      "Symbol"
+    ),
+    style = c(
+      "\\froman",
+      "\\froman",
+      "\\fswiss",
+      "\\fswiss",
+      "\\fswiss",
+      "\\froman",
+      "\\ffroman",
+      "\\fmodern",
+      "\\fmodern",
+      "\\ftech"
+    ),
+    rtf_code = c(
+      "\\f0",
+      "\\f1",
+      "\\f2",
+      "\\f3",
+      "\\f4",
+      "\\f5",
+      "\\f6",
+      "\\f7",
+      "\\f8",
+      "\\f9"
+    ),
+    family = c(
+      "Times",
+      "Times",
+      "ArialMT",
+      "ArialMT",
+      "Helvetica",
+      "Georgia",
+      "Cambria",
+      "Courier",
+      "Courier",
+      "Times"
+    ),
+    char_set = c(
+      "fcharset0",
+      "fcharset161",
+      "fcharset161",
+      "fcharset0",
+      "fcharset0",
+      "fcharset0",
+      "fcharset0",
+      "fcharset0",
+      "fcharset0",
+      "fcharset0"
+    ),
+    stringsAsFactors = FALSE
+    )
+}
+
+as_rtf_page <- function (tbl)
+{
+  page <- attr(tbl, "page")
+  page_size <- c("\\paperw", "\\paperh")
+  page_size <- paste(paste0(page_size, inch_to_twip(c(page$width,
+                                                      page$height))), collapse = "")
+  if (page$orientation == "landscape") {
+    page_size <- paste0(page_size, "\\landscape\n")
+  }
+  if (page$orientation == "portrait") {
+    page_size <- paste0(page_size, "\n")
+  }
+
+  margin <- c("\\margl", "\\margr", "\\margt", "\\margb", "\\headery", "\\footery")
+  margin <- paste(paste0(margin, inch_to_twip(page$margin)),
+                  collapse = "")
+  margin <- paste0(margin, "\n")
+
+  section <- "\\sect\\linex0\\endnhere\n"
+
+  sec_page_size <- c("\\pgwsxn", "\\pghsxn")
+  sec_page_size <- paste(paste0(sec_page_size, inch_to_twip(c(page$width,
+                                                      page$height))), collapse = "")
+  if (page$orientation == "landscape") {
+    sec_page_size <- paste0(page_size, "\\lndscpsxn\n")
+  }
+  if (page$orientation == "portrait") {
+    sec_page_size <- paste0(page_size, "\n")
+  }
+
+  sec_margin <- c("\\pgwsxn", "\\pghsxn", "\\margt", "\\margb", "\\headery", "\\footery")
+  sec_margin <- paste(paste0(margin, inch_to_twip(page$margin)),
+                      collapse = "")
+  sec_margin <- paste0(margin, "\n")
+
+
+  paste0(page_size, margin, section, sec_page_size, sec_margin)
+}
+
+as_rtf_header <- function(tbl) {
+  encode <- ""
+  if (!is.null(attr(tbl, "rtf_page_header"))) {
+    encode <- c("{\\header", as_rtf_paragraph(attr(tbl, "rtf_page_header"),
+                                              combine = FALSE), "}")
+    encode <- paste(encode, collapse = "\n")
+  }
+  encode
+}
+
+as_rtf_footer <- function(tbl) {
+  encode <- ""
+  if (!is.null(attr(tbl, "rtf_page_footer"))) {
+    encode <- c("{\\footer", as_rtf_paragraph(attr(tbl, "rtf_page_footer"),
+                                              combine = FALSE), "}")
+    encode <- paste(encode, collapse = "\n")
+  }
+  encode
+}
+
+as_rtf_new_page <- function ()
+{
+  # paste("{\\pard\\fs2\\par}\\page{\\pard\\fs2\\par}")
+  paste("\\page")
+}

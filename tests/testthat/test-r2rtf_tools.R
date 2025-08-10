@@ -16,6 +16,7 @@ test_that("rtf_encode_table2 handles table with subgroups", {
 
   # Test without grouping function - just basic table structure
   tbl_prepared <- test_data %>%
+    rtf_page() %>%
     rtf_body()
 
   result <- rtf_encode_table2(tbl_prepared, verbose = TRUE)
