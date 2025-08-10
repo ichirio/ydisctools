@@ -735,16 +735,16 @@ font_type <- function ()
       "Times"
     ),
     char_set = c(
-      "fcharset0",
-      "fcharset161",
-      "fcharset161",
-      "fcharset0",
-      "fcharset0",
-      "fcharset0",
-      "fcharset0",
-      "fcharset0",
-      "fcharset0",
-      "fcharset0"
+      "\\fcharset0",
+      "\\fcharset161",
+      "\\fcharset161",
+      "\\fcharset0",
+      "\\fcharset0",
+      "\\fcharset0",
+      "\\fcharset0",
+      "\\fcharset0",
+      "\\fcharset0",
+      "\\fcharset0"
     ),
     stringsAsFactors = FALSE
     )
