@@ -763,13 +763,13 @@ as_rtf_page <- function (tbl, first_page = FALSE)
     page_size <- paste0(page_size, "\n")
   }
 
-  margin <- c("\\margl", "\\margr", "\\margt", "\\margb", "\\headery", "\\footery")
-  margin <- paste(paste0(margin, r2rtf:::inch_to_twip(page$margin)),
+  margin <- c("\\margl", "\\margr", "\\margt", "\\margb")
+  margin <- paste(paste0(margin, r2rtf:::inch_to_twip(page$margin[1:4])),
                   collapse = "")
   margin <- paste0(margin, "\n")
 
-  if(first_page) sect <- "" else sect <- "\\sect"
-  section <- "\\sectd\\linex0\\endnhere\n"
+  sect <- "\\pard\n\\sect"
+  section <- "\\sectd\\linex0\\endnhere"
 
   sec_page_size <- c("\\pgwsxn", "\\pghsxn")
   sec_page_size <- paste(paste0(sec_page_size, r2rtf:::inch_to_twip(c(page$width,
@@ -781,13 +781,15 @@ as_rtf_page <- function (tbl, first_page = FALSE)
     sec_page_size <- paste0(sec_page_size, "\n")
   }
 
-  sec_margin <- c("\\marglsxn", "\\margrsxn", "\\margtsxn", "\\margbsxn")
-  sec_margin <- paste(paste0(sec_margin, r2rtf:::inch_to_twip(page$margin[1:4])),
+  sec_margin <- c("\\marglsxn", "\\margrsxn", "\\margtsxn", "\\margbsxn", "\\headery", "\\footery")
+  sec_margin <- paste(paste0(sec_margin, r2rtf:::inch_to_twip(page$margin)),
                       collapse = "")
-  sec_margin <- paste0(margin, "\n")
+  sec_margin <- paste0(sec_margin, "\n")
 
-
-  paste0(page_size, margin, sect, section, sec_page_size, sec_margin)
+  if(first_page)
+    paste0(page_size, margin, section, sec_page_size, sec_margin)
+ else
+   paste0(sect, section, sec_page_size, sec_margin)
 }
 
 as_rtf_header <- function(tbl) {
