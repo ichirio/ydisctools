@@ -775,10 +775,10 @@ as_rtf_page <- function (tbl, first_page = FALSE)
   sec_page_size <- paste(paste0(sec_page_size, r2rtf:::inch_to_twip(c(page$width,
                                                       page$height))), collapse = "")
   if (page$orientation == "landscape") {
-    sec_page_size <- paste0(seq_page_size, "\\lndscpsxn\n")
+    sec_page_size <- paste0(sec_page_size, "\\lndscpsxn\n")
   }
   if (page$orientation == "portrait") {
-    sec_page_size <- paste0(seq_page_size, "\n")
+    sec_page_size <- paste0(sec_page_size, "\n")
   }
 
   sec_margin <- c("\\marglsxn", "\\margrsxn", "\\margtsxn", "\\margbsxn")
