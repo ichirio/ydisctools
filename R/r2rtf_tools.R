@@ -105,8 +105,7 @@ rtf_encode_table2 <- function(tbl, verbose = FALSE) {
   subline_rtftext <- r2rtf:::as_rtf_subline(tbl)
 
 
-  # new_page_rtftext <- r2rtf:::as_rtf_new_page()
-  new_page_rtftext <- as_rtf_new_page()
+  new_page_rtftext <- r2rtf:::as_rtf_new_page()
 
   ## rtf encode for column header
   colheader_rtftext_1 <- paste(unlist(as_rtf_colheader(tbl_1)), collapse = "\n") # First page
@@ -224,7 +223,9 @@ rtf_encode_table2 <- function(tbl, verbose = FALSE) {
   rtf
 }
 
-rtf_encode_table3 <- function(tbl, verbose = FALSE) {
+
+#####  ******************************************************************
+rtf_encode_table3 <- function(tbl, verbose = FALSE, first_page = FALSE) {
   # Update First and Last Border
   tbl_1 <- r2rtf:::update_border_first(tbl)
   tbl_1 <- r2rtf:::update_border_last(tbl_1)
@@ -242,7 +243,7 @@ rtf_encode_table3 <- function(tbl, verbose = FALSE) {
   )
 
   ## get rtf code for page, margin, header, footnote, source, new_page
-  page_rtftext        <- as_rtf_page(tbl)
+  page_rtftext        <- as_rtf_page(tbl, first_page = first_page)
   page_header_rtftext <- as_rtf_header(tbl)
   page_footer_rtftext <- as_rtf_footer(tbl)
   header_rtftext      <- r2rtf:::as_rtf_title(tbl)
@@ -749,11 +750,11 @@ font_type <- function ()
     )
 }
 
-as_rtf_page <- function (tbl)
+as_rtf_page <- function (tbl, first_page = FALSE)
 {
   page <- attr(tbl, "page")
   page_size <- c("\\paperw", "\\paperh")
-  page_size <- paste(paste0(page_size, inch_to_twip(c(page$width,
+  page_size <- paste(paste0(page_size, r2rtf:::inch_to_twip(c(page$width,
                                                       page$height))), collapse = "")
   if (page$orientation == "landscape") {
     page_size <- paste0(page_size, "\\landscape\n")
@@ -763,14 +764,15 @@ as_rtf_page <- function (tbl)
   }
 
   margin <- c("\\margl", "\\margr", "\\margt", "\\margb", "\\headery", "\\footery")
-  margin <- paste(paste0(margin, inch_to_twip(page$margin)),
+  margin <- paste(paste0(margin, r2rtf:::inch_to_twip(page$margin)),
                   collapse = "")
   margin <- paste0(margin, "\n")
 
-  section <- "\\sect\\linex0\\endnhere\n"
+  if(first_page) sect <- "" else sect <- "\\sect"
+  section <- "\\sectd\\linex0\\endnhere\n"
 
   sec_page_size <- c("\\pgwsxn", "\\pghsxn")
-  sec_page_size <- paste(paste0(sec_page_size, inch_to_twip(c(page$width,
+  sec_page_size <- paste(paste0(sec_page_size, r2rtf:::inch_to_twip(c(page$width,
                                                       page$height))), collapse = "")
   if (page$orientation == "landscape") {
     sec_page_size <- paste0(page_size, "\\lndscpsxn\n")
@@ -780,12 +782,12 @@ as_rtf_page <- function (tbl)
   }
 
   sec_margin <- c("\\pgwsxn", "\\pghsxn", "\\margt", "\\margb", "\\headery", "\\footery")
-  sec_margin <- paste(paste0(margin, inch_to_twip(page$margin)),
+  sec_margin <- paste(paste0(margin, r2rtf:::inch_to_twip(page$margin)),
                       collapse = "")
   sec_margin <- paste0(margin, "\n")
 
 
-  paste0(page_size, margin, section, sec_page_size, sec_margin)
+  paste0(page_size, margin, sect, section, sec_page_size, sec_margin)
 }
 
 as_rtf_header <- function(tbl) {
@@ -806,10 +808,4 @@ as_rtf_footer <- function(tbl) {
     encode <- paste(encode, collapse = "\n")
   }
   encode
-}
-
-as_rtf_new_page <- function ()
-{
-  # paste("{\\pard\\fs2\\par}\\page{\\pard\\fs2\\par}")
-  paste("\\page")
 }

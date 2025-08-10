@@ -59,6 +59,10 @@ if(FALSE) {
   tbl_encode <- tbl_obj %>%
     rtf_encode_table2()
 
+  tbl_encode <- tbl_obj %>%
+    rtf_encode_table3()
+
+
   tbl_encode %>%
     write_rtf("c:/Yrepo/intro-ae1.rtf") # Step 3 Write to a .rtf file
 }
