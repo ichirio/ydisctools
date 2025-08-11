@@ -505,6 +505,7 @@ rtf_table_content <- function(tbl,
   text_indent_left <- attr(tbl, "text_indent_left")
   text_indent_right <- attr(tbl, "text_indent_right")
 
+  cell_height_trrh <- attr(tbl, "cell_height_trrh")
 
 
   text_convert <- attr(tbl, "text_convert")
@@ -537,6 +538,9 @@ rtf_table_content <- function(tbl,
 
   # rtf code for table begin and end
   row_begin <- paste0("\\trowd\\trgaph", cell_height, "\\trleft0", cell_justification_rtf)
+  if (!is.null(cell_height_trrh)) {
+    row_begin <- paste0(row_begin, "\\trrh", cell_height)
+  }
   row_end <- "\\intbl\\row\\pard"
 
   # Encoding RTF Cell Border type and width
