@@ -278,7 +278,7 @@ rtf_encode_figure <- function(tbl) {
 
   start_rtf <- paste(
     as_rtf_init(),
-    as_rtf_font(tbl),
+    as_rtf_font(),
     r2rtf:::as_rtf_color(tbl),
     sep = "\n"
   )
