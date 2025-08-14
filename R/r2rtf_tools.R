@@ -298,10 +298,10 @@ rtf_encode_figure <- function(tbl) {
   page_footer_rtftext <- as_rtf_footer(tbl)
 
   header_rtftext <- r2rtf:::as_rtf_title(tbl)
-  subline_rtftext <- r2ftf:::as_rtf_subline(tbl)
-  footnote_rtftext <- r2ftf:::as_rtf_footnote(tbl)
-  source_rtftext <- r2ftf:::as_rtf_source(tbl)
-  new_page_rtftext <- r2ftf:::as_rtf_new_page()
+  subline_rtftext <- r2rtf:::as_rtf_subline(tbl)
+  footnote_rtftext <- r2rtf:::as_rtf_footnote(tbl)
+  source_rtftext <- r2rtf:::as_rtf_source(tbl)
+  new_page_rtftext <- r2rtf:::as_rtf_new_page()
 
   ## get rtf code for figure width and height
   fig_width <- attr(tbl, "fig_width")
