@@ -355,7 +355,7 @@ rtf_encode_figure <- function(tbl) {
     r2rtf:::rtf_paragraph(""), # new line after figure
     footnote_rtftext,
     source_rtftext,
-    c(rep(new_page_rtftext, length(rtf_fig) - 1), ""),
+    # c(rep(new_page_rtftext, length(rtf_fig) - 1), ""),
     sep = "\n"
   )
 
