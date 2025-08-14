@@ -308,7 +308,7 @@ rtf_encode_figure <- function(tbl) {
   fig_height <- attr(tbl, "fig_height")
 
   ## get rtf code for figure format
-  fig_format <- fig_format()
+  fig_format <- r2rtf:::fig_format()
   fig_format <- factor(attr(tbl, "fig_format"), levels = fig_format$type, labels = fig_format$rtf_code)
 
   rtf_fig <- paste0(
@@ -352,7 +352,7 @@ rtf_encode_figure <- function(tbl) {
     header_rtftext,
     subline_rtftext,
     rtf_fig,
-    rtf_paragraph(""), # new line after figure
+    r2rtf:::rtf_paragraph(""), # new line after figure
     footnote_rtftext,
     source_rtftext,
     c(rep(new_page_rtftext, length(rtf_fig) - 1), ""),
@@ -364,7 +364,7 @@ rtf_encode_figure <- function(tbl) {
   ## Post Processing
   rtf_feature <- gsub("\\totalpage", n_page, rtf_feature, fixed = TRUE) # total page number
 
-  list(start = start_rtf, body = rtf_feature, end = as_rtf_end())
+  list(start = start_rtf, body = rtf_feature, end = r2rtf:::as_rtf_end())
 }
 
 as_rtf_table <- function(tbl) {
