@@ -1,58 +1,45 @@
-#' Encode Table to RTF Format with Advanced Features
+#' Encode Tables and Figures to RTF Format
 #'
-#' This function encodes a table object into Rich Text Format (RTF) with advanced
-#' formatting features including pagination, headers, footers, and sublines.
-#' Based on the r2rtf package functionality by Wang et al. (2020).
+#' This function provides a unified interface for encoding tables and figures
+#' into Rich Text Format (RTF) with customizable page layout options.
+#' Supports both single tables/figures and lists of multiple objects.
 #'
-#' @param tbl A table object with RTF attributes. The table should have been
-#'   prepared with appropriate RTF formatting attributes using other r2rtf functions.
+#' @param tbl A table object (data.frame with RTF attributes), figure object,
+#'   or list of such objects to be encoded as RTF.
+#' @param doc_type A character string specifying the document type.
+#'   Must be either "table" or "figure". Default is "table".
+#' @param page_title A character string specifying on which pages to display
+#'   the title. Options are "all", "first", or "last". Default is "all".
+#' @param page_footnote A character string specifying on which pages to display
+#'   the footnote. Options are "all", "first", or "last". Default is "all".
+#' @param page_source A character string specifying on which pages to display
+#'   the source note. Options are "all", "first", or "last". Default is "last".
+#' @param first_page A logical or NULL value for first page handling.
+#'   Passed to the underlying encoding function. Default is NULL.
 #' @param verbose A logical value indicating whether to return detailed RTF
-#'   components separately. If TRUE, returns a list with individual RTF sections.
-#'   If FALSE (default), returns a condensed list with start, body, and end sections.
+#'   components. If TRUE, returns verbose output with individual sections.
+#'   Default is FALSE.
 #'
-#' @return If verbose = FALSE, returns a list with three elements:
-#'   \describe{
-#'     \item{start}{Character string containing RTF initialization code}
-#'     \item{body}{Character string containing the main RTF table content}
-#'     \item{end}{Character string containing RTF closing code}
-#'   }
-#'
-#'   If verbose = TRUE, returns a detailed list with elements:
-#'   \describe{
-#'     \item{start}{RTF initialization code}
-#'     \item{page}{Page formatting code}
-#'     \item{margin}{Margin settings}
-#'     \item{header}{Header/title text}
-#'     \item{subline}{Subline text}
-#'     \item{sublineby}{Subline by grouping variable}
-#'     \item{colheader}{Column headers for each page}
-#'     \item{body}{Table body content for each page}
-#'     \item{footnote}{Footnote text for each page}
-#'     \item{source}{Source text for each page}
-#'     \item{end}{RTF closing code}
-#'     \item{info}{Page and grouping information}
-#'   }
+#' @return For tables: Returns RTF encoded list with start, body, and end
+#'   components. For figures: Returns RTF encoded figure object.
+#'   The exact structure depends on the input type and verbose setting.
 #'
 #' @details
-#' This function performs comprehensive RTF encoding of a table object with the following features:
+#' This function serves as a dispatcher for different RTF encoding methods:
 #' \itemize{
-#'   \item Updates first and last border formatting
-#'   \item Handles multi-page table layouts with proper pagination
-#'   \item Manages page titles, footnotes, and source notes positioning
-#'   \item Supports grouping variables with subline headers
-#'   \item Applies consistent column headers across pages
-#'   \item Integrates fonts, colors, and margin settings
+#'   \item For data.frame objects: Uses \code{rtf_encode_table3()}
+#'   \item For list objects: Uses \code{r2rtf:::rtf_encode_list()}
+#'   \item For figure objects: Uses \code{r2rtf:::rtf_encode_figure()}
 #' }
 #'
-#' The function expects the input table to have specific RTF attributes set by
-#' other r2rtf functions such as page settings, formatting options, and content
-#' specifications.
+#' The function automatically sets page layout attributes based on the provided
+#' parameters before calling the appropriate encoding method.
 #'
-#' Page elements positioning:
+#' Page element positioning:
 #' \itemize{
-#'   \item Page titles can be placed on "first", "last", or "all" pages
-#'   \item Footnotes can be placed on "first", "last", or "all" pages
-#'   \item Source notes can be placed on "first", "last", or "all" pages
+#'   \item "all": Element appears on every page
+#'   \item "first": Element appears only on the first page
+#'   \item "last": Element appears only on the last page
 #' }
 #'
 #' @import r2rtf
@@ -63,169 +50,85 @@
 #' \url{https://pharmasug.org/proceedings/2020/DV/PharmaSUG-2020-DV-198.pdf}
 #'
 #' @seealso
-#' \code{\link{rtf_encode_table}} for simplified RTF encoding
+#' \code{\link{rtf_encode_table2}} for advanced table encoding,
+#' \code{\link{rtf_encode_table3}} for enhanced table encoding
 #'
 #' @export
 #' @examples
 #' \dontrun{
-#' # Assume 'tbl' is a properly formatted table object with RTF attributes
+#' # Basic table encoding
+#' tbl <- data.frame(
+#'   Treatment = c("Placebo", "Drug A"),
+#'   N = c(25, 30),
+#'   Response = c(5, 12)
+#' ) %>%
+#'   rtf_body()
 #'
-#' # Basic encoding
-#' rtf_result <- rtf_encode_table2(tbl)
-#' writeLines(paste(rtf_result$start, rtf_result$body, rtf_result$end), "output.rtf")
+#' # Encode with default settings
+#' rtf_result <- rtf_encode(tbl)
 #'
-#' # Verbose encoding for debugging
-#' rtf_detailed <- rtf_encode_table2(tbl, verbose = TRUE)
-#' str(rtf_detailed)
+#' # Customize page layout
+#' rtf_result <- rtf_encode(
+#'   tbl,
+#'   page_title = "first",
+#'   page_footnote = "last",
+#'   page_source = "last"
+#' )
 #'
-#' # Check page information
-#' print(rtf_detailed$info)
+#' # Encode a figure
+#' fig <- ggplot(mtcars, aes(x = wt, y = mpg)) + geom_point()
+#' rtf_fig <- rtf_encode(fig, doc_type = "figure")
+#'
+#' # Write to RTF file
+#' rtf_result %>% write_rtf("output.rtf")
 #' }
-rtf_encode_table2 <- function(tbl, verbose = FALSE) {
-  # Update First and Last Border
-  tbl_1 <- r2rtf:::update_border_first(tbl)
-  tbl_1 <- r2rtf:::update_border_last(tbl_1)
+rtf_encode <- function(tbl,
+                       doc_type = "table",
+                       page_title = "all",
+                       page_footnote = "all",
+                       page_source = "last",
+                       first_page = TRUE,
+                       verbose = FALSE) {
+  r2rtf:::match_arg(doc_type, c("table", "figure"))
+  r2rtf:::match_arg(page_title, c("all", "first", "last"))
+  r2rtf:::match_arg(page_footnote, c("all", "first", "last"))
+  r2rtf:::match_arg(page_source, c("all", "first", "last"))
 
-  # Get content
-  page <- attr(tbl, "page")
-  pageby <- attr(tbl, "rtf_pageby")
+  if (doc_type == "table") {
+    if (any(class(tbl) %in% "list")) {
+      for (i in 1:length(tbl)) {
+        attr(tbl[[i]], "page")$page_title <- page_title
+        attr(tbl[[i]], "page")$page_footnote <- page_footnote
+        attr(tbl[[i]], "page")$page_source <- page_source
+      }
 
-  start_rtf <- paste(
-
-    r2rtf:::as_rtf_init(),
-    r2rtf:::as_rtf_font(),
-    r2rtf:::as_rtf_color(tbl),
-    sep = "\n"
-  )
-
-  ## get rtf code for page, margin, header, footnote, source, new_page
-  page_rtftext <- r2rtf:::as_rtf_page(tbl)
-  margin_rtftext <- r2rtf:::as_rtf_margin(tbl)
-  header_rtftext <- r2rtf:::as_rtf_title(tbl)
-  subline_rtftext <- r2rtf:::as_rtf_subline(tbl)
-
-
-  new_page_rtftext <- r2rtf:::as_rtf_new_page()
-
-  ## rtf encode for column header
-  colheader_rtftext_1 <- paste(unlist(as_rtf_colheader(tbl_1)), collapse = "\n") # First page
-  colheader_rtftext <- paste(unlist(as_rtf_colheader(tbl)), collapse = "\n") # Rest of page
-
-  ## rtf encode for footnote
-  footnote_rtftext_1 <- paste(r2rtf:::as_rtf_footnote(tbl_1), collapse = "\n") # Last page
-  footnote_rtftext <- paste(r2rtf:::as_rtf_footnote(tbl), collapse = "\n") # Rest of pages
-
-  ## rtf encode for source
-  source_rtftext_1 <- paste(r2rtf:::as_rtf_source(tbl_1), collapse = "\n") # Last page
-  source_rtftext <- paste(r2rtf:::as_rtf_source(tbl), collapse = "\n") # Rest of pages
-
-  ## RTF encode for table body
-  if (is.null(pageby$by_var)) {
-    table_rtftext <- as_rtf_table(tbl_1)
-  } else {
-    table_rtftext <- r2rtf:::as_rtf_pageby(tbl_1)
-  }
-
-  ## RTF encoding for subline_by row
-  info <- attr(table_rtftext, "info")
-
-  if (is.null(attr(tbl, "rtf_by_subline")$by_var)) {
-    sublineby_rtftext <- NULL
-  } else {
-    info_dict <- unique(info[, c("subline", "page")])
-    sublineby_index <- as.numeric(factor(info_dict$subline, levels = unique(info_dict$subline)))
-
-    sublineby_rtftext <- r2rtf:::as_rtf_paragraph(attr(tbl, "rtf_by_subline_row"), combine = FALSE)
-
-    if (!is.null(dim(sublineby_rtftext))) {
-      sublineby_rtftext <- apply(sublineby_rtftext, 1, paste, collapse = "\n")
+      warning("List of tables is not yet supported. This feature will be added in a future version. Currently calling r2rtf:::rtf_encode_list().")
+      return(r2rtf:::rtf_encode_list(tbl))
     }
 
-    sublineby_rtftext <- sublineby_rtftext[sublineby_index]
+    if (any(class(tbl) %in% "data.frame")) {
+      attr(tbl, "page")$page_title <- page_title
+      attr(tbl, "page")$page_footnote <- page_footnote
+      attr(tbl, "page")$page_source <- page_source
+
+      return(rtf_encode_table(tbl, verbose = verbose, first_page = first_page))
+    }
   }
 
-  # if (pageby$new_page) {
-  #   body_rtftext <- tapply(table_rtftext, paste0(info$id, info$page), FUN = function(x) paste(x, collapse = "\n"))
-  # } else {
-  body_rtftext <- tapply(table_rtftext, info$page, FUN = function(x) paste(x, collapse = "\n"))
-  # }
-
-  n_page <- length(body_rtftext)
-
-  # Page Title Display Location
-  if (page$page_title == "first") {
-    if (!is.null(header_rtftext)) header_rtftext <- c(header_rtftext, rep("", n_page - 1))
-    if (!is.null(subline_rtftext)) subline_rtftext <- c(subline_rtftext, rep("", n_page - 1))
+  if (doc_type == "figure") {
+    attr(tbl, "page")$page_title <- page_title
+    attr(tbl, "page")$page_footnote <- page_footnote
+    attr(tbl, "page")$page_source <- page_source
+    return(rtf_encode_figure(tbl))
   }
-
-  if (page$page_title == "last") {
-    if (!is.null(header_rtftext)) header_rtftext <- c(rep("", n_page - 1), header_rtftext)
-    if (!is.null(subline_rtftext)) subline_rtftext <- c(rep("", n_page - 1), subline_rtftext)
-  }
-
-  # Title RTF encoding by page
-
-  # Footnote RTF encoding by page
-  footnote_rtftext <- switch(page$page_footnote,
-                             first = c(footnote_rtftext, rep("", n_page - 1)),
-                             last  = c(rep("", n_page - 1), footnote_rtftext_1),
-                             all   = c(rep(footnote_rtftext, n_page - 1), footnote_rtftext_1)
-  )
-
-  # Source RTF encoding by page
-  source_rtftext <- switch(page$page_source,
-                           first = c(source_rtftext, rep("", n_page - 1)),
-                           last  = c(rep("", n_page - 1), source_rtftext_1),
-                           all   = c(rep(source_rtftext, n_page - 1), source_rtftext_1)
-  )
-
-
-  # Combine RTF body encoding
-  rtf_feature <- paste(
-    page_rtftext,
-    margin_rtftext,
-    header_rtftext,
-    subline_rtftext,
-    sublineby_rtftext,
-    c(colheader_rtftext_1, rep(colheader_rtftext, n_page - 1)),
-    body_rtftext,
-    footnote_rtftext,
-    source_rtftext,
-    c(rep(new_page_rtftext, n_page - 1), ""),
-    sep = "\n"
-  )
-
-  rtf_feature <- paste(unlist(rtf_feature), collapse = "\n")
-
-  ## Post Processing for total page number
-  rtf_feature <- gsub("\\totalpage", n_page, rtf_feature, fixed = TRUE) # total page number
-
-  end <- r2rtf:::as_rtf_end()
-  if (verbose) {
-    rtf <- list(
-      start = start_rtf,
-      page = page_rtftext,
-      margin = margin_rtftext,
-      header = header_rtftext,
-      subline = subline_rtftext,
-      sublineby = sublineby_rtftext,
-      colheader = c(colheader_rtftext_1, rep(colheader_rtftext, n_page - 1)),
-      body = body_rtftext,
-      footnote = footnote_rtftext,
-      source = source_rtftext,
-      end = end,
-      info = info
-    )
-  } else {
-    rtf <- list(start = start_rtf, body = rtf_feature, end = end)
-  }
-
-  rtf
 }
-
 
 #####  ******************************************************************
 rtf_encode_table3 <- function(tbl, verbose = FALSE, first_page = FALSE) {
+  rtf_encode_table(tbl, verbose = verbose, first_page = first_page)
+}
+
+rtf_encode_table <- function(tbl, verbose = FALSE, first_page = FALSE) {
   # Update First and Last Border
   tbl_1 <- r2rtf:::update_border_first(tbl)
   tbl_1 <- r2rtf:::update_border_last(tbl_1)
@@ -368,6 +271,100 @@ rtf_encode_table3 <- function(tbl, verbose = FALSE, first_page = FALSE) {
   }
 
   rtf
+}
+
+rtf_encode_figure <- function(tbl) {
+  page <- attr(tbl, "page")
+
+  start_rtf <- paste(
+    as_rtf_init(),
+    as_rtf_font(tbl),
+    r2rtf:::as_rtf_color(tbl),
+    sep = "\n"
+  )
+
+  # Footnote always be free text in figures
+  footnote <- attr(tbl, "rtf_footnote")
+
+  if (!is.null(footnote)) {
+    attr(footnote, "as_table") <- FALSE
+    attr(tbl, "rtf_footnote") <- footnote
+  }
+
+  ## get rtf code for page, margin, header, footnote, source, new_page
+  page_rtftext_1 <- as_rtf_page(tbl, first = TRUE)
+  page_rtftext   <- as_rtf_page(tbl, first = FALSE)
+  page_header_rtftext <- as_rtf_header(tbl)
+  page_footer_rtftext <- as_rtf_footer(tbl)
+
+  header_rtftext <- r2rtf:::as_rtf_title(tbl)
+  subline_rtftext <- r2ftf:::as_rtf_subline(tbl)
+  footnote_rtftext <- r2ftf:::as_rtf_footnote(tbl)
+  source_rtftext <- r2ftf:::as_rtf_source(tbl)
+  new_page_rtftext <- r2ftf:::as_rtf_new_page()
+
+  ## get rtf code for figure width and height
+  fig_width <- attr(tbl, "fig_width")
+  fig_height <- attr(tbl, "fig_height")
+
+  ## get rtf code for figure format
+  fig_format <- fig_format()
+  fig_format <- factor(attr(tbl, "fig_format"), levels = fig_format$type, labels = fig_format$rtf_code)
+
+  rtf_fig <- paste0(
+    "{\\pict", fig_format, "\\picwgoal",
+    round(fig_width * 1440), "\\pichgoal",
+    round(fig_height * 1440), " ", lapply(tbl, paste, collapse = ""), "}"
+  )
+
+  n_page <- length(tbl)
+  # Page Title Display Location
+  if (page$page_title == "first") {
+    if (!is.null(header_rtftext)) header_rtftext <- c(header_rtftext, rep("", n_page - 1))
+    if (!is.null(subline_rtftext)) subline_rtftext <- c(subline_rtftext, rep("", n_page - 1))
+  }
+
+  if (page$page_title == "last") {
+    if (!is.null(header_rtftext)) header_rtftext <- c(rep("", n_page - 1), header_rtftext)
+    if (!is.null(subline_rtftext)) subline_rtftext <- c(rep("", n_page - 1), subline_rtftext)
+  }
+
+  # Title RTF encoding by page
+
+  # Footnote RTF encoding by page
+  footnote_rtftext <- switch(page$page_footnote,
+                             first = c(footnote_rtftext, rep("", n_page - 1)),
+                             last  = c(rep("", n_page - 1), footnote_rtftext),
+                             all   = rep(footnote_rtftext, n_page)
+  )
+
+  # Source RTF encoding by page
+  source_rtftext <- switch(page$page_source,
+                           first = c(source_rtftext, rep("", n_page - 1)),
+                           last  = c(rep("", n_page - 1), source_rtftext),
+                           all   = rep(source_rtftext, n_page)
+  )
+
+  rtf_feature <- paste(
+    c(page_rtftext_1, rep(page_rtftext, length(rtf_fig) - 1)),
+    page_header_rtftext,
+    page_footer_rtftext,
+    header_rtftext,
+    subline_rtftext,
+    rtf_fig,
+    rtf_paragraph(""), # new line after figure
+    footnote_rtftext,
+    source_rtftext,
+    c(rep(new_page_rtftext, length(rtf_fig) - 1), ""),
+    sep = "\n"
+  )
+
+  rtf_feature <- paste(rtf_feature, collapse = "\n")
+
+  ## Post Processing
+  rtf_feature <- gsub("\\totalpage", n_page, rtf_feature, fixed = TRUE) # total page number
+
+  list(start = start_rtf, body = rtf_feature, end = as_rtf_end())
 }
 
 as_rtf_table <- function(tbl) {

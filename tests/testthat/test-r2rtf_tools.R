@@ -19,7 +19,7 @@ test_that("rtf_encode_table2 handles table with subgroups", {
     rtf_page() %>%
     rtf_body()
 
-  result <- rtf_encode_table2(tbl_prepared, verbose = TRUE)
+  result <- rtf_encode(tbl_prepared, verbose = TRUE)
 
   # Should work without error
   expect_type(result, "list")
@@ -57,10 +57,8 @@ if(FALSE) {
 
 
   tbl_encode <- tbl_obj %>%
-    rtf_encode_table2()
+    rtf_encode()
 
-  tbl_encode <- tbl_obj %>%
-    rtf_encode_table3()
 
 
   tbl_encode %>%
