@@ -453,6 +453,7 @@ rtf_encode_figure <- function(tbl) {
     as_rtf_init(),
     as_rtf_font(),
     r2rtf:::as_rtf_color(tbl),
+    as_rtf_page(tbl),
     sep = "\n"
   )
 
@@ -465,8 +466,7 @@ rtf_encode_figure <- function(tbl) {
   }
 
   ## get rtf code for page, margin, header, footnote, source, new_page
-  page_rtftext_1 <- as_rtf_page(tbl, first = TRUE)
-  page_rtftext   <- as_rtf_page(tbl, first = FALSE)
+  page_rtftext   <- as_rtf_section(tbl)
   page_header_rtftext <- as_rtf_header(tbl)
   page_footer_rtftext <- as_rtf_footer(tbl)
 
@@ -474,7 +474,7 @@ rtf_encode_figure <- function(tbl) {
   subline_rtftext <- r2rtf:::as_rtf_subline(tbl)
   footnote_rtftext <- r2rtf:::as_rtf_footnote(tbl)
   source_rtftext <- r2rtf:::as_rtf_source(tbl)
-  new_page_rtftext <- r2rtf:::as_rtf_new_page()
+  new_page_rtftext <- as_rtf_new_page()
 
   ## get rtf code for figure width and height
   fig_width <- attr(tbl, "fig_width")
@@ -519,7 +519,7 @@ rtf_encode_figure <- function(tbl) {
   )
 
   rtf_feature <- paste(
-    c(page_rtftext_1, rep(page_rtftext, length(rtf_fig) - 1)),
+    page_rtftext,
     page_header_rtftext,
     page_footer_rtftext,
     header_rtftext,
@@ -528,8 +528,8 @@ rtf_encode_figure <- function(tbl) {
     r2rtf:::rtf_paragraph(""), # new line after figure
     footnote_rtftext,
     source_rtftext,
-    # c(rep(new_page_rtftext, length(rtf_fig) - 1), ""),
-    sep = "\n"
+    c(rep(new_page_rtftext, length(rtf_fig) - 1), ""),
+    sep = ""
   )
 
   rtf_feature <- paste(rtf_feature, collapse = "\n")
