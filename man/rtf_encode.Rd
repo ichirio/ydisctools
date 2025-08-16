@@ -10,7 +10,6 @@ rtf_encode(
   page_title = "all",
   page_footnote = "all",
   page_source = "last",
-  first_page = TRUE,
   verbose = FALSE
 )
 }
@@ -30,9 +29,6 @@ the footnote. Options are "all", "first", or "last". Default is "all".}
 \item{page_source}{A character string specifying on which pages to display
 the source note. Options are "all", "first", or "last". Default is "last".}
 
-\item{first_page}{A logical or NULL value for first page handling.
-Passed to the underlying encoding function. Default is NULL.}
-
 \item{verbose}{A logical value indicating whether to return detailed RTF
 components. If TRUE, returns verbose output with individual sections.
 Default is FALSE.}
@@ -50,9 +46,9 @@ Supports both single tables/figures and lists of multiple objects.
 \details{
 This function serves as a dispatcher for different RTF encoding methods:
 \itemize{
-\item For data.frame objects: Uses \code{rtf_encode_table3()}
+\item For data.frame objects: Uses \code{rtf_encode_table()}
 \item For list objects: Uses \code{r2rtf:::rtf_encode_list()}
-\item For figure objects: Uses \code{r2rtf:::rtf_encode_figure()}
+\item For figure objects: Uses \code{rtf_encode_figure()}
 }
 
 The function automatically sets page layout attributes based on the provided

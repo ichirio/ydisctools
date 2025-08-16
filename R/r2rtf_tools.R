@@ -14,8 +14,6 @@
 #'   the footnote. Options are "all", "first", or "last". Default is "all".
 #' @param page_source A character string specifying on which pages to display
 #'   the source note. Options are "all", "first", or "last". Default is "last".
-#' @param first_page A logical or NULL value for first page handling.
-#'   Passed to the underlying encoding function. Default is NULL.
 #' @param verbose A logical value indicating whether to return detailed RTF
 #'   components. If TRUE, returns verbose output with individual sections.
 #'   Default is FALSE.
@@ -27,9 +25,9 @@
 #' @details
 #' This function serves as a dispatcher for different RTF encoding methods:
 #' \itemize{
-#'   \item For data.frame objects: Uses \code{rtf_encode_table3()}
+#'   \item For data.frame objects: Uses \code{rtf_encode_table()}
 #'   \item For list objects: Uses \code{r2rtf:::rtf_encode_list()}
-#'   \item For figure objects: Uses \code{r2rtf:::rtf_encode_figure()}
+#'   \item For figure objects: Uses \code{rtf_encode_figure()}
 #' }
 #'
 #' The function automatically sets page layout attributes based on the provided
@@ -87,7 +85,6 @@ rtf_encode <- function(tbl,
                        page_title = "all",
                        page_footnote = "all",
                        page_source = "last",
-                       first_page = TRUE,
                        verbose = FALSE) {
   r2rtf:::match_arg(doc_type, c("table", "figure"))
   r2rtf:::match_arg(page_title, c("all", "first", "last"))
@@ -111,7 +108,7 @@ rtf_encode <- function(tbl,
       attr(tbl, "page")$page_footnote <- page_footnote
       attr(tbl, "page")$page_source <- page_source
 
-      return(rtf_encode_table(tbl, verbose = verbose, first_page = first_page))
+      return(rtf_encode_table(tbl, verbose = verbose))
     }
   }
 
@@ -125,10 +122,10 @@ rtf_encode <- function(tbl,
 
 #####  ******************************************************************
 rtf_encode_table3 <- function(tbl, verbose = FALSE, first_page = FALSE) {
-  rtf_encode_table(tbl, verbose = verbose, first_page = first_page)
+  rtf_encode_table(tbl, verbose = verbose)
 }
 
-rtf_encode_table <- function(tbl, verbose = FALSE, first_page = FALSE) {
+rtf_encode_table <- function(tbl, verbose = FALSE) {
   # Update First and Last Border
   tbl_1 <- r2rtf:::update_border_first(tbl)
   tbl_1 <- r2rtf:::update_border_last(tbl_1)
@@ -142,11 +139,12 @@ rtf_encode_table <- function(tbl, verbose = FALSE, first_page = FALSE) {
     as_rtf_init(),
     as_rtf_font(),
     r2rtf:::as_rtf_color(tbl),
+    as_rtf_page(tbl),
     sep = "\n"
   )
 
   ## get rtf code for page, margin, header, footnote, source, new_page
-  page_rtftext        <- as_rtf_page(tbl, first_page = first_page)
+  page_rtftext        <- as_rtf_section(tbl)
   page_header_rtftext <- as_rtf_header(tbl)
   page_footer_rtftext <- as_rtf_footer(tbl)
   header_rtftext      <- r2rtf:::as_rtf_title(tbl)
@@ -241,7 +239,8 @@ rtf_encode_table <- function(tbl, verbose = FALSE, first_page = FALSE) {
     footnote_rtftext,
     source_rtftext,
     c(rep(new_page_rtftext, n_page - 1), ""),
-    sep = "\n"
+    sep = ""
+    # sep = "\n"
   )
 
   rtf_feature <- paste(unlist(rtf_feature), collapse = "\n")
@@ -269,6 +268,180 @@ rtf_encode_table <- function(tbl, verbose = FALSE, first_page = FALSE) {
   } else {
     rtf <- list(start = start_rtf, body = rtf_feature, end = end)
   }
+
+  rtf
+}
+
+#これから修正
+rtf_encode_list <- function(tbl) {
+  # Page Input checking
+  page <- lapply(tbl, function(x) attr(x, "page"))
+  width <- length(unique(lapply(page, function(x) x$width))) > 1
+  height <- length(unique(lapply(page, function(x) x$height))) > 1
+  orientation <- length(unique(lapply(page, function(x) x$orientation))) > 1
+  use_color <- length(unique(lapply(page, function(x) x$use_color))) > 1
+
+  if (width) {
+    stop("Page width must be the same")
+  }
+  if (height) {
+    stop("Page height must be the same")
+  }
+  if (orientation) {
+    stop("Page orientation must be the same")
+  }
+
+  page_title <- unlist(unique(lapply(page, function(x) x$page_title)))
+  page_footnote <- unlist(unique(lapply(page, function(x) x$page_footnote)))
+  page_source <- unlist(unique(lapply(page, function(x) x$page_source)))
+  if (length(page_title) > 1) {
+    stop("Table title location must be the same")
+  }
+  if (length(page_footnote) > 1) {
+    stop("Table footnote location must be the same")
+  }
+  if (length(page_source) > 1) {
+    stop("Table source location must be the same")
+  }
+  if (page_title != "all") {
+    stop("Only page_title = 'all' is supported in list")
+  }
+  if (page_footnote != "last") {
+    stop("Only page_footnote = 'last' is supported in list")
+  }
+  if (page_source != "last") {
+    stop("Only page_source = 'last' is supported in list")
+  }
+
+  # Number of tbls
+  n <- length(tbl)
+  if (n < 2) {
+    stop("The length of input list must >= 2")
+  }
+
+  # Footnote and Data Source
+  tbl[2:n] <- lapply(tbl[2:n], function(x) {
+    if (!is.null(attr(x, "rtf_footnote"))) {
+      message("Only rtf_footnote in first item is used")
+    }
+
+    if (!is.null(attr(x, "rtf_source"))) {
+      message("Only rtf_source in first item is used")
+    }
+
+    attr(x, "page")$nrow <- attr(tbl[[1]], "page")$nrow
+    x
+  })
+
+  if (n > 2) {
+    tbl[2:(n - 1)] <- lapply(tbl[2:(n - 1)], function(x) {
+      attr(x, "page")$border_first <- NULL
+      attr(x, "page")$border_last <- NULL
+      attr(x, "page")$border_color_first <- NULL
+      attr(x, "page")$border_color_last <- NULL
+      x
+    })
+  }
+
+  attr(tbl[[1]], "page")$border_last <- NULL
+  attr(tbl[[1]], "page")$border_color_last <- NULL
+  attr(tbl[[1]], "page")$use_color <- use_color
+  attr(tbl[[n]], "page")$border_first <- NULL
+  attr(tbl[[n]], "page")$border_color_first <- NULL
+  attr(tbl[[n]], "rtf_footnote") <- attr(tbl[[1]], "rtf_footnote")
+  attr(tbl[[n]], "rtf_source") <- attr(tbl[[1]], "rtf_source")
+  attr(tbl[[1]], "rtf_footnote") <- NULL
+  attr(tbl[[1]], "rtf_source") <- NULL
+
+  # Split page if necessary
+  item <- 0
+  iter <- 0
+  item_next <- tbl[[1]]
+  while (nrow(item_next) > 0) {
+    if (item == 0) {
+      # Render first time
+      encode <- lapply(tbl, rtf_encode_table, verbose = TRUE)
+    } else {
+      index <- item_next$index[item_next$page1 == item_next$page1[1]]
+
+      tbl0 <- list()
+      tbl0[[1]] <- rtf_subset(tbl[[item - iter]], row = index)
+      tbl0[[2]] <- rtf_subset(tbl[[item - iter]], row = -index)
+
+      # Update border
+      attr(tbl0[[1]], "page")$border_last <- NULL
+      attr(tbl0[[1]], "page")$border_color_last <- NULL
+      attr(tbl0[[1]], "rtf_title") <- NULL
+      attr(tbl0[[1]], "rtf_footnote") <- NULL
+      attr(tbl0[[1]], "rtf_source") <- NULL
+      encode0 <- c(encode[1:(item - 1)], lapply(tbl0, rtf_encode_table, verbose = TRUE))
+
+      if (item < length(encode)) {
+        encode0 <- c(encode0, encode[(item + 1):n])
+      }
+
+      encode <- encode0
+
+      iter <- iter + 1
+    }
+
+    # Split page
+    info <- list()
+    for (i in 1:length(encode)) {
+      info[[i]] <- data.frame(item = i, encode[[i]]$info)
+    }
+    info <- do.call(rbind, info)
+
+    info$total <- min(info$total)
+
+    info$page1 <- page_dict_page(info)
+
+    page1 <- info[info$page == 1, ]
+    page1 <- split(page1, page1$item)
+    item1 <- which(unlist(lapply(page1, function(x) length(unique(x$page1)))) > 1)[1]
+    if (is.na(item1)) {
+      item1 <- 0
+    }
+    item_next <- info[info$item == item1 & info$page == 1, ]
+    item <- item1
+  }
+
+
+  start <- encode[[1]]$start
+  new_page_rtftext <- as_rtf_new_page()
+
+
+  body <- lapply(encode, function(x) {
+    n_page <- length(x$body)
+    paste(
+      x$page,
+      x$margin,
+      x$header,
+      x$subline,
+      x$sublineby,
+      x$colheader,
+      x$body,
+      x$footnote,
+      x$source,
+      c(rep(new_page_rtftext, n_page - 1), ""),
+      sep = "\n"
+    )
+  })
+
+  # add page break
+  break_index <- lapply(split(info, info$page1), function(x) {
+    unique(x$item)[-length(unique(x$item))]
+  })
+  break_index <- sort(unique(unlist(break_index)))
+
+  page_break <- rep(new_page_rtftext, length(body))
+  page_break[c(break_index, length(body))] <- ""
+
+  for (i in 1:length(body)) {
+    body[[i]] <- c(body[[i]], page_break[i])
+  }
+  body <- paste(unlist(body), collapse = "\n")
+  rtf <- list(start = start, body = body, end = as_rtf_end())
 
   rtf
 }
@@ -751,7 +924,7 @@ font_type <- function ()
     )
 }
 
-as_rtf_page <- function (tbl, first_page = FALSE)
+as_rtf_page <- function (tbl)
 {
   page <- attr(tbl, "page")
   page_size <- c("\\paperw", "\\paperh")
@@ -769,12 +942,18 @@ as_rtf_page <- function (tbl, first_page = FALSE)
                   collapse = "")
   margin <- paste0(margin, "\n")
 
-  sect <- "\\pard\n\\sect"
+  paste0(page_size, margin)
+}
+
+as_rtf_section <- function (tbl)
+{
+  page <- attr(tbl, "page")
+
   section <- "\\sectd\\linex0\\endnhere"
 
   sec_page_size <- c("\\pgwsxn", "\\pghsxn")
   sec_page_size <- paste(paste0(sec_page_size, r2rtf:::inch_to_twip(c(page$width,
-                                                      page$height))), collapse = "")
+                                                                      page$height))), collapse = "")
   if (page$orientation == "landscape") {
     sec_page_size <- paste0(sec_page_size, "\\lndscpsxn\n")
   }
@@ -787,10 +966,7 @@ as_rtf_page <- function (tbl, first_page = FALSE)
                       collapse = "")
   sec_margin <- paste0(sec_margin, "\n")
 
-  if(first_page)
-    paste0(page_size, margin, section, sec_page_size, sec_margin)
- else
-   paste0(sect, section, sec_page_size, sec_margin)
+  paste0(section, sec_page_size, sec_margin)
 }
 
 as_rtf_header <- function(tbl) {
@@ -815,4 +991,8 @@ as_rtf_footer <- function(tbl) {
     encode <- paste(encode, collapse = "\n")
   }
   encode
+}
+
+as_rtf_new_page <- function() {
+  "\\pard\n\\sect"
 }
