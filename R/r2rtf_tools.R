@@ -151,7 +151,7 @@ rtf_encode_table <- function(tbl, verbose = FALSE) {
   subline_rtftext     <- r2rtf:::as_rtf_subline(tbl)
 
 
-  new_page_rtftext <- r2rtf:::as_rtf_new_page()
+  new_page_rtftext <- as_rtf_new_page()
 
   ## rtf encode for column header
   colheader_rtftext_1 <- paste(unlist(as_rtf_colheader(tbl_1)), collapse = "\n") # First page
@@ -394,7 +394,7 @@ rtf_encode_list <- function(tbl) {
 
     info$total <- min(info$total)
 
-    info$page1 <- page_dict_page(info)
+    info$page1 <- r2rtf::page_dict_page(info)
 
     page1 <- info[info$page == 1, ]
     page1 <- split(page1, page1$item)
@@ -971,7 +971,11 @@ as_rtf_section <- function (tbl)
 
 as_rtf_header <- function(tbl) {
   encode <- ""
-  if (!is.null(attr(tbl, "rtf_page_header_direct"))) {
+  if (!is.null(attr(tbl, "rtf_page_header_tbl"))) {
+    encode <- paste("{\\header\\pard\\plain\\ql",
+                    as_rtf_hf_tbl(tbl, attr(tbl, "rtf_page_header_tbl")),
+                    "}", sep = "\n")
+  } else if (!is.null(attr(tbl, "rtf_page_header_direct"))) {
     encode <- paste("{\\header\\pard\\plain\\ql", attr(tbl, "rtf_page_header_direct"), "}", sep = "\n")
   } else if (!is.null(attr(tbl, "rtf_page_header"))) {
     encode <- c("{\\header", r2rtf:::as_rtf_paragraph(attr(tbl, "rtf_page_header"),
@@ -983,7 +987,11 @@ as_rtf_header <- function(tbl) {
 
 as_rtf_footer <- function(tbl) {
   encode <- ""
-  if (!is.null(attr(tbl, "rtf_page_footer_direct"))) {
+  if (!is.null(attr(tbl, "rtf_page_footer_tbl"))) {
+    encode <- paste("{\\footer\\pard\\plain\\ql",
+                    as_rtf_hf_tbl(tbl, attr(tbl, "rtf_page_footer_tbl")),
+                    "}", sep = "\n")
+  } else if (!is.null(attr(tbl, "rtf_page_footer_direct"))) {
     encode <- paste("{\\footer\\pard\\plain\\ql", attr(tbl, "rtf_page_footer_direct"), "}", sep = "\n")
   } else  if (!is.null(attr(tbl, "rtf_page_footer"))) {
     encode <- c("{\\footer", r2rtf:::as_rtf_paragraph(attr(tbl, "rtf_page_footer"),
@@ -995,4 +1003,191 @@ as_rtf_footer <- function(tbl) {
 
 as_rtf_new_page <- function() {
   "\\pard\n\\sect"
+}
+
+
+
+#公開する関数（作成中）
+rtf_page_header_tbl <- function(tbl, page_header_tbl) {
+  attr(tbl, "page_header_tbl") <- page_header_tbl
+  tbl
+}
+
+rtf_page_footer_tbl <- function(tbl, page_footer_tbl) {
+  attr(tbl, "page_footer_tbl") <- page_footer_tbl
+  tbl
+}
+
+rtf_footer_tbl <- function(tbl, footer_tbl) {
+  attr(tbl, "footer_tbl") <- footer_tbl
+  tbl
+}
+
+as_rtf_hf_tbl <- function(tbl, texts, width = NULL) {
+  cell_height <- attr(tbl, "cell_height")
+  text_font <- attr(tbl, "text_font")
+  text_font_size <- attr(tbl, "text_font_size")
+
+  if(!is.null(cell_height))
+    cell_height <- round(r2rtf:::inch_to_twip(cell_height) / 2, 0)
+  else
+    cell_height <- 0
+
+  page <- attr(tbl, "page")
+  if(!is.null(page)) {
+    col_width <- attr(tbl, "page")$col_width
+    if (is.null(col_width)) {
+      col_width <- 10
+    }
+  }
+
+  if(!is.null(width)) col_width <- width
+
+  cellx2 <- col_width * 1440
+  cellx1 <- cellx2 / 2
+
+
+  repalce_page <- function(text) {
+    result <- gsub("__PAGE__", "{\\field{\\*\\fldinst { PAGE }}}", text, fixed = TRUE)
+    result <- gsub("__NUMPAGES__", "{\\field{\\*\\fldinst { NUMPAGES }}}", result, fixed = TRUE)
+    result
+  }
+
+  rtf_rows <- lapply(texts, function(vec) {
+    if(length(vec) == 2) {
+      left_text  <- if ("l" %in% names(vec)) vec["l"] else vec[1]
+      left_text <- replace_page(left_text)
+      right_text <- if ("r" %in% names(vec)) vec["r"] else vec[2]
+      right_text <- replace_page(right_text)
+
+
+
+      rtf_text <- paste0(
+        "{\\trowd\\trgaph", cell_height, "\\trleft0\n",
+        "\\cellx", cellx1, "\\cellx", cellx1, "\n",
+        "\\intbl\\ql\\f", text_font, "\\fs", text_font_size * 2, " ", left_text, "\\cell\n",
+        "\\intbl\\qr\\f", text_font, "\\fs", text_font_size * 2, " ", right_text, "\\cell\n",
+        "\\row}"
+      )
+    }else if (length(vec) == 1) {
+      text <- if ("c" %in% names(vec)) vec["c"] else vec[1]
+      text <- replace_page(text)
+
+      # get alignment from names (l, c, r)
+      align <- if ("l" %in% names(vec)) "\\ql" else if ("r" %in% names(vec)) "\\qr" else "\\qc"
+
+      rtf_text <- paste0(
+        "{\\trowd\\trgaph", cell_height, "\\trleft0\n",
+        "\\cellx", cellx2, "\n",
+        "\\intbl", align, "\\f", text_font, "\\fs", text_font_size * 2, " ", text, "\\cell\n",
+        "\\row}"
+      )
+    } else {
+      stop("texts must be a list of character vector of length 1 or 2.")
+    }
+    rtf_text
+  })
+
+  return(paste(rtf_rows, collapse = "\n"))
+}
+
+
+
+
+
+
+get_paper_dimension <- function(paper_size = "letter",
+                                unit = "inch") {
+
+  # 用紙サイズの定義（mm単位、portrait基準）
+  paper_sizes <- list(
+    # ISO A series
+    "a0" = c(width = 841, height = 1189),
+    "a1" = c(width = 594, height = 841),
+    "a2" = c(width = 420, height = 594),
+    "a3" = c(width = 297, height = 420),
+    "a4" = c(width = 210, height = 297),
+    "a5" = c(width = 148, height = 210),
+    "a6" = c(width = 105, height = 148),
+
+    # US paper sizes
+    "letter" = c(width = 215.9, height = 279.4),
+    "legal" = c(width = 215.9, height = 355.6),
+    "tabloid" = c(width = 279.4, height = 431.8),
+    "ledger" = c(width = 431.8, height = 279.4),
+
+    # Other common sizes
+    "b4" = c(width = 250, height = 353),
+    "b5" = c(width = 176, height = 250),
+    "executive" = c(width = 184.2, height = 266.7),
+    "folio" = c(width = 210, height = 330),
+    "quarto" = c(width = 215, height = 275)
+  )
+
+  # 入力値の正規化
+  paper_size <- tolower(paper_size)
+  unit <- tolower(unit)
+
+  # 用紙サイズの確認
+  if (!paper_size %in% names(paper_sizes)) {
+    stop("Unsupported paper size: ", paper_size,
+         "\nSupported sizes: ", paste(names(paper_sizes), collapse = ", "))
+  }
+
+  # 基本サイズの取得（portrait固定）
+  base_size <- paper_sizes[[paper_size]]
+
+  # 単位変換
+  converted_size <- convert_units(base_size, from = "mm", to = unit)
+
+  # 長さ2の名前なしベクトルとして返す
+  return(round(as.numeric(converted_size), 2))
+}
+
+#' Convert Units
+#'
+#' @param values Numeric vector of values
+#' @param from Source unit
+#' @param to Target unit
+#' @return Converted values
+convert_units <- function(values, from = "mm", to = "mm") {
+
+  # mm を基準とした変換係数
+  conversion_factors <- list(
+    "mm" = 1,
+    "cm" = 0.1,
+    "inch" = 0.0393701,
+    "in" = 0.0393701,
+    "pt" = 2.83465,
+    "twip" = 56.6929
+  )
+
+  from <- tolower(from)
+  to <- tolower(to)
+
+  if (!from %in% names(conversion_factors)) {
+    stop("Unsupported source unit: ", from)
+  }
+
+  if (!to %in% names(conversion_factors)) {
+    stop("Unsupported target unit: ", to)
+  }
+
+  # 単位変換
+  if (from == to) {
+    return(values)
+  }
+
+  # mmから目的単位への変換
+  if (from == "mm") {
+    result <- values * conversion_factors[[to]]
+  } else if (to == "mm") {
+    result <- values / conversion_factors[[from]]
+  } else {
+    # mm経由で変換
+    mm_values <- values / conversion_factors[[from]]
+    result <- mm_values * conversion_factors[[to]]
+  }
+
+  return(result)
 }
