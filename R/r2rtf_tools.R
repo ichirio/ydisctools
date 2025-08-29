@@ -971,9 +971,9 @@ as_rtf_section <- function (tbl)
 
 as_rtf_header <- function(tbl) {
   encode <- ""
-  if (!is.null(attr(tbl, "rtf_page_header_tbl"))) {
+  if (!is.null(attr(tbl, "page_header_tbl"))) {
     encode <- paste("{\\header\\pard\\plain\\ql",
-                    as_rtf_hf_tbl(tbl, attr(tbl, "rtf_page_header_tbl")),
+                    as_rtf_hf_tbl(tbl, attr(tbl, "page_header_tbl")),
                     "}", sep = "\n")
   } else if (!is.null(attr(tbl, "rtf_page_header_direct"))) {
     encode <- paste("{\\header\\pard\\plain\\ql", attr(tbl, "rtf_page_header_direct"), "}", sep = "\n")
@@ -987,9 +987,9 @@ as_rtf_header <- function(tbl) {
 
 as_rtf_footer <- function(tbl) {
   encode <- ""
-  if (!is.null(attr(tbl, "rtf_page_footer_tbl"))) {
+  if (!is.null(attr(tbl, "page_footer_tbl"))) {
     encode <- paste("{\\footer\\pard\\plain\\ql",
-                    as_rtf_hf_tbl(tbl, attr(tbl, "rtf_page_footer_tbl")),
+                    as_rtf_hf_tbl(tbl, attr(tbl, "page_footer_tbl")),
                     "}", sep = "\n")
   } else if (!is.null(attr(tbl, "rtf_page_footer_direct"))) {
     encode <- paste("{\\footer\\pard\\plain\\ql", attr(tbl, "rtf_page_footer_direct"), "}", sep = "\n")
