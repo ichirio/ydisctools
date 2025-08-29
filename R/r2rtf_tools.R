@@ -1086,7 +1086,7 @@ as_rtf_hf_tbl <- function(tbl, texts, module = "page_header", width = NULL) {
 
       rtf_text <- paste0(
         "{\\trowd\\trgaph", cell_height, "\\trleft0\n",
-        "\\cellx", cellx1, "\\cellx", cellx1, "\n",
+        "\\cellx", cellx1, "\\cellx", cellx2, "\n",
         "\\intbl\\ql\\f", text_font, "\\fs", text_font_size * 2, " ", left_text, "\\cell\n",
         "\\intbl\\qr\\f", text_font, "\\fs", text_font_size * 2, " ", right_text, "\\cell\n",
         "\\row}"
