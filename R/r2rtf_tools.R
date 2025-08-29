@@ -1012,10 +1012,12 @@ rtf_page_header_tbl <- function(tbl,
                                 page_header_tbl,
                                 text_font = 1,
                                 text_font_size = 9,
+                                col_width = NULL,
                                 cell_height = NULL) {
   attr(tbl, "page_header_tbl") <- page_header_tbl
   attr(tbl, "page_header_tbl_font") <- text_font
   attr(tbl, "page_header_tbl_size") <- text_font_size
+  attr(tbl, "page_footer_col_width") <- col_width
   attr(tbl, "page_header_tbl_gap")  <- cell_height
   tbl
 }
@@ -1024,10 +1026,12 @@ rtf_page_footer_tbl <- function(tbl,
                                 page_footer_tbl,
                                 text_font = 1,
                                 text_font_size = 9,
+                                col_width = NULL,
                                 cell_height = NULL) {
   attr(tbl, "page_footer_tbl") <- page_footer_tbl
   attr(tbl, "page_footer_tbl_font") <- text_font
   attr(tbl, "page_footer_tbl_size") <- text_font_size
+  attr(tbl, "page_footer_col_width") <- col_width
   attr(tbl, "page_footer_tbl_gap")  <- cell_height
   tbl
 }
@@ -1049,6 +1053,7 @@ as_rtf_hf_tbl <- function(tbl, texts, module = "page_header", width = NULL) {
   cell_height <- attr(tbl, paste0(module, "_tbl_gap"))
   text_font <- attr(tbl, paste0(module, "_tbl_font"))
   text_font_size <- attr(tbl, paste0(module, "_tbl_size"))
+  col_width <- attr(tbl, paste0(module, "_col_width"))
 
   if(!is.null(cell_height))
     cell_height <- round(r2rtf:::inch_to_twip(cell_height) / 2, 0)
@@ -1056,10 +1061,12 @@ as_rtf_hf_tbl <- function(tbl, texts, module = "page_header", width = NULL) {
     cell_height <- 0
 
   page <- attr(tbl, "page")
-  if(!is.null(page)) {
-    col_width <- attr(tbl, "page")$col_width
-    if (is.null(col_width)) {
-      col_width <- 10
+  if(is.null(col_width)) {
+    if(!is.null(page)) {
+      col_width <- attr(tbl, "page")$col_width
+      if (is.null(col_width)) {
+        col_width <- 10
+      }
     }
   }
 
