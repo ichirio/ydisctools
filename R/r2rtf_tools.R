@@ -1017,7 +1017,7 @@ rtf_page_header_tbl <- function(tbl,
   attr(tbl, "page_header_tbl") <- page_header_tbl
   attr(tbl, "page_header_tbl_font") <- text_font
   attr(tbl, "page_header_tbl_size") <- text_font_size
-  attr(tbl, "page_footer_col_width") <- col_width
+  attr(tbl, "page_header_col_width") <- col_width
   attr(tbl, "page_header_tbl_gap")  <- cell_height
   tbl
 }
