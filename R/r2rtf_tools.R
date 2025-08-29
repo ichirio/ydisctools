@@ -1047,7 +1047,7 @@ as_rtf_hf_tbl <- function(tbl, texts, width = NULL) {
   cellx1 <- cellx2 / 2
 
 
-  repalce_page <- function(text) {
+  replace_page <- function(text) {
     result <- gsub("__PAGE__", "{\\field{\\*\\fldinst { PAGE }}}", text, fixed = TRUE)
     result <- gsub("__NUMPAGES__", "{\\field{\\*\\fldinst { NUMPAGES }}}", result, fixed = TRUE)
     result
