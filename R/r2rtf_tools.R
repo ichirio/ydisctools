@@ -602,8 +602,8 @@ as_rtf_table <- function(tbl) {
   # Remove repeated records if group_by is not null
   if (!is.null(group_by)) {
     cell_tbl <- r2rtf:::rtf_group_by_enhance(cell_tbl,
-                                     group_by = group_by,
-                                     page_index = page_dict$page
+                                             group_by = group_by,
+                                             page_index = page_dict$page
     )
   }
 
@@ -798,26 +798,26 @@ rtf_table_content <- function(tbl,
   # Encode RTF Text and Paragraph
   use_i18n <- attr(tbl, "page")$use_i18n %||% attr(tbl, "use_i18n") %||% FALSE
   text_rtf <- r2rtf:::rtf_text(tbl,
-                       font = text_font,
-                       font_size = text_font_size,
-                       format = text_format,
-                       color = text_color,
-                       background_color = text_background_color,
-                       text_convert = text_convert
-                       #, use_i18n = use_i18n
+                               font = text_font,
+                               font_size = text_font_size,
+                               format = text_format,
+                               color = text_color,
+                               background_color = text_background_color,
+                               text_convert = text_convert
+                               #, use_i18n = use_i18n
   )
 
   cell_rtf <- r2rtf:::rtf_paragraph(text_rtf,
-                            justification = text_justification,
-                            indent_first = text_indent_first,
-                            indent_left = text_indent_left,
-                            indent_right = text_indent_right,
-                            space = text_space,
-                            space_before = text_space_before,
-                            space_after = text_space_after,
-                            new_page = FALSE,
-                            hyphenation = FALSE,
-                            cell = TRUE
+                                    justification = text_justification,
+                                    indent_first = text_indent_first,
+                                    indent_left = text_indent_left,
+                                    indent_right = text_indent_right,
+                                    space = text_space,
+                                    space_before = text_space_before,
+                                    space_after = text_space_after,
+                                    new_page = FALSE,
+                                    hyphenation = FALSE,
+                                    cell = TRUE
   )
 
   rbind(row_begin, border_rtf, t(cell_rtf), row_end)
@@ -921,7 +921,7 @@ font_type <- function ()
       "\\fcharset0"
     ),
     stringsAsFactors = FALSE
-    )
+  )
 }
 
 as_rtf_page <- function (tbl)
@@ -929,7 +929,7 @@ as_rtf_page <- function (tbl)
   page <- attr(tbl, "page")
   page_size <- c("\\paperw", "\\paperh")
   page_size <- paste(paste0(page_size, r2rtf:::inch_to_twip(c(page$width,
-                                                      page$height))), collapse = "")
+                                                              page$height))), collapse = "")
   if (page$orientation == "landscape") {
     page_size <- paste0(page_size, "\\landscape\n")
   }
@@ -979,7 +979,7 @@ as_rtf_header <- function(tbl) {
     encode <- paste("{\\header\\pard\\plain\\ql", attr(tbl, "rtf_page_header_direct"), "}", sep = "\n")
   } else if (!is.null(attr(tbl, "rtf_page_header"))) {
     encode <- c("{\\header", r2rtf:::as_rtf_paragraph(attr(tbl, "rtf_page_header"),
-                                              combine = FALSE), "}")
+                                                      combine = FALSE), "}")
     encode <- paste(encode, collapse = "\n")
   }
   encode
@@ -995,7 +995,7 @@ as_rtf_footer <- function(tbl) {
     encode <- paste("{\\footer\\pard\\plain\\ql", attr(tbl, "rtf_page_footer_direct"), "}", sep = "\n")
   } else  if (!is.null(attr(tbl, "rtf_page_footer"))) {
     encode <- c("{\\footer", r2rtf:::as_rtf_paragraph(attr(tbl, "rtf_page_footer"),
-                                              combine = FALSE), "}")
+                                                      combine = FALSE), "}")
     encode <- paste(encode, collapse = "\n")
   }
   encode
@@ -1008,13 +1008,27 @@ as_rtf_new_page <- function() {
 
 
 #公開する関数（作成中）
-rtf_page_header_tbl <- function(tbl, page_header_tbl) {
+rtf_page_header_tbl <- function(tbl,
+                                page_header_tbl,
+                                text_font = 1,
+                                text_font_size = 9,
+                                cell_height = NULL) {
   attr(tbl, "page_header_tbl") <- page_header_tbl
+  attr(tbl, "page_header_tbl_font") <- text_font
+  attr(tbl, "page_header_tbl_size") <- text_font_size
+  attr(tbl, "page_header_tbl_gap")  <- cell_height
   tbl
 }
 
-rtf_page_footer_tbl <- function(tbl, page_footer_tbl) {
+rtf_page_footer_tbl <- function(tbl,
+                                page_footer_tbl,
+                                text_font = 1,
+                                text_font_size = 9,
+                                cell_height = NULL) {
   attr(tbl, "page_footer_tbl") <- page_footer_tbl
+  attr(tbl, "page_footer_tbl_font") <- text_font
+  attr(tbl, "page_footer_tbl_size") <- text_font_size
+  attr(tbl, "page_footer_tbl_gap")  <- cell_height
   tbl
 }
 
@@ -1023,10 +1037,18 @@ rtf_footer_tbl <- function(tbl, footer_tbl) {
   tbl
 }
 
-as_rtf_hf_tbl <- function(tbl, texts, width = NULL) {
-  cell_height <- attr(tbl, "cell_height")
-  text_font <- attr(tbl, "text_font")
-  text_font_size <- attr(tbl, "text_font_size")
+as_rtf_header_tbl <- function(tbl, texts, width = NULL) {
+  as_rtf_hf_tbl(tbl, texts, "page_header", width)
+}
+
+as_rtf_footer_tbl <- function(tbl, texts, width = NULL) {
+  as_rtf_hf_tbl(tbl, texts, "page_footer", width)
+}
+
+as_rtf_hf_tbl <- function(tbl, texts, module = "page_header", width = NULL) {
+  cell_height <- attr(tbl, paste0(module, "_tbl_gap"))
+  text_font <- attr(tbl, paste0(module, "_tbl_font"))
+  text_font_size <- attr(tbl, paste0(module, "_tbl_size"))
 
   if(!is.null(cell_height))
     cell_height <- round(r2rtf:::inch_to_twip(cell_height) / 2, 0)
@@ -1043,8 +1065,8 @@ as_rtf_hf_tbl <- function(tbl, texts, width = NULL) {
 
   if(!is.null(width)) col_width <- width
 
-  cellx2 <- col_width * 1440
-  cellx1 <- cellx2 / 2
+  cellx2 <- round(col_width * 1440, 0)
+  cellx1 <- round(cellx2 / 2, 0)
 
 
   replace_page <- function(text) {
