@@ -197,8 +197,6 @@ rtf_encode_table <- function(tbl, verbose = FALSE) {
     pages <- insert_elements(pages, pos)
   }
 
-  print(table_rtftext)
-  print(pages)
   # if (pageby$new_page) {
   #   body_rtftext <- tapply(table_rtftext, paste0(info$id, info$page), FUN = function(x) paste(x, collapse = "\n"))
   # } else {
@@ -557,13 +555,22 @@ as_rtf_blank_rows <- function(tbl, table_rtftext) {
     text_font <- attr(tbl, "text_font")[1]
     text_font_size <- attr(tbl, "text_font_size")[1]
     cell_height <- round(r2rtf:::inch_to_twip(attr(tbl, "cell_height")[1]) / 2, 0)
+    cell_height_trrh <- attr(tbl, "cell_height_trrh")[1]
+    text_space_before <- attr(tbl, "text_space_before")[1]
+    text_space_after <- attr(tbl, "text_space_after")[1]
+
+
+    if (!is.null(cell_height_trrh)) cell_height_trrh <- paste0("\\trrh", cell_height_trrh)
+    else cell_height_trrh <- ""
+
+    attr(tbl, "cell_height")[1]
 
 
     rtf_text <- paste0(
-      "{\\trowd\\trgaph", cell_height, "\\trleft0\n",
-      "\\cellx", col_width, "\n",
-      "\\intbl\\qc\\f", text_font, "\\fs", text_font_size * 2, "  \\cell\n",
-      "\\row}\n"
+      "\\trowd\\trgaph", cell_height, "\\trleft0\\trqc", cell_height_trrh, "\n",
+      "\\clvertalt\\cellx", col_width, "\n",
+      "\\pard\\hyphpar0\\sb", text_space_before, "\\sa", text_space_after, "\\li0\\ri0\\qc\\fs", text_font_size * 2, "{\\f", text_font, "  }\\cell\n",
+      "\\intbl\\row\\pard\n"
     )
 
     table_rtftext <- insert_text(table_rtftext, blank_rows, rtf_text)
