@@ -190,6 +190,8 @@ rtf_encode_table <- function(tbl, verbose = FALSE) {
     sublineby_rtftext <- sublineby_rtftext[sublineby_index]
   }
 
+  table_rtftext <- as_rtf_blank_rows(tbl, table_rtftext)
+
   # if (pageby$new_page) {
   #   body_rtftext <- tapply(table_rtftext, paste0(info$id, info$page), FUN = function(x) paste(x, collapse = "\n"))
   # } else {
@@ -538,6 +540,28 @@ rtf_encode_figure <- function(tbl) {
   rtf_feature <- gsub("\\totalpage", n_page, rtf_feature, fixed = TRUE) # total page number
 
   list(start = start_rtf, body = rtf_feature, end = r2rtf:::as_rtf_end())
+}
+
+as_rtf_blank_rows <- function(tbl, table_rtftext) {
+  blank_rows <- attr(tbl, "rtf_blank_rows")
+
+  if(!is.null(blank_rows)) {
+    col_width <- attr(tbl, "page")$col_width
+    text_font <- attr(tbl, "text_font")
+    text_font_size <- attr(tbl, "text_font_size")
+    cell_height <- attr(tbl, "cell_height")
+
+    rtf_text <- paste0(
+      "{\\trowd\\trgaph", cell_height, "\\trleft0\n",
+      "\\cellx", col_width, "\n",
+      "\\intbl\\qc\\f", text_font, "\\fs", text_font_size * 2, " \\cell\n",
+      "\\row}"
+    )
+
+    table_rtftext <- insert_text(table_rtftext, blank_rows, rtf_text)
+  }
+
+  return(table_rtftext)
 }
 
 as_rtf_table <- function(tbl) {
@@ -1216,6 +1240,36 @@ convert_units <- function(values, from = "mm", to = "mm") {
     # mm経由で変換
     mm_values <- values / conversion_factors[[from]]
     result <- mm_values * conversion_factors[[to]]
+  }
+
+  return(result)
+}
+
+insert_text <- function(target, pos, text) {
+  # posを昇順にソートして、後ろから挿入する（インデックスのズレを防ぐため）
+  sorted_indices <- order(pos, decreasing = TRUE)
+
+  result <- target
+
+  for (i in sorted_indices) {
+    position <- pos[i]
+
+    if (position == 0) {
+      # 最初に挿入
+      result <- c(text, result)
+    } else if (position <= length(result)) {
+      # 指定位置の後ろに挿入
+      if (position == length(result)) {
+        # 最後に追加する場合
+        result <- c(result, text)
+      } else {
+        # 途中に挿入する場合
+        result <- c(result[1:position], text, result[(position + 1):length(result)])
+      }
+    } else {
+      # 位置が範囲外の場合は最後に追加
+      result <- c(result, text)
+    }
   }
 
   return(result)
