@@ -551,10 +551,10 @@ as_rtf_blank_rows <- function(tbl, table_rtftext) {
   blank_rows <- attr(tbl, "rtf_blank_rows")
 
   if(!is.null(blank_rows)) {
-    col_width <- attr(tbl, "page")$col_width
-    text_font <- attr(tbl, "text_font")
-    text_font_size <- attr(tbl, "text_font_size")
-    cell_height <- attr(tbl, "cell_height")
+    col_width <- attr(tbl, "page")$col_width[1]
+    text_font <- attr(tbl, "text_font")[1]
+    text_font_size <- attr(tbl, "text_font_size")[1]
+    cell_height <- attr(tbl, "cell_height")[1]
 
     rtf_text <- paste0(
       "{\\trowd\\trgaph", cell_height, "\\trleft0\n",
