@@ -191,11 +191,16 @@ rtf_encode_table <- function(tbl, verbose = FALSE) {
   }
 
   table_rtftext <- as_rtf_blank_rows(tbl, table_rtftext)
+  pos <- attr(tbl, "rtf_blank_rows")
+  pages <- info$page
+  if(!is.null(pos) & length(pos) > 0) {
+    pages <- insert_elements(pages, pos)
+  }
 
   # if (pageby$new_page) {
   #   body_rtftext <- tapply(table_rtftext, paste0(info$id, info$page), FUN = function(x) paste(x, collapse = "\n"))
   # } else {
-  body_rtftext <- tapply(table_rtftext, info$page, FUN = function(x) paste(x, collapse = "\n"))
+  body_rtftext <- tapply(table_rtftext, pages, FUN = function(x) paste(x, collapse = "\n"))
   # }
 
   n_page <- length(body_rtftext)
@@ -1269,6 +1274,35 @@ insert_text <- function(target, pos, text) {
     } else {
       # 位置が範囲外の場合は最後に追加
       result <- c(result, text)
+    }
+  }
+
+  return(result)
+}
+
+insert_elements <- function(page, pos) {
+  # posを降順にソートして後ろから処理（インデックスのズレを防ぐ）
+  sorted_indices <- order(pos, decreasing = TRUE)
+
+  result <- page
+
+  for (i in sorted_indices) {
+    position <- pos[i]
+
+    if (position == 0) {
+      # 最初に1番目の要素をコピー
+      result <- c(result[1], result)
+    } else if (position <= length(result)) {
+      # 指定位置の要素をその直後にコピー
+      element_to_copy <- result[position]
+
+      if (position == length(result)) {
+        # 最後の要素の場合
+        result <- c(result, element_to_copy)
+      } else {
+        # 途中の要素の場合
+        result <- c(result[1:position], element_to_copy, result[(position + 1):length(result)])
+      }
     }
   }
 
