@@ -995,7 +995,7 @@ as_rtf_section <- function (tbl)
 {
   page <- attr(tbl, "page")
 
-  section <- "\\sectd\\linex0\\endnhere"
+  section <- "\\sectd\\pgnrestart\\pgnstart1\\linex0\\endnhere"
 
   sec_page_size <- c("\\pgwsxn", "\\pghsxn")
   sec_page_size <- paste(paste0(sec_page_size, r2rtf:::inch_to_twip(c(page$width,
@@ -1126,6 +1126,7 @@ as_rtf_hf_tbl <- function(tbl, texts, module = "page_header", width = NULL) {
   replace_page <- function(text) {
     result <- gsub("__PAGE__", "{\\field{\\*\\fldinst { PAGE }}}", text, fixed = TRUE)
     result <- gsub("__NUMPAGES__", "{\\field{\\*\\fldinst { NUMPAGES }}}", result, fixed = TRUE)
+    result <- gsub("__SECTIONPAGES__", "{\\field{\\*\\fldinst { SECTIONPAGES }}}", result, fixed = TRUE)
     result
   }
 
@@ -1354,7 +1355,7 @@ assemble_rtf <- function(input,
   # assemble RTF
   rtf <- lapply(input, readLines)
   n <- length(rtf)
-  start <- c(1, vapply(rtf[-1], function(x) max(grep("marglsxn", rtf[[1]])) + 2, numeric(1)))
+  start <- c(1, vapply(rtf[-1], function(x) max(grep("sectd", rtf[[1]])), numeric(1)))
   end <- vapply(rtf, length, numeric(1))
   end[-n] <- end[-n] - 1
 
