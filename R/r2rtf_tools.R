@@ -1367,7 +1367,8 @@ assemble_rtf <- function(input,
     if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
   }
 
-  if(sectionpages) rtf <- gsub("NUMPAGES", "SECTIONPAGES", rtf)
+  if(isTRUE(sectionpages))
+    rtf <- map(rtf, ~ gsub("NUMPAGES", "SECTIONPAGES", .x, fixed = TRUE))
 
   rtf <- do.call(c, rtf)
 
