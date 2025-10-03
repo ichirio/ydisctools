@@ -1333,7 +1333,8 @@ insert_elements <- function(page, pos) {
 
 assemble_rtf <- function(input,
                          output,
-                         landscape = FALSE) {
+                         landscape = FALSE,
+                         sectionpages = FALSE) {
   # input checking
   r2rtf:::check_args(input, type = "character")
   r2rtf:::check_args(output, type = "character", length = 1)
@@ -1365,6 +1366,8 @@ assemble_rtf <- function(input,
     rtf[[i]] <- rtf[[i]][start[i]:end[i]]
     if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
   }
+
+  if(sectionpages) rtf <- gsub("NUMPAGES", "SECTIONPAGES", rtf)
 
   rtf <- do.call(c, rtf)
 
