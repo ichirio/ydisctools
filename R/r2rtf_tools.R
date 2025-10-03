@@ -151,7 +151,7 @@ rtf_encode_table <- function(tbl, verbose = FALSE) {
   subline_rtftext     <- r2rtf:::as_rtf_subline(tbl)
 
 
-  new_page_rtftext <- as_rtf_new_page()
+  new_page_rtftext <- r2rtf:::as_rtf_new_page()
 
   ## rtf encode for column header
   colheader_rtftext_1 <- paste(unlist(as_rtf_colheader(tbl_1)), collapse = "\n") # First page
@@ -415,7 +415,7 @@ rtf_encode_list <- function(tbl) {
 
 
   start <- encode[[1]]$start
-  new_page_rtftext <- as_rtf_new_page()
+  new_page_rtftext <- r2rtf:::as_rtf_new_page()
 
 
   body <- lapply(encode, function(x) {
@@ -481,7 +481,7 @@ rtf_encode_figure <- function(tbl) {
   subline_rtftext <- r2rtf:::as_rtf_subline(tbl)
   footnote_rtftext <- r2rtf:::as_rtf_footnote(tbl)
   source_rtftext <- r2rtf:::as_rtf_source(tbl)
-  new_page_rtftext <- as_rtf_new_page()
+  new_page_rtftext <- r2rtf:::as_rtf_new_page()
 
   ## get rtf code for figure width and height
   fig_width <- attr(tbl, "fig_width")
@@ -1047,6 +1047,7 @@ as_rtf_footer <- function(tbl) {
 
 as_rtf_new_page <- function() {
   "\\pard\n\\sect"
+  # paste("{\\pard\\fs2\\par}\\page{\\pard\\fs2\\par}")
 }
 
 
@@ -1322,4 +1323,45 @@ insert_elements <- function(page, pos) {
   }
 
   return(result)
+}
+
+
+assemble_rtf <- function(input,
+                         output,
+                         landscape = FALSE) {
+  # input checking
+  check_args(input, type = "character")
+  check_args(output, type = "character", length = 1)
+
+  # define variables
+  input <- normalizePath(input)
+  n_input <- length(input)
+  missing_input <- input[!file.exists(input)]
+  ext_output <- tolower(tools::file_ext(output))
+
+  # input checking
+  check_args(landscape, "logical", length = 1)
+  match_arg(ext_output, "rtf")
+
+  # warning missing input
+  if (length(missing_input) > 0) {
+    warning("Missing files: \n", paste(missing_input, collapse = "\n"))
+    input <- setdiff(input, missing_input)
+  }
+
+  # assemble RTF
+  rtf <- lapply(input, readLines)
+  n <- length(rtf)
+  start <- c(1, vapply(rtf[-1], function(x) max(grep("margl", rtf[[1]])) + 2, numeric(1)))
+  end <- vapply(rtf, length, numeric(1))
+  end[-n] <- end[-n] - 1
+
+  for (i in seq_len(n)) {
+    rtf[[i]] <- rtf[[i]][start[i]:end[i]]
+    if (i < n) rtf[[i]] <- c(rtf[[i]], r2rtf:::as_rtf_new_page())
+  }
+
+  rtf <- do.call(c, rtf)
+
+  write_rtf(rtf, output)
 }
