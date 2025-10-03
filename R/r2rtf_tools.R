@@ -1333,8 +1333,8 @@ assemble_rtf <- function(input,
                          output,
                          landscape = FALSE) {
   # input checking
-  check_args(input, type = "character")
-  check_args(output, type = "character", length = 1)
+  r2rtf:::check_args(input, type = "character")
+  r2rtf:::check_args(output, type = "character", length = 1)
 
   # define variables
   input <- normalizePath(input)
@@ -1343,8 +1343,8 @@ assemble_rtf <- function(input,
   ext_output <- tolower(tools::file_ext(output))
 
   # input checking
-  check_args(landscape, "logical", length = 1)
-  match_arg(ext_output, "rtf")
+  r2rtf:::check_args(landscape, "logical", length = 1)
+  r2rtf:::match_arg(ext_output, "rtf")
 
   # warning missing input
   if (length(missing_input) > 0) {
