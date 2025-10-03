@@ -995,8 +995,9 @@ as_rtf_section <- function (tbl)
 {
   page <- attr(tbl, "page")
 
-  section <- "\\sectd\\pgnrestart\\pgnstart1\\linex0\\endnhere"
-  if(isFALSE(attr(tbl, "page_reset"))) section <- "\\sectd\\linex0\\endnhere"
+  # section <- "\\sectd\\pgnrestart\\pgnstart1\\linex0\\endnhere"
+  # if(isFALSE(attr(tbl, "page_reset"))) section <- "\\sectd\\linex0\\endnhere"
+  section <- "\\sectd\\linex0\\endnhere"
 
   sec_page_size <- c("\\pgwsxn", "\\pghsxn")
   sec_page_size <- paste(paste0(sec_page_size, r2rtf:::inch_to_twip(c(page$width,
@@ -1366,9 +1367,19 @@ assemble_rtf <- function(input,
     if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
   }
 
-  if(isTRUE(sectionpages))
-    rtf <- map(rtf, ~ gsub("NUMPAGES", "SECTIONPAGES", .x, fixed = TRUE))
+  # if(isTRUE(sectionpages))
+  #   rtf <- map(rtf, ~ gsub("NUMPAGES", "SECTIONPAGES", .x, fixed = TRUE))
 
+  if (isTRUE(sectionpages)) {
+    rtf <- lapply(
+      rtf,
+      function(x) {
+        x <- gsub("NUMPAGES", "SECTIONPAGES", x, fixed = TRUE)
+        gsub("\\\\sectd", "\\\\sectd\\\\pgnrestart\\\\pgnstart1", x)
+      }
+    )
+  }
+  
   rtf <- do.call(c, rtf)
 
   write_rtf(rtf, output)
