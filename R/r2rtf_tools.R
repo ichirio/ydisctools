@@ -995,9 +995,8 @@ as_rtf_section <- function (tbl)
 {
   page <- attr(tbl, "page")
 
-  section <- "\\sectd\\linex0\\endnhere"
-  if(isTRUE(attr(tbl, "page_reset"))) section <- "\\sectd\\pgnrestart\\pgnstart1\\linex0\\endnhere"
-
+  section <- "\\sectd\\pgnrestart\\pgnstart1\\linex0\\endnhere"
+  if(isFALSE(attr(tbl, "page_reset"))) section <- "\\sectd\\linex0\\endnhere"
 
   sec_page_size <- c("\\pgwsxn", "\\pghsxn")
   sec_page_size <- paste(paste0(sec_page_size, r2rtf:::inch_to_twip(c(page$width,
