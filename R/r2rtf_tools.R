@@ -1047,7 +1047,7 @@ as_rtf_footer <- function(tbl) {
   encode
 }
 
-as_rtf_new_page <- function() {
+as_rtf_new_section <- function() {
   "\\pard\n\\sect"
   # paste("{\\pard\\fs2\\par}\\page{\\pard\\fs2\\par}")
 }
@@ -1361,7 +1361,7 @@ assemble_rtf <- function(input,
 
   for (i in seq_len(n)) {
     rtf[[i]] <- rtf[[i]][start[i]:end[i]]
-    if (i < n) rtf[[i]] <- c(rtf[[i]], r2rtf:::as_rtf_new_page())
+    if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
   }
 
   rtf <- do.call(c, rtf)
