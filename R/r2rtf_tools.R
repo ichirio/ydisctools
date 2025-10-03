@@ -462,7 +462,7 @@ rtf_encode_figure <- function(tbl) {
     as_rtf_font(),
     r2rtf:::as_rtf_color(tbl),
     as_rtf_page(tbl),
-    as_rtf_section(tbl)
+    as_rtf_section(tbl),
     sep = "\n"
   )
 
