@@ -140,11 +140,12 @@ rtf_encode_table <- function(tbl, verbose = FALSE) {
     as_rtf_font(),
     r2rtf:::as_rtf_color(tbl),
     as_rtf_page(tbl),
+    as_rtf_section(tbl),
     sep = "\n"
   )
 
   ## get rtf code for page, margin, header, footnote, source, new_page
-  page_rtftext        <- as_rtf_section(tbl)
+  # page_rtftext        <- as_rtf_section(tbl)
   page_header_rtftext <- as_rtf_header(tbl)
   page_footer_rtftext <- as_rtf_footer(tbl)
   header_rtftext      <- r2rtf:::as_rtf_title(tbl)
@@ -235,7 +236,7 @@ rtf_encode_table <- function(tbl, verbose = FALSE) {
 
   # Combine RTF body encoding
   rtf_feature <- paste(
-    page_rtftext,
+    # page_rtftext,
     page_header_rtftext,
     page_footer_rtftext,
     header_rtftext,
@@ -259,7 +260,7 @@ rtf_encode_table <- function(tbl, verbose = FALSE) {
   if (verbose) {
     rtf <- list(
       start = start_rtf,
-      page = page_rtftext,
+      # page = page_rtftext,
       page_header = page_header_rtftext,
       page_footer = page_footer_rtftext,
       header = header_rtftext,
@@ -461,6 +462,7 @@ rtf_encode_figure <- function(tbl) {
     as_rtf_font(),
     r2rtf:::as_rtf_color(tbl),
     as_rtf_page(tbl),
+    as_rtf_section(tbl)
     sep = "\n"
   )
 
@@ -473,7 +475,7 @@ rtf_encode_figure <- function(tbl) {
   }
 
   ## get rtf code for page, margin, header, footnote, source, new_page
-  page_rtftext   <- as_rtf_section(tbl)
+  # page_rtftext   <- as_rtf_section(tbl)
   page_header_rtftext <- as_rtf_header(tbl)
   page_footer_rtftext <- as_rtf_footer(tbl)
 
@@ -526,7 +528,7 @@ rtf_encode_figure <- function(tbl) {
   )
 
   rtf_feature <- paste(
-    page_rtftext,
+    # page_rtftext,
     page_header_rtftext,
     page_footer_rtftext,
     header_rtftext,
@@ -1352,7 +1354,7 @@ assemble_rtf <- function(input,
   # assemble RTF
   rtf <- lapply(input, readLines)
   n <- length(rtf)
-  start <- c(1, vapply(rtf[-1], function(x) max(grep("margl", rtf[[1]])) + 2, numeric(1)))
+  start <- c(1, vapply(rtf[-1], function(x) max(grep("marglsxn", rtf[[1]])) + 2, numeric(1)))
   end <- vapply(rtf, length, numeric(1))
   end[-n] <- end[-n] - 1
 
