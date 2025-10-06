@@ -1347,7 +1347,7 @@ assemble_rtf <- function(input,
 
   # input checking
   r2rtf:::check_args(sectionpages, "logical", length = 1)
-  r2rtf:::check_args(sasmode, "logical", length = 1)
+  r2rtf:::check_args(cnt_numpages, "logical", length = 1)
   r2rtf:::match_arg(ext_output, "rtf")
 
   # warning missing input
