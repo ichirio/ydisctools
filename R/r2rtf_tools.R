@@ -1380,11 +1380,12 @@ assemble_rtf <- function(input,
                     perl = TRUE)
         }else {
           x <- gsub("NUMPAGES", "SECTIONPAGES", x, fixed = TRUE)
-          if(isTRUE(replace_sect)) {
-            n_sect <- sum(grepl("\\\\sect([^A-Za-z0-9]|$)", x, perl = TRUE, ignore.case = TRUE))
 
-            if (n_sect > 0) {
-              x <- gsub("(?i)\\\\sect(?![A-Za-z0-9])", "\\\\page", x, perl = TRUE)
+          if (isTRUE(replace_sect)) {
+            # \sect のみ（後続が英数字でない）を含む行を特定 (\sectd など除外)
+            idx <- grepl("\\\\sect(?![A-Za-z0-9])", x, perl = TRUE, ignore.case = TRUE)
+            if (any(idx)) {
+              x[idx] <- "\\page"
             }
           }
         }
