@@ -1375,10 +1375,13 @@ assemble_rtf <- function(input,
     rtf <- lapply(
       rtf,
       function(x) {
-        if(cnt_numpages) {
+        if(isTRUE(cnt_numpages)) {
           n_sect <- sum(grepl("\\\\sect([^A-Za-z0-9]|$)", x, ignore.case = TRUE))
           n_page <- sum(grepl("\\\\page([^A-Za-z0-9]|$)", x, ignore.case = TRUE))
-          x <- gsub("NUMPAGES", as.character(n_sect + n_page + 1), x, fixed = TRUE)
+          x <- gsub("\\{\\\\field\\{\\\\\\*\\\\fldinst\\s*\\{\\s*NUMPAGES\\s*\\}\\}\\}",
+                    paste0(n_sect + n_page + 1, " "),
+                    x,
+                    perl = TRUE)
         }else {
           x <- gsub("NUMPAGES", "SECTIONPAGES", x, fixed = TRUE)
         }
