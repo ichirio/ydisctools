@@ -1363,11 +1363,6 @@ assemble_rtf <- function(input,
   end <- vapply(rtf, length, numeric(1))
   end[-n] <- end[-n] - 1
 
-  for (i in seq_len(n)) {
-    rtf[[i]] <- rtf[[i]][start[i]:end[i]]
-    if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
-  }
-
   # if(isTRUE(sectionpages))
   #   rtf <- map(rtf, ~ gsub("NUMPAGES", "SECTIONPAGES", .x, fixed = TRUE))
 
@@ -1394,6 +1389,11 @@ assemble_rtf <- function(input,
         x
       }
     )
+  }
+
+  for (i in seq_len(n)) {
+    rtf[[i]] <- rtf[[i]][start[i]:end[i]]
+    if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
   }
 
   rtf <- do.call(c, rtf)
