@@ -1385,7 +1385,7 @@ assemble_rtf <- function(input,
             # \sect のみ（後続が英数字でない）を含む行を特定 (\sectd など除外)
             idx <- grepl("\\\\sect(?![A-Za-z0-9])", x, perl = TRUE, ignore.case = TRUE)
             if (any(idx)) {
-              x[idx] <- "\\page"
+              x[idx] <- r2rtf:::as_rtf_new_page()
             }
           }
         }
