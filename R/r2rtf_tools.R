@@ -1334,7 +1334,8 @@ insert_elements <- function(page, pos) {
 assemble_rtf <- function(input,
                          output,
                          sectionpages = FALSE,
-                         cnt_numpages = FALSE) {
+                         cnt_numpages = FALSE,
+                         replace_sect = FALSE) {
   # input checking
   r2rtf:::check_args(input, type = "character")
   r2rtf:::check_args(output, type = "character", length = 1)
@@ -1379,6 +1380,13 @@ assemble_rtf <- function(input,
                     perl = TRUE)
         }else {
           x <- gsub("NUMPAGES", "SECTIONPAGES", x, fixed = TRUE)
+          if(isTRUE(replace_sect)) {
+            n_sect <- sum(grepl("\\\\sect([^A-Za-z0-9]|$)", x, perl = TRUE, ignore.case = TRUE))
+
+            if (n_sect > 0) {
+              x <- gsub("(?i)\\\\sect(?![A-Za-z0-9])", "\\\\page", x, perl = TRUE)
+            }
+          }
         }
 
         # gsub("\\\\sectd", "\\\\sectd\\\\pgnrestart\\\\pgnstart1", x)
