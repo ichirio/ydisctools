@@ -1388,6 +1388,7 @@ assemble_rtf <- function(input,
         if (!is.na(idx)) {
           x[idx] <- sub("\\\\sectd", "\\\\sectd\\\\pgnrestart\\\\pgnstart1", x[idx])
         }
+        x
       }
     )
   }
