@@ -1333,8 +1333,8 @@ insert_elements <- function(page, pos) {
 
 assemble_rtf <- function(input,
                          output,
-                         landscape = FALSE,
-                         sectionpages = FALSE) {
+                         sectionpages = FALSE,
+                         cnt_numpages = FALSE) {
   # input checking
   r2rtf:::check_args(input, type = "character")
   r2rtf:::check_args(output, type = "character", length = 1)
@@ -1346,7 +1346,8 @@ assemble_rtf <- function(input,
   ext_output <- tolower(tools::file_ext(output))
 
   # input checking
-  r2rtf:::check_args(landscape, "logical", length = 1)
+  r2rtf:::check_args(sectionpages, "logical", length = 1)
+  r2rtf:::check_args(sasmode, "logical", length = 1)
   r2rtf:::match_arg(ext_output, "rtf")
 
   # warning missing input
@@ -1358,7 +1359,7 @@ assemble_rtf <- function(input,
   # assemble RTF
   rtf <- lapply(input, readLines)
   n <- length(rtf)
-  start <- c(1, vapply(rtf[-1], function(x) max(grep("sectd", rtf[[1]])), numeric(1)))
+  start <- c(1, vapply(rtf[-1], function(x) min(grep("sectd", x)), numeric(1)))
   end <- vapply(rtf, length, numeric(1))
   end[-n] <- end[-n] - 1
 
@@ -1374,12 +1375,23 @@ assemble_rtf <- function(input,
     rtf <- lapply(
       rtf,
       function(x) {
-        x <- gsub("NUMPAGES", "SECTIONPAGES", x, fixed = TRUE)
-        gsub("\\\\sectd", "\\\\sectd\\\\pgnrestart\\\\pgnstart1", x)
+        if(cnt_numpages) {
+          n_sect <- sum(grepl("\\\\sect([^A-Za-z0-9]|$)", x, ignore.case = TRUE))
+          n_page <- sum(grepl("\\\\page([^A-Za-z0-9]|$)", x, ignore.case = TRUE))
+          x <- gsub("NUMPAGES", as.character(n_sect + n_page + 1), x, fixed = TRUE)
+        }else {
+          x <- gsub("NUMPAGES", "SECTIONPAGES", x, fixed = TRUE)
+        }
+
+        # gsub("\\\\sectd", "\\\\sectd\\\\pgnrestart\\\\pgnstart1", x)
+        idx <- which(grepl("\\\\sectd", x))[1]
+        if (!is.na(idx)) {
+          x[idx] <- sub("\\\\sectd", "\\\\sectd\\\\pgnrestart\\\\pgnstart1", x[idx])
+        }
       }
     )
   }
-  
+
   rtf <- do.call(c, rtf)
 
   write_rtf(rtf, output)
