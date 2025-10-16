@@ -1423,7 +1423,7 @@ assemble_rtf <- function(input,
     rtf[[i]] <- rtf[[i]][start[i]:end[i]]
     if(!is.null(toc_title)) rtf[[i]] <- c(bookmark_rtf, rtf[[i]])
     if (i == 1) {
-      if(!is.null(toc_title)) rtf[[i]] <- c(generate_toc(rtf, toc_title), rtf[[i]])
+      if(!is.null(toc_title)) rtf[[i]] <- c(generate_toc(rtf, toc_title), as_rtf_new_section(), rtf[[i]])
       rtf[[i]] <- c(rtf_start, rtf[[i]])
     }
     if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
@@ -1497,19 +1497,17 @@ generate_toc <- function(rtf_list, toc_title, width = 80, row_num = 30) {
     ) %>%
     rowwise() %>%
     mutate(
-      title_str = list(ydisctools::split_text_by_max_bytes(title, max_bytes = 80)),
+      title_str = list(ydisctools::split_text_by_max_bytes(title, max_bytes = width)),
       pagefl = list(ifelse(seq_along(title_str) == length(title_str), "Y", "N"))
     ) %>%
     mutate(
       line_no = length(title_str)
     ) %>%
     ungroup() %>%
-    mutate(,
-           toc_page_no = ceiling(cumsum(line_no) / 3L)
-    ) %>%
+    mutate(toc_page_no = ceiling(cumsum(line_no) / row_num)) %>%
     unnest_longer(c(title_str, pagefl)) %>%
     mutate(
-      title_str = ifelse(pagefl == "Y", rpad(title_str, 82, "."), title_str),
+      title_str = ifelse(pagefl == "Y", rpad(title_str, width + 2, "."), title_str),
       # toc_page_no = ceiling(n() / 30),
       n = ifelse(pagefl == "Y", n, 0),
       page_no = ifelse(pagefl == "Y", as.character(max(toc_page_no) + cumsum(n) - n + 1), "")
