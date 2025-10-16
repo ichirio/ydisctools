@@ -1416,7 +1416,7 @@ assemble_rtf <- function(input,
       mutate(bookmark_key = str_sub(title, 1, 25)) %>%
       pull(bookmark_key)
 
-    bookmark_rtf <- paste0("{\\bkmkstart ", bookmark_keys, "}{\\bkmkend ", bookmark_keys, "}\n")
+    bookmark_rtf <- paste0("{\\*\\bkmkstart ", bookmark_keys, "}{\\*\\bkmkend ", bookmark_keys, "}\n")
   }
 
   rtf_bk <- rtf
