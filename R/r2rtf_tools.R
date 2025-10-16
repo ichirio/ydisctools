@@ -1335,7 +1335,8 @@ assemble_rtf <- function(input,
                          output,
                          sectionpages = FALSE,
                          cnt_numpages = FALSE,
-                         replace_sect = FALSE) {
+                         replace_sect = FALSE,
+                         toc_title = NULL) {
   # input checking
   r2rtf:::check_args(input, type = "character")
   r2rtf:::check_args(output, type = "character", length = 1)
@@ -1360,9 +1361,14 @@ assemble_rtf <- function(input,
   # assemble RTF
   rtf <- lapply(input, readLines)
   n <- length(rtf)
-  start <- c(1, vapply(rtf[-1], function(x) min(grep("sectd", x)), numeric(1)))
-  end <- vapply(rtf, length, numeric(1))
-  end[-n] <- end[-n] - 1
+  # start <- c(1, vapply(rtf[-1], function(x) min(grep("sectd", x)), numeric(1)))
+  # end <- vapply(rtf, length, numeric(1))
+  # end[-n] <- end[-n] - 1
+  start <- vapply(rtf, function(x) min(grep("sectd", x)), numeric(1))
+  end <- vapply(rtf, length, numeric(1)) - 1
+  rtf_start <- rtf[[1]][1:(start[1] - 1)]
+  rtf_end <- "}"
+
 
   # if(isTRUE(sectionpages))
   #   rtf <- map(rtf, ~ gsub("NUMPAGES", "SECTIONPAGES", .x, fixed = TRUE))
@@ -1400,12 +1406,186 @@ assemble_rtf <- function(input,
     )
   }
 
-  for (i in seq_len(n)) {
-    rtf[[i]] <- rtf[[i]][start[i]:end[i]]
-    if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
+  # for (i in seq_len(n)) {
+  #   rtf[[i]] <- rtf[[i]][start[i]:end[i]]
+  #   if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
+  # }
+
+  if(!is.null(toc_title)) {
+    bookmark_keys <- rtf_toc_list(rtf) %>%
+      mutate(bookmark_key = str_sub(title, 1, 25)) %>%
+      pull(bookmark_key)
+
+    bookmark_rtf <- paste0("{\\bkmkstart ", bookmark_keys, "}{\\bkmkend ", bookmark_keys, "}\n")
   }
 
-  rtf <- do.call(c, rtf)
+  for (i in seq_len(n)) {
+    rtf[[i]] <- rtf[[i]][start[i]:end[i]]
+    if(!is.null(toc_title)) rtf[[i]] <- c(bookmark_rtf, rtf[[i]])
+    if (i == 1) {
+      if(!is.null(toc_title)) rtf[[i]] <- c(generate_toc(rtf, toc_title), rtf[[i]])
+      rtf[[i]] <- c(rtf_start, rtf[[i]])
+    }
+    if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
+    if (i == n) rtf[[i]] <- c(rtf[[i]], rtf_end)
+  }
+
+  rtf_final <- do.call(c, rtf)
 
   write_rtf(rtf, output)
+}
+
+
+
+
+
+
+# 開発中
+
+find_rtf_text <- function(rtf_texts, key, n) {
+  stopifnot(is.character(rtf_texts), length(n) == 1L, n >= 1)
+
+  # 簡易ストリップ
+  texts <- gsub("\\\\([A-Za-z0-9;])+", "", rtf_texts, perl = TRUE)
+  texts <- gsub("[{}]", "", texts)
+  texts <- trimws(texts)
+  texts <- texts[nzchar(texts) & texts != ";"]
+
+  if (length(texts) == 0L) return(character(0))
+
+  # 大文字小文字無視で最初のマッチのみ取得
+  i <- grep(key, texts, perl = TRUE, ignore.case = TRUE)[1]
+  if (is.na(i)) return(character(0))
+
+  paste(texts[seq.int(i, min(length(texts), i + n - 1L))], collapse = " ")
+}
+
+rtf_page_count <- function(rtf) {
+  rtf <- rtf[!is.na(rtf)]
+  n_sect <- sum(grepl("\\\\sect([^A-Za-z0-9]|$)", rtf, ignore.case = TRUE))
+  n_page <- sum(grepl("\\\\page([^A-Za-z0-9]|$)", rtf, ignore.case = TRUE))
+  as.integer(n_sect + n_page + 1L)
+}
+
+
+rtf_toc_list <- function(rtf) {
+  purrr::map_dfr(rtf, ~ {
+    n <- rtf_page_count(.x)
+    title <- find_rtf_text(.x, "^table|Figure|Listing", 3)
+
+    tibble(
+      title = title,
+      n = n
+    )
+  })
+}
+
+rpad <- function(x, width, pad = " ") {
+  stopifnot(length(pad) == 1L)
+  w <- nchar(x, type = "width", allowNA = TRUE)
+  add <- pmax(0L, width - w)
+  paste0(x, strrep(pad, add))
+}
+
+
+# 実行（関数内のキーは "^table|Figure|Listing" 前提）
+generate_toc <- function(rtf_list, toc_title, width = 80, row_num = 30) {
+  toc_rtf <- rtf_toc_list(rtf_list) %>%
+    mutate(
+      title_n = str_length(title),
+      bookmark_key = str_sub(title, 1, 25)
+    ) %>%
+    rowwise() %>%
+    mutate(
+      title_str = list(ydisctools::split_text_by_max_bytes(title, max_bytes = 80)),
+      pagefl = list(ifelse(seq_along(title_str) == length(title_str), "Y", "N"))
+    ) %>%
+    mutate(
+      line_no = length(title_str)
+    ) %>%
+    ungroup() %>%
+    mutate(,
+           toc_page_no = ceiling(cumsum(line_no) / 3L)
+    ) %>%
+    unnest_longer(c(title_str, pagefl)) %>%
+    mutate(
+      title_str = ifelse(pagefl == "Y", rpad(title_str, 82, "."), title_str),
+      # toc_page_no = ceiling(n() / 30),
+      n = ifelse(pagefl == "Y", n, 0),
+      page_no = ifelse(pagefl == "Y", as.character(max(toc_page_no) + cumsum(n) - n + 1), "")
+    ) %>%
+    mutate(
+      rtf_text = paste0(
+        "\\field\n\\fldinst { HYPERLINK \\\\l \"",
+        bookmark_key,
+        "\" }}\n",
+        "\\pard\\plain\\ql\\li0\\ri0\\nowidctlpar\\faauto\\rin0\\lin0\\itap0\\f6\\fs20\n",
+        "{\\*\\fldrslt {",
+        title_str, page_no,
+        "}}\\par\n}"
+      )
+    ) %>%
+    mutate(rtf_text = if_else(toc_page_no != lead(toc_page_no),
+                              paste0(rtf_text, "\n", r2rtf:::as_rtf_new_page()), rtf_text, rtf_text)) %>%
+    pull(rtf_text)
+
+  toc_rtf <- c(
+    "\\paperw15840\\paperh12240\n",
+    "{\\bkmkstart Table of Contents}{\\bkmkend Table of Contents}\n",
+    "\\par\\pard\\ql\\b Table of Contents \\b0\\par\n",
+    "\\par\\pard\\ql\\b ", toc_title, " \\b0\\par\n",
+    toc_rtf
+  )
+
+  toc_rtf
+}
+
+
+# テスト用RTF（文字ベクトル）作成
+if(FALSE) {
+
+  library(purrr)
+  library(dplyr)
+  library(magrittr)
+  library(stringr)
+  library(tidyr)
+
+
+  rtf_list <- list(
+    doc_table = c(
+      "{\\rtf1\\ansi",
+      "{\\b TABLE 1 Demographics}",
+      "body text long long long long long long texts long long long long long long texts",
+      "<hoge>",
+      "{\\page}",    # ページ区切り1回 → ページ数 2
+      "}"
+    ),
+    doc_figure = c(
+      "{\\rtf1\\ansi",
+      "{\\i FIGURE 2 Disposition} body text",
+      "body text",
+      "<hoge>",
+      "{\\sect }",   # セクション区切り1回 → ページ数 2
+      "}"
+    ),
+    doc_listing = c(
+      "{\\rtf1\\ansi",
+      "{\\ul LISTING 3 Adverse} body text",
+      "body text",
+      "<hoge>",
+      "}"            # 区切りなし → ページ数 1
+    ),
+    doc_mixed = c(
+      "{\\rtf1\\ansi",
+      "{\\b TABLE 10 Baseline} blah",
+      "body text",
+      "<hoge>",
+      "{\\page }",   # +1
+      "{\\i FIGURE 5 KM} blah",
+      "{\\sect }",   # +1 → ページ数 3
+      "}"
+    )
+  )
+
+  generate_toc(rtf_list, "TAK-853-1501 Phase-I")
 }
