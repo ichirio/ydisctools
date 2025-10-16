@@ -1516,7 +1516,7 @@ generate_toc <- function(rtf_list, toc_title, width = 80, row_num = 30) {
     ) %>%
     mutate(
       rtf_text = paste0(
-        "\\field\n\\fldinst { HYPERLINK \\\\l \"",
+        "{\\field\n{\\fldinst { HYPERLINK \\\\l \"",
         bookmark_key,
         "\" }}\n",
         "\\pard\\plain\\ql\\li0\\ri0\\nowidctlpar\\faauto\\rin0\\lin0\\itap0\\f6\\fs20\n",
