@@ -1419,11 +1419,13 @@ assemble_rtf <- function(input,
     bookmark_rtf <- paste0("{\\bkmkstart ", bookmark_keys, "}{\\bkmkend ", bookmark_keys, "}\n")
   }
 
+  rtf_bk <- rtf
+
   for (i in seq_len(n)) {
     rtf[[i]] <- rtf[[i]][start[i]:end[i]]
     if(!is.null(toc_title)) rtf[[i]] <- c(bookmark_rtf[i], rtf[[i]])
     if (i == 1) {
-      if(!is.null(toc_title)) rtf[[i]] <- c(generate_toc(rtf, toc_title), as_rtf_new_section(), rtf[[i]])
+      if(!is.null(toc_title)) rtf[[i]] <- c(generate_toc(rtf_bk, toc_title), as_rtf_new_section(), rtf[[i]])
       rtf[[i]] <- c(rtf_start, rtf[[i]])
     }
     if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
@@ -1517,7 +1519,7 @@ generate_toc <- function(rtf_list, toc_title, width = 80, row_num = 30) {
         "{\\field\n{\\fldinst { HYPERLINK \\\\l \"",
         bookmark_key,
         "\" }}\n",
-        "\\pard\\plain\\ql\\li0\\ri0\\nowidctlpar\\faauto\\rin0\\lin0\\itap0\\f6\\fs20\n",
+        "\\pard\\plain\\ql\\li0\\ri0\\nowidctlpar\\faauto\\rin0\\lin0\\itap0\\f8\\fs20\n",
         "{\\*\\fldrslt {",
         title_str, page_no,
         "}}\\par\n}"
