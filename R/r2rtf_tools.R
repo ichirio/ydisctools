@@ -1430,7 +1430,7 @@ assemble_rtf <- function(input,
     if (i == n) rtf[[i]] <- c(rtf[[i]], rtf_end)
   }
 
-  rtf_final <- do.call(c, rtf)
+  rtf <- do.call(c, rtf)
 
   write_rtf(rtf, output)
 }
