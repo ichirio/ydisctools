@@ -1421,7 +1421,7 @@ assemble_rtf <- function(input,
 
   for (i in seq_len(n)) {
     rtf[[i]] <- rtf[[i]][start[i]:end[i]]
-    if(!is.null(toc_title)) rtf[[i]] <- c(bookmark_rtf, rtf[[i]])
+    if(!is.null(toc_title)) rtf[[i]] <- c(bookmark_rtf[i], rtf[[i]])
     if (i == 1) {
       if(!is.null(toc_title)) rtf[[i]] <- c(generate_toc(rtf, toc_title), as_rtf_new_section(), rtf[[i]])
       rtf[[i]] <- c(rtf_start, rtf[[i]])
