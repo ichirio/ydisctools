@@ -1416,7 +1416,7 @@ assemble_rtf <- function(input,
       mutate(bookmark_key = str_sub(title, 1, 25)) %>%
       pull(bookmark_key)
 
-    bookmark_rtf <- paste0("{\\*\\bkmkstart ", bookmark_keys, "}{\\*\\bkmkend ", bookmark_keys, "}\n")
+    bookmark_rtf <- paste0("{\\*\\bkmkstart ", bookmark_keys, "} \\par \\ql {\\*\\bkmkend ", bookmark_keys, "}\n")
   }
 
   rtf_bk <- rtf
@@ -1491,7 +1491,7 @@ rpad <- function(x, width, pad = " ") {
 
 
 # 実行（関数内のキーは "^table|Figure|Listing" 前提）
-generate_toc <- function(rtf_list, toc_title, width = 80, row_num = 30) {
+generate_toc <- function(rtf_list, toc_title, width = 95, row_num = 30) {
   toc_rtf <- rtf_toc_list(rtf_list) %>%
     mutate(
       title_n = str_length(title),
@@ -1531,7 +1531,7 @@ generate_toc <- function(rtf_list, toc_title, width = 80, row_num = 30) {
 
   toc_rtf <- c(
     "\\paperw15840\\paperh12240\n",
-    "{\\bkmkstart Table of Contents}{\\bkmkend Table of Contents}\n",
+    "{\\*\\bkmkstart Table of Contents}{\\*\\bkmkend Table of Contents}\n",
     "\\par\\pard\\ql\\b Table of Contents \\b0\\par\n",
     "\\par\\pard\\ql\\b ", toc_title, " \\b0\\par\n",
     toc_rtf
