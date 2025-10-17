@@ -1132,7 +1132,13 @@ as_rtf_hf_tbl <- function(tbl, texts, module = "page_header", width = NULL) {
     result
   }
 
-  rtf_rows <- lapply(texts, function(vec) {
+  # rtf_rows <- lapply(texts, function(vec) {
+  rtf_rows <- lapply(seq_along(texts), function(i) {
+    vec <- texts[[i]]
+
+    cell_command <- "\\cellx"
+    if(i == 1 && module == "page_footer") cell_command <- "\\clbrdrt\\brdrs\\brdrw20\\cellx"
+
     if(length(vec) == 2) {
       left_text  <- if ("l" %in% names(vec)) vec["l"] else vec[1]
       left_text <- replace_page(left_text)
@@ -1143,7 +1149,7 @@ as_rtf_hf_tbl <- function(tbl, texts, module = "page_header", width = NULL) {
 
       rtf_text <- paste0(
         "{\\trowd\\trgaph", cell_height, "\\trleft0\n",
-        "\\cellx", cellx1, "\\cellx", cellx2, "\n",
+        cell_command, cellx1, cell_command, cellx2, "\n",
         "\\intbl\\ql\\f", text_font, "\\fs", text_font_size * 2, " ", left_text, "\\cell\n",
         "\\intbl\\qr\\f", text_font, "\\fs", text_font_size * 2, " ", right_text, "\\cell\n",
         "\\row}"
@@ -1157,7 +1163,7 @@ as_rtf_hf_tbl <- function(tbl, texts, module = "page_header", width = NULL) {
 
       rtf_text <- paste0(
         "{\\trowd\\trgaph", cell_height, "\\trleft0\n",
-        "\\cellx", cellx2, "\n",
+        cell_command, cellx2, "\n",
         "\\intbl", align, "\\f", text_font, "\\fs", text_font_size * 2, " ", text, "\\cell\n",
         "\\row}"
       )
