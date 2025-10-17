@@ -1412,11 +1412,18 @@ assemble_rtf <- function(input,
   # }
 
   if(!is.null(toc_title)) {
-    bookmark_keys <- rtf_toc_list(rtf) %>%
-      mutate(bookmark_key = str_sub(title, 1, 25)) %>%
+    toc_df <- rtf_toc_list(rtf)
+
+    title <- toc_df %>%
+      pull(title)
+
+    bookmark_keys <- toc_df %>%
       pull(bookmark_key)
 
-    bookmark_rtf <- paste0("{\\*\\bkmkstart ", bookmark_keys, "} \\par \\ql {\\*\\bkmkend ", bookmark_keys, "}\n")
+    bookmark_rtf <- paste0(
+      "\\ltrpar\\s2\\ql {\\fs0 ", title, "} \\par \\s0\\ql ",
+      "{\\*\\bkmkstart ", bookmark_keys, "} \\par \\ql {\\*\\bkmkend ", bookmark_keys, "}\n"
+    )
   }
 
   rtf_bk <- rtf
@@ -1478,7 +1485,12 @@ rtf_toc_list <- function(rtf) {
     tibble(
       title = title,
       n = n
-    )
+    ) %>%
+      mutate(
+        title_n = str_length(title),
+        bookmark_key = str_sub(title, 1, 25)
+      )
+
   })
 }
 
@@ -1493,10 +1505,10 @@ rpad <- function(x, width, pad = " ") {
 # 実行（関数内のキーは "^table|Figure|Listing" 前提）
 generate_toc <- function(rtf_list, toc_title, width = 95, row_num = 30) {
   toc_rtf <- rtf_toc_list(rtf_list) %>%
-    mutate(
-      title_n = str_length(title),
-      bookmark_key = str_sub(title, 1, 25)
-    ) %>%
+    # mutate(
+    #   title_n = str_length(title),
+    #   bookmark_key = str_sub(title, 1, 25)
+    # ) %>%
     rowwise() %>%
     mutate(
       title_str = list(ydisctools::split_text_by_max_bytes(title, max_bytes = width)),
@@ -1531,9 +1543,11 @@ generate_toc <- function(rtf_list, toc_title, width = 95, row_num = 30) {
 
   toc_rtf <- c(
     "\\paperw15840\\paperh12240\n",
+    "{\\stylesheet{\\s0\\ql Normal;}{\\s1\\ql \\sqformat \\spriority9 Heading 1;}",
+    "{\\s2\\ql \\sqformat \\spriority9 Heading 2;}{\\s3\\ql \\sqformat \\spriority9 Heading 3;}}\n",
     "{\\*\\bkmkstart Table of Contents}{\\*\\bkmkend Table of Contents}\n",
-    "\\par\\pard\\ql\\b Table of Contents \\b0\\par\n",
-    "\\par\\pard\\ql\\b ", toc_title, " \\b0\\par\n",
+    "\\par\\pard\\ql\\fs24\\b \\s1 Table of Contents \\b0\\par\n",
+    "\\par\\pard\\ql\\fs24\\b \\s1 ", toc_title, " \\b0\\par\n",
     toc_rtf
   )
 
