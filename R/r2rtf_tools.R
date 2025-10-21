@@ -1430,7 +1430,8 @@ assemble_rtf <- function(input,
 
     bookmark_rtf <- paste0(
       "\\ltrpar\\s2\\ql {\\fs0 \\cf", white_num, " ", title, "} \\par \\s0\\ql ",
-      "{\\*\\bkmkstart ", bookmark_keys, "} \\par \\ql {\\*\\bkmkend ", bookmark_keys, "}\n"
+      # "{\\*\\bkmkstart ", bookmark_keys, "} \\par \\ql {\\*\\bkmkend ", bookmark_keys, "}\n"
+      "{\\*\\bkmkstart ", bookmark_keys, "}{\\*\\bkmkend ", bookmark_keys, "}\n"
     )
   }
 
