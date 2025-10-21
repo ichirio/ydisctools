@@ -1343,7 +1343,8 @@ assemble_rtf <- function(input,
                          cnt_numpages = FALSE,
                          replace_sect = FALSE,
                          toc_title = NULL,
-                         font_num = 8) {
+                         font_num = 8,
+                         white_num = 1) {
   # input checking
   r2rtf:::check_args(input, type = "character")
   r2rtf:::check_args(output, type = "character", length = 1)
@@ -1428,7 +1429,7 @@ assemble_rtf <- function(input,
       pull(bookmark_key)
 
     bookmark_rtf <- paste0(
-      "\\ltrpar\\s2\\ql {\\fs0 \\cf1 ", title, "} \\par \\s0\\ql ",
+      "\\ltrpar\\s2\\ql {\\fs0 \\cf", white_num, " ", title, "} \\par \\s0\\ql ",
       "{\\*\\bkmkstart ", bookmark_keys, "} \\par \\ql {\\*\\bkmkend ", bookmark_keys, "}\n"
     )
   }
