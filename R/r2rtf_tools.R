@@ -1374,21 +1374,22 @@ assemble_rtf <- function(input,
   # end[-n] <- end[-n] - 1
   start <- vapply(rtf, function(x) min(grep("sectd", x)), numeric(1))
   # end <- vapply(rtf, length, numeric(1)) - 1
-  end <- vapply(rtf, function(rtf_vec) {
-    idxs <- which(!is.na(rtf_vec) & grepl("}", rtf_vec, fixed = TRUE))
-    if (length(idxs) == 0L) {
-      n <- length(rtf_vec)
+  end <- integer(length(rtf))
+  for (i in seq_along(rtf)) {
+    v <- rtf[[i]]
+    if (length(v) == 0L) { end[i] <- 0L; next }
+
+    idx <- tail(which(!is.na(v) & grepl("}", v, fixed = TRUE)), 1)
+
+    if (length(idx) == 0L) {
+      end[i] <- length(v)
+    } else if (trimws(v[idx]) == "}") {
+      end[i] <- idx - 1L
     } else {
-      last_idx <- idxs[length(idxs)]
-      if (trimws(rtf_vec[last_idx]) == "}") {
-        n <- last_idx - 1L
-      } else {
-        rtf_vec[last_idx] <- sub("\\}(?!.*\\})", "", rtf_vec[last_idx], perl = TRUE)
-        n <- last_idx
-      }
+      rtf[[i]][idx] <- sub("}(?=[^}]*$)", "", v[idx], perl = TRUE)
+      end[i] <- idx
     }
-    n
-  }, numeric(1))
+  }
   rtf_start <- rtf[[1]][1:(start[1] - 1)]
   rtf_end <- "}"
 
