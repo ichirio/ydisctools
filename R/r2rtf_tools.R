@@ -1342,7 +1342,8 @@ assemble_rtf <- function(input,
                          sectionpages = FALSE,
                          cnt_numpages = FALSE,
                          replace_sect = FALSE,
-                         toc_title = NULL) {
+                         toc_title = NULL,
+                         font_num = 8) {
   # input checking
   r2rtf:::check_args(input, type = "character")
   r2rtf:::check_args(output, type = "character", length = 1)
@@ -1438,7 +1439,8 @@ assemble_rtf <- function(input,
     rtf[[i]] <- rtf[[i]][start[i]:end[i]]
     if(!is.null(toc_title)) rtf[[i]] <- c(bookmark_rtf[i], rtf[[i]])
     if (i == 1) {
-      if(!is.null(toc_title)) rtf[[i]] <- c(generate_toc(rtf_bk, toc_title), as_rtf_new_section(), rtf[[i]])
+      if(!is.null(toc_title)) rtf[[i]] <- c(generate_toc(rtf_bk, toc_title, font_num = font_num),
+                                            as_rtf_new_section(), rtf[[i]])
       rtf[[i]] <- c(rtf_start, rtf[[i]])
     }
     if (i < n) rtf[[i]] <- c(rtf[[i]], as_rtf_new_section())
@@ -1509,7 +1511,7 @@ rpad <- function(x, width, pad = " ") {
 
 
 # 実行（関数内のキーは "^table|Figure|Listing" 前提）
-generate_toc <- function(rtf_list, toc_title, width = 95, row_num = 30) {
+generate_toc <- function(rtf_list, toc_title, width = 95, row_num = 30, font_num = 8) {
   toc_rtf <- rtf_toc_list(rtf_list) %>%
     # mutate(
     #   title_n = str_length(title),
@@ -1537,7 +1539,7 @@ generate_toc <- function(rtf_list, toc_title, width = 95, row_num = 30) {
         "{\\field\n{\\fldinst { HYPERLINK \\\\l \"",
         bookmark_key,
         "\" }}\n",
-        "\\pard\\plain\\ql\\li0\\ri0\\nowidctlpar\\faauto\\rin0\\lin0\\itap0\\f8\\fs20\n",
+        "\\pard\\plain\\ql\\li0\\ri0\\nowidctlpar\\faauto\\rin0\\lin0\\itap0\\f", font_num, "\\fs20\n",
         "{\\*\\fldrslt {",
         title_str, page_no,
         "}}\\par\n}"
@@ -1548,7 +1550,7 @@ generate_toc <- function(rtf_list, toc_title, width = 95, row_num = 30) {
     pull(rtf_text)
 
   toc_rtf <- c(
-    "\\paperw15840\\paperh12240\n",
+    # "\\paperw15840\\paperh12240\n",
     "{\\stylesheet{\\s0\\ql Normal;}{\\s1\\ql \\sqformat \\spriority9 Heading 1;}",
     "{\\s2\\ql \\sqformat \\spriority9 Heading 2;}{\\s3\\ql \\sqformat \\spriority9 Heading 3;}}\n",
     "{\\*\\bkmkstart Table of Contents}{\\*\\bkmkend Table of Contents}\n",
