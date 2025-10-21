@@ -1373,7 +1373,22 @@ assemble_rtf <- function(input,
   # end <- vapply(rtf, length, numeric(1))
   # end[-n] <- end[-n] - 1
   start <- vapply(rtf, function(x) min(grep("sectd", x)), numeric(1))
-  end <- vapply(rtf, length, numeric(1)) - 1
+  # end <- vapply(rtf, length, numeric(1)) - 1
+  end <- vapply(rtf, function(rtf_vec) {
+    idxs <- which(!is.na(rtf_vec) & grepl("}", rtf_vec, fixed = TRUE))
+    if (length(idxs) == 0L) {
+      n <- length(rtf_vec)
+    } else {
+      last_idx <- idxs[length(idxs)]
+      if (trimws(rtf_vec[last_idx]) == "}") {
+        n <- last_idx - 1L
+      } else {
+        rtf_vec[last_idx] <- sub("\\}(?!.*\\})", "", rtf_vec[last_idx], perl = TRUE)
+        n <- last_idx
+      }
+    }
+    n
+  }, numeric(1))
   rtf_start <- rtf[[1]][1:(start[1] - 1)]
   rtf_end <- "}"
 
