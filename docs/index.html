@@ -3,52 +3,328 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ydisctools Documentation</title>
+  <title>ydisctools - CDISC Utility Toolkit</title>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      margin: 40px auto;
-      max-width: 900px;
-      line-height: 1.6;
-      color: #1f2937;
-      padding: 0 16px;
+    :root {
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --ink: #13203a;
+      --muted: #61708d;
+      --brand: #0d4b95;
+      --brand-2: #2e76d0;
+      --line: #d9e1ef;
+      --chip: #e8f0ff;
+      --shadow: 0 10px 26px rgba(15, 45, 91, 0.12);
+      --radius: 14px;
     }
-    h1 { margin-bottom: 8px; }
-    .muted { color: #6b7280; }
-    ul { padding-left: 20px; }
-    a { color: #2563eb; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    .card {
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 16px;
-      margin: 16px 0;
-      background: #f9fafb;
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% -8%, rgba(81, 145, 224, 0.18), transparent 42%),
+        radial-gradient(circle at 88% 0%, rgba(127, 187, 231, 0.14), transparent 36%),
+        var(--bg);
+      font-family: "Segoe UI", "Source Sans 3", Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(8px);
+      background: rgba(13, 75, 149, 0.93);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .topbar-inner {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 12px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #fff;
+    }
+
+    .brand {
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      color: #fff;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .nav-links a {
+      color: #eaf2ff;
+      font-size: 14px;
+    }
+
+    .hero {
+      max-width: 1160px;
+      margin: 26px auto 18px;
+      padding: 0 22px;
+    }
+
+    .hero-box {
+      background: linear-gradient(125deg, #0f3f7a 0%, #1b5aab 56%, #2f7cd3 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 34px 34px 28px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-box::after {
+      content: "";
+      position: absolute;
+      right: -48px;
+      top: -48px;
+      width: 210px;
+      height: 210px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.13);
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 40px);
+      letter-spacing: 0.3px;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      max-width: 760px;
+      color: #dce9ff;
+      font-size: 18px;
+    }
+
+    .chips {
+      margin-top: 18px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.16);
+      color: #eef5ff;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+    }
+
+    .layout {
+      max-width: 1160px;
+      margin: 0 auto 34px;
+      padding: 0 22px;
+      display: grid;
+      grid-template-columns: 1.7fr 0.9fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 14px rgba(15, 45, 91, 0.06);
+      padding: 22px;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    .panel h3 {
+      margin: 20px 0 10px;
+      font-size: 17px;
+    }
+
+    .doc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .doc-card {
+      border: 1px solid var(--line);
+      background: #fbfdff;
+      border-radius: 12px;
+      padding: 14px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .doc-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(22, 58, 112, 0.12);
+    }
+
+    .doc-card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .doc-card span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .example-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .thumb {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .thumb a {
+      display: block;
+      color: inherit;
+    }
+
+    .thumb img {
+      display: block;
+      width: 100%;
+      height: 170px;
+      object-fit: cover;
+      border-bottom: 1px solid var(--line);
+      background: #eef3fb;
+    }
+
+    .thumb .caption {
+      padding: 10px 12px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .side-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .side-list li {
+      margin: 8px 0;
+    }
+
+    .footer {
+      max-width: 1160px;
+      margin: 0 auto 28px;
+      padding: 0 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .hero-box { padding: 26px 22px; }
     }
   </style>
 </head>
 <body>
-  <h1>ydisctools Documentation</h1>
-  <p class="muted">CDISC-oriented utilities and Sankey plotting helpers.</p>
+  <nav class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">ydisctools</div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="FUNCTION_REFERENCE.md">Reference</a>
+        <a href="SANKEY_GUIDE.md">Sankey Guide</a>
+        <a href="https://github.com/ichirio/ydisctools">GitHub</a>
+      </div>
+    </div>
+  </nav>
 
-  <div class="card">
-    <h2>Documents</h2>
-    <ul>
-      <li><a href="FUNCTION_REFERENCE.md">Function Reference</a></li>
-      <li><a href="SANKEY_GUIDE.md">Sankey Guide</a></li>
-      <li><a href="PAGES_SETUP.md">GitHub Pages Setup</a></li>
-    </ul>
+  <header class="hero">
+    <div class="hero-box">
+      <h1>Clinical Data Utilities with Visual Transition Support</h1>
+      <p>
+        ydisctools provides CDISC-oriented helper functions plus Sankey visualization
+        tools for treatment line transition analysis.
+      </p>
+      <div class="chips">
+        <span class="chip">SDTM/ADaM Helpers</span>
+        <span class="chip">Sankey with Isolated Nodes</span>
+        <span class="chip">Top/Bottom Baseline Control</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel">
+      <h2>Documentation</h2>
+      <div class="doc-grid">
+        <a class="doc-card" href="FUNCTION_REFERENCE.md">
+          <strong>Function Reference</strong>
+          <span>Generated list of package functions and summaries.</span>
+        </a>
+        <a class="doc-card" href="SANKEY_GUIDE.md">
+          <strong>Sankey Guide</strong>
+          <span>How to configure nodes, links, color modes, and alignment.</span>
+        </a>
+        <a class="doc-card" href="PAGES_SETUP.md">
+          <strong>Pages Setup</strong>
+          <span>Deployment notes for GitHub Pages workflow.</span>
+        </a>
+      </div>
+
+      <h3>Sankey examples</h3>
+      <div class="example-grid">
+        <article class="thumb">
+          <a href="../output/sankey_line1_line5_sample_across_lines.png">
+            <img src="../output/sankey_line1_line5_sample_across_lines.png" alt="Across-lines treatment color mode">
+            <div class="caption">Across-lines color mode</div>
+          </a>
+        </article>
+        <article class="thumb">
+          <a href="../output/sankey_line1_line5_sample_by_line.png">
+            <img src="../output/sankey_line1_line5_sample_by_line.png" alt="By-line treatment color mode">
+            <div class="caption">By-line color mode</div>
+          </a>
+        </article>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <h2>Project Links</h2>
+      <ul class="side-list">
+        <li><a href="https://github.com/ichirio/ydisctools">Repository</a></li>
+        <li><a href="https://github.com/ichirio/ydisctools/issues">Issue Tracker</a></li>
+        <li><a href="../README.md">README</a></li>
+        <li><a href="../output/create_line1_line5_sankey_sample.R">Sample Sankey Script</a></li>
+      </ul>
+
+      <h3>Current scope</h3>
+      <p>
+        The site is intentionally lightweight while keeping documentation and
+        examples directly accessible from one page.
+      </p>
+    </aside>
+  </main>
+
+  <div class="footer">
+    ydisctools documentation site · hosted on GitHub Pages
   </div>
-
-  <div class="card">
-    <h2>Sankey Examples</h2>
-    <ul>
-      <li><a href="../output/sankey_line1_line5_sample_across_lines.png">Across-lines color mode PNG</a></li>
-      <li><a href="../output/sankey_line1_line5_sample_by_line.png">By-line color mode PNG</a></li>
-      <li><a href="../output/create_line1_line5_sankey_sample.R">Sample generator script</a></li>
-    </ul>
-  </div>
-
-  <p>Repository: <a href="https://github.com/ichirio/ydisctools">https://github.com/ichirio/ydisctools</a></p>
 </body>
 </html>
