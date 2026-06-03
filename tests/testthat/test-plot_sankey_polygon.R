@@ -1,4 +1,4 @@
-test_that("plot_sankey_polygon returns ggplot and keeps isolated nodes", {
+test_that("plot_sankey returns ggplot and keeps isolated nodes", {
   nodes <- data.frame(
     id = c("A", "B", "C", "No Treatment"),
     stage = c("L1", "L2", "L2", "L1"),
@@ -13,7 +13,7 @@ test_that("plot_sankey_polygon returns ggplot and keeps isolated nodes", {
     stringsAsFactors = FALSE
   )
 
-  p <- plot_sankey_polygon(
+  p <- plot_sankey(
     nodes = nodes,
     links = links,
     node_id = "id",
@@ -30,7 +30,7 @@ test_that("plot_sankey_polygon returns ggplot and keeps isolated nodes", {
   expect_false(any(is.na(built_nodes$ymin)))
 })
 
-test_that("plot_sankey_polygon supports vertical orientation and bottom baseline", {
+test_that("plot_sankey supports vertical orientation and bottom baseline", {
   nodes <- data.frame(
     id = c("A", "B", "C"),
     stage = c("S1", "S2", "S2"),
@@ -44,7 +44,7 @@ test_that("plot_sankey_polygon supports vertical orientation and bottom baseline
     stringsAsFactors = FALSE
   )
 
-  p <- plot_sankey_polygon(
+  p <- plot_sankey(
     nodes = nodes,
     links = links,
     orientation = "vertical",
@@ -58,7 +58,7 @@ test_that("plot_sankey_polygon supports vertical orientation and bottom baseline
   expect_true(length(p$layers) >= 2)
 })
 
-test_that("plot_sankey_polygon aligns stage tops when baseline is top", {
+test_that("plot_sankey aligns stage tops when baseline is top", {
   nodes <- data.frame(
     id = c("L1_A", "L1_No", "L2_A", "L2_No"),
     stage = c("L1", "L1", "L2", "L2"),
@@ -73,7 +73,7 @@ test_that("plot_sankey_polygon aligns stage tops when baseline is top", {
     stringsAsFactors = FALSE
   )
 
-  p <- plot_sankey_polygon(
+  p <- plot_sankey(
     nodes = nodes,
     links = links,
     node_value = "node_n",
@@ -88,7 +88,7 @@ test_that("plot_sankey_polygon aligns stage tops when baseline is top", {
   expect_equal(l1_top, l2_top, tolerance = 1e-8)
 })
 
-test_that("plot_sankey_polygon keeps input order as top-to-bottom when baseline is top", {
+test_that("plot_sankey keeps input order as top-to-bottom when baseline is top", {
   nodes <- data.frame(
     id = c("L1_A", "L1_B", "L1_No", "L2_A"),
     stage = c("L1", "L1", "L1", "L2"),
@@ -104,7 +104,7 @@ test_that("plot_sankey_polygon keeps input order as top-to-bottom when baseline 
     stringsAsFactors = FALSE
   )
 
-  p <- plot_sankey_polygon(
+  p <- plot_sankey(
     nodes = nodes,
     links = links,
     node_label = "label",
@@ -119,17 +119,17 @@ test_that("plot_sankey_polygon keeps input order as top-to-bottom when baseline 
   expect_equal(which.min(l1$ymin), 3)
 })
 
-test_that("plot_sankey_polygon validates shared scale input", {
+test_that("plot_sankey validates shared scale input", {
   nodes <- data.frame(id = c("A", "B"), stage = c("S1", "S2"), stringsAsFactors = FALSE)
   links <- data.frame(source = "A", target = "B", value = 1, stringsAsFactors = FALSE)
 
   expect_error(
-    plot_sankey_polygon(nodes, links, scale_mode = "shared"),
+    plot_sankey(nodes, links, scale_mode = "shared"),
     "shared_scale_max"
   )
 })
 
-test_that("plot_sankey_polygon supports treatment color modes", {
+test_that("plot_sankey supports treatment color modes", {
   nodes <- data.frame(
     id = c("L1_Chemo", "L1_No", "L2_Chemo", "L2_No"),
     stage = c("L1", "L1", "L2", "L2"),
@@ -145,7 +145,7 @@ test_that("plot_sankey_polygon supports treatment color modes", {
     stringsAsFactors = FALSE
   )
 
-  p_global <- plot_sankey_polygon(
+  p_global <- plot_sankey(
     nodes = nodes,
     links = links,
     node_treatment = "treatment",
@@ -157,7 +157,7 @@ test_that("plot_sankey_polygon supports treatment color modes", {
   global_fill <- ggplot2::layer_data(p_global, 2)$fill
   expect_equal(global_fill[1], global_fill[3])
 
-  p_by_line <- plot_sankey_polygon(
+  p_by_line <- plot_sankey(
     nodes = nodes,
     links = links,
     node_treatment = "treatment",

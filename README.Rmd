@@ -25,7 +25,7 @@ devtools::load_all()
 This repository also includes a Sankey plotting utility for treatment transition
 visualization:
 
-- `plot_sankey_polygon()` (Bezier links + rectangle nodes)
+- `plot_sankey()` (Bezier links + rectangle nodes)
 - isolated node support (nodes with zero incoming/outgoing links)
 - top/bottom baseline alignment and flexible scaling
 - treatment color modes (`across_lines` / `by_line`)

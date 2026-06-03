@@ -1,6 +1,6 @@
 # Sankey Guide
 
-This guide describes how to use `plot_sankey_polygon()` for treatment transition plots.
+This guide describes how to use `plot_sankey()` for treatment transition plots.
 
 ## Key features
 
@@ -32,7 +32,7 @@ Output files:
 ## Minimal call
 
 ```r
-p <- plot_sankey_polygon(
+p <- plot_sankey(
   nodes = nodes,
   links = links,
   node_id = "id",

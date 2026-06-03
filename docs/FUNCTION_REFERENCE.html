@@ -308,7 +308,7 @@ filtered_dfs &lt;- pickup_subjects(df_list, "subject_id", c("101", "102"))
 
 # Example without filtering (returns the original list)
 all_dfs &lt;- pickup_subjects(df_list, "subject_id")</code></pre></article>
-<article id="fn-plot-sankey-polygon" class="doc-card" style="margin-bottom:12px;"><strong><code>plot_sankey_polygon</code></strong><div class="meta">Plot Sankey Diagram with Rectangular Nodes and Bezier Polygon Links</div><div style="margin-top:8px;font-size:14px;"><a href="https://github.com/ichirio/ydisctools/blob/main/man/plot_sankey_polygon.Rd">Rd manual</a> · <a href="https://github.com/ichirio/ydisctools/search?q=plot_sankey_polygon&type=code">Source search</a> · <a href="#top">Back to top</a></div><h3>Usage</h3><pre><code>plot_sankey_polygon(
+<article id="fn-plot-sankey-polygon" class="doc-card" style="margin-bottom:12px;"><strong><code>plot_sankey_polygon</code></strong><div class="meta">Plot Sankey Diagram with Rectangular Nodes and Bezier Polygon Links</div><div style="margin-top:8px;font-size:14px;"><a href="https://github.com/ichirio/ydisctools/blob/main/man/plot_sankey_polygon.Rd">Rd manual</a> · <a href="https://github.com/ichirio/ydisctools/search?q=plot_sankey_polygon&type=code">Source search</a> · <a href="#top">Back to top</a></div><h3>Usage</h3><pre><code>plot_sankey(
   nodes,
   links,
   node_id = "id",
@@ -358,7 +358,7 @@ links &lt;- data.frame(
   stringsAsFactors = FALSE
 )
 
-plot_sankey_polygon(
+plot_sankey(
   nodes = nodes,
   links = links,
   node_treatment = "treatment",

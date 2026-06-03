@@ -17,8 +17,8 @@
 #'   - `link_filter`: expression string for `links` only (optional).
 #'   - `title`: plot title override (optional).
 #'   - `file_name`: output file name (optional).
-#' @param node_id,node_stage,node_label,node_value Node mapping columns passed to `plot_sankey_polygon()`.
-#' @param link_source,link_target,link_value Link mapping columns passed to `plot_sankey_polygon()`.
+#' @param node_id,node_stage,node_label,node_value Node mapping columns passed to `plot_sankey()`.
+#' @param link_source,link_target,link_value Link mapping columns passed to `plot_sankey()`.
 #' @param scale_strategy Scale strategy across subgroups:
 #'   `"shared_max"`, `"shared_first_stage"`, or `"first_stage_normalized"`.
 #' @param scale_reference_subgroup Reference subgroup name used when
@@ -29,7 +29,7 @@
 #' @param output_dir Optional output directory to save PNG files.
 #' @param save_png Whether to write PNG files.
 #' @param width,height,dpi,bg PNG rendering options for `ggsave()`.
-#' @param ... Additional arguments passed to `plot_sankey_polygon()`.
+#' @param ... Additional arguments passed to `plot_sankey()`.
 #'
 #' @return A list with:
 #'   - `plots`: named list of ggplot objects.
@@ -301,7 +301,7 @@ plot_sankey_subgroups_batch <- function(
       shared_scale_max = shared_max
     ), args_extra)
 
-    p <- do.call(plot_sankey_polygon, p_args)
+    p <- do.call(plot_sankey, p_args)
 
     title_i <- s$title
     if (!is.na(title_i) && nzchar(title_i)) {

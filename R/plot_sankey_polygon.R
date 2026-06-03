@@ -63,7 +63,7 @@ if (getRversion() >= "2.15.1") {
   ))
 }
 
-plot_sankey_polygon <- function(
+plot_sankey <- function(
     nodes,
     links,
     node_id = "id",
@@ -480,7 +480,13 @@ plot_sankey_polygon <- function(
       inherit.aes = FALSE
     ) +
     ggplot2::scale_fill_identity() +
-    ggplot2::coord_cartesian(clip = "off") +
+    {
+      if (orientation == "horizontal") {
+        ggplot2::coord_cartesian(ylim = c(0, panel_span), clip = "off")
+      } else {
+        ggplot2::coord_cartesian(xlim = c(0, panel_span), clip = "off")
+      }
+    } +
     ggplot2::theme_void()
 
   if (show_labels) {
@@ -496,4 +502,11 @@ plot_sankey_polygon <- function(
   }
 
   p
+}
+
+#' @rdname plot_sankey
+#' @export
+plot_sankey_polygon <- function(...) {
+  warning("`plot_sankey_polygon()` is deprecated. Use `plot_sankey()`.", call. = FALSE)
+  plot_sankey(...)
 }

@@ -1,9 +1,10 @@
 % Generated manually for ydisctools
-\name{plot_sankey_polygon}
+\name{plot_sankey}
+\alias{plot_sankey}
 \alias{plot_sankey_polygon}
 \title{Plot Sankey Diagram with Rectangular Nodes and Bezier Polygon Links}
 \usage{
-plot_sankey_polygon(
+plot_sankey(
   nodes,
   links,
   node_id = "id",
@@ -99,7 +100,7 @@ links <- data.frame(
   stringsAsFactors = FALSE
 )
 
-plot_sankey_polygon(
+plot_sankey(
   nodes = nodes,
   links = links,
   node_treatment = "treatment",
