@@ -5,8 +5,8 @@ library(rlang)
 .data <- rlang::.data
 source("R/plot_sankey_polygon.R")
 
-# Color mode options to render.
-color_modes <- c("across_lines", "by_line")
+# Scenario options to render.
+scenario_names <- c("full", "subgroup")
 
 nodes <- data.frame(
   id = c(
@@ -119,24 +119,65 @@ treatment_palette <- c(
   "No Treatment" = "#7F7F7F"
 )
 
-for (treatment_color_mode in color_modes) {
+compute_scale_max <- function(nodes_df, links_df, node_gap = 0.03) {
+  out_sum <- aggregate(value ~ source, data = links_df, FUN = sum)
+  names(out_sum) <- c("id", "outflow")
+  in_sum <- aggregate(value ~ target, data = links_df, FUN = sum)
+  names(in_sum) <- c("id", "inflow")
+
+  tmp <- merge(nodes_df, out_sum, by = "id", all.x = TRUE)
+  tmp <- merge(tmp, in_sum, by = "id", all.x = TRUE)
+  tmp$outflow[is.na(tmp$outflow)] <- 0
+  tmp$inflow[is.na(tmp$inflow)] <- 0
+
+  base_value <- tmp$node_n
+  base_value[is.na(base_value)] <- 0
+  display_value <- pmax(base_value, tmp$inflow, tmp$outflow)
+
+  stage_sum <- tapply(display_value, tmp$stage, sum)
+  stage_n <- table(tmp$stage)
+  stage_span <- as.numeric(stage_sum) + pmax(0, as.numeric(stage_n) - 1) * node_gap
+
+  max(stage_span)
+}
+
+subgroup_ratio <- 0.5
+nodes_sub <- nodes
+links_sub <- links
+links_sub$value <- pmax(1, round(links_sub$value * subgroup_ratio))
+nodes_sub$node_n <- ifelse(is.na(nodes_sub$node_n), NA, pmax(1, round(nodes_sub$node_n * subgroup_ratio)))
+
+shared_scale_max <- max(
+  compute_scale_max(nodes, links, node_gap = 0.03),
+  compute_scale_max(nodes_sub, links_sub, node_gap = 0.03)
+)
+
+scenario_data <- list(
+  full = list(nodes = nodes, links = links, subtitle = "Full cohort"),
+  subgroup = list(nodes = nodes_sub, links = links_sub, subtitle = "Subgroup (~50% N)")
+)
+
+for (scenario_name in scenario_names) {
+  obj <- scenario_data[[scenario_name]]
+
   p <- plot_sankey_polygon(
-    nodes = nodes,
-    links = links,
+    nodes = obj$nodes,
+    links = obj$links,
     node_id = "id",
     node_stage = "stage",
     node_label = "label",
     node_value = "node_n",
     node_treatment = "treatment",
     node_line = "line",
-    treatment_color_mode = treatment_color_mode,
+    treatment_color_mode = "across_lines",
     treatment_palette = treatment_palette,
     link_source = "source",
     link_target = "target",
     link_value = "value",
     orientation = "horizontal",
     baseline = "top",
-    scale_mode = "auto",
+    scale_mode = "shared",
+    shared_scale_max = shared_scale_max,
     use_link_color_by_source = TRUE,
     node_width = 0.22,
     node_gap = 0.03,
@@ -148,7 +189,7 @@ for (treatment_color_mode in color_modes) {
   ) +
     ggplot2::labs(
       title = "Cancer Therapy Transition: Line1 to Line5 (Sample)",
-      subtitle = paste0("Sankey-style plot with isolated no-treatment nodes (color mode: ", treatment_color_mode, ")"),
+      subtitle = paste0("Sankey-style plot with isolated no-treatment nodes (", obj$subtitle, ", shared scale)"),
       caption = "Sample synthetic data"
     ) +
     ggplot2::theme(
@@ -158,7 +199,7 @@ for (treatment_color_mode in color_modes) {
       plot.margin = ggplot2::margin(15, 100, 15, 15)
     )
 
-  out_png <- file.path("output", paste0("sankey_line1_line5_sample_", treatment_color_mode, ".png"))
+  out_png <- file.path("output", paste0("sankey_line1_line5_sample_", scenario_name, "_shared_scale.png"))
 
   ggplot2::ggsave(
     filename = out_png,

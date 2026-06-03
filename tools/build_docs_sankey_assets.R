@@ -5,8 +5,8 @@ if (!dir.exists("docs/assets")) {
 source("output/create_line1_line5_sankey_sample.R", local = new.env(parent = globalenv()))
 
 targets <- c(
-  "sankey_line1_line5_sample_across_lines.png",
-  "sankey_line1_line5_sample_by_line.png"
+  "sankey_line1_line5_sample_full_shared_scale.png",
+  "sankey_line1_line5_sample_subgroup_shared_scale.png"
 )
 
 for (f in targets) {
