@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Function Reference - ydisctools</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">ydisctools</div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a class="active" href="FUNCTION_REFERENCE.html">Reference</a>
+        <a href="SANKEY_GUIDE.html">Sankey Guide</a>
+        <a href="PAGES_SETUP.html">Pages Setup</a>
+        <a href="https://github.com/ichirio/ydisctools">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-box">
+      <h1>Function Reference</h1>
+      <p>Auto-generated from <code>man/*.Rd</code>.</p>
+      <div class="chips">
+        <span class="chip">Regenerate: Rscript tools/build_function_reference.R</span>
+        <span class="chip">Build HTML: Rscript tools/build_function_reference_html.R</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="panel">
+      <p class="meta">For in-R docs: <code>?function_name</code></p>
+      <table>
+        <thead><tr><th>Function</th><th>Description</th><th>Rd</th></tr></thead>
+        <tbody>
+<tr><td><code>catx</code></td><td>Concatenate strings with a separator, excluding empty strings and NA values</td><td><code>catx.Rd</code></td></tr>
+<tr><td><code>check_invalid_chars</code></td><td>Check for Invalid Characters in a Data Frame(SDTM)</td><td><code>check_invalid_chars.Rd</code></td></tr>
+<tr><td><code>check_invalid_chars_in_datasets</code></td><td>Check for Invalid Characters in Multiple Datasets</td><td><code>check_invalid_chars_in_datasets.Rd</code></td></tr>
+<tr><td><code>check_sdtm_keys</code></td><td>Check SDTM Keys</td><td><code>check_sdtm_keys.Rd</code></td></tr>
+<tr><td><code>comp_char_date</code></td><td>Compare Character Dates</td><td><code>comp_char_date.Rd</code></td></tr>
+<tr><td><code>comp_char_dates</code></td><td>Compare Character Date Vectors</td><td><code>comp_char_dates.Rd</code></td></tr>
+<tr><td><code>compute_dy</code></td><td>Compute Day Difference Between Two Dates</td><td><code>compute_dy.Rd</code></td></tr>
+<tr><td><code>conv_iso8601</code></td><td>Convert character date and time to ISO 8601 format</td><td><code>conv_iso8601.Rd</code></td></tr>
+<tr><td><code>conv_iso8601_num_d</code></td><td>Convert Date to ISO 8601 Format (Date)</td><td><code>conv_iso8601_num_d.Rd</code></td></tr>
+<tr><td><code>conv_iso8601_num_hm</code></td><td>Convert POSIXct to ISO 8601 Format (Date and Time without Seconds)</td><td><code>conv_iso8601_num_hm.Rd</code></td></tr>
+<tr><td><code>conv_iso8601_num_hms</code></td><td>Convert POSIXct to ISO 8601 Format (Date and Time with Seconds)</td><td><code>conv_iso8601_num_hms.Rd</code></td></tr>
+<tr><td><code>convert_units</code></td><td>Convert Units</td><td><code>convert_units.Rd</code></td></tr>
+<tr><td><code>derive_dtf_from_dtc</code></td><td>Derive DTF (Date Imputation Flag) Variable from DTC</td><td><code>derive_dtf_from_dtc.Rd</code></td></tr>
+<tr><td><code>derive_dtm_from_dtc</code></td><td>Derive POSIXct Datetime from Partial ISO 8601 Datetime String</td><td><code>derive_dtm_from_dtc.Rd</code></td></tr>
+<tr><td><code>derive_tmf_from_dtc</code></td><td>Derive TMF (Time Imputation Flag) Variable from DTC</td><td><code>derive_tmf_from_dtc.Rd</code></td></tr>
+<tr><td><code>detect_invalid_chars</code></td><td>Detect Invalid Characters for SDTM (non-ascii + alpha)</td><td><code>detect_invalid_chars.Rd</code></td></tr>
+<tr><td><code>get_ct_decode</code></td><td>Get Decode Value from CT Metadata</td><td><code>get_ct_decode.Rd</code></td></tr>
+<tr><td><code>get_ct_term</code></td><td>Get Term Value from CT Metadata</td><td><code>get_ct_term.Rd</code></td></tr>
+<tr><td><code>get_split_var_names</code></td><td>Generate split variable names based on a base variable name</td><td><code>get_split_var_names.Rd</code></td></tr>
+<tr><td><code>is_unique_key</code></td><td>Check if Key is Unique</td><td><code>is_unique_key.Rd</code></td></tr>
+<tr><td><code>make_adam_dataset</code></td><td>Create an ADaM Dataset</td><td><code>make_adam_dataset.Rd</code></td></tr>
+<tr><td><code>make_sdtm_all_dataset</code></td><td>Create SDTM + SUPP variables in a dataset with metadata</td><td><code>make_sdtm_all_dataset.Rd</code></td></tr>
+<tr><td><code>make_sdtm_dataset</code></td><td>Create SDTM Dataset with metadata</td><td><code>make_sdtm_dataset.Rd</code></td></tr>
+<tr><td><code>make_sdtm_supp_dataset</code></td><td>Create SDTM Supplemental Dataset with metadata</td><td><code>make_sdtm_supp_dataset.Rd</code></td></tr>
+<tr><td><code>make_supp_df</code></td><td>Create a suppqual DataFrame</td><td><code>make_supp_df.Rd</code></td></tr>
+<tr><td><code>pickup_subjects</code></td><td>Filter Subjects from a List of Data Frames</td><td><code>pickup_subjects.Rd</code></td></tr>
+<tr><td><code>plot_sankey_polygon</code></td><td>Plot Sankey Diagram with Rectangular Nodes and Bezier Polygon Links</td><td><code>plot_sankey_polygon.Rd</code></td></tr>
+<tr><td><code>read_excel_all_sheets</code></td><td>Read All Sheets from Excel File</td><td><code>read_excel_all_sheets.Rd</code></td></tr>
+<tr><td><code>read_metadata_spec_p21</code></td><td>Read P21 Metadata Spec</td><td><code>read_metadata_spec_p21.Rd</code></td></tr>
+<tr><td><code>read_p21_spec</code></td><td>Read P21 Specification Files</td><td><code>read_p21_spec.Rd</code></td></tr>
+<tr><td><code>read_sas_datasets</code></td><td>Read Multiple SAS Datasets from a Folder</td><td><code>read_sas_datasets.Rd</code></td></tr>
+<tr><td><code>read_sdtm_meta_supp</code></td><td>Read SDTM Supplemental Qualifiers Metadata from Excel File</td><td><code>read_sdtm_meta_supp.Rd</code></td></tr>
+<tr><td><code>read_sdtm_metadata_p21</code></td><td>Read SDTM Metadata from P21 Spec File</td><td><code>read_sdtm_metadata_p21.Rd</code></td></tr>
+<tr><td><code>read_xpts</code></td><td>Read XPT Files from a Folder</td><td><code>read_xpts.Rd</code></td></tr>
+<tr><td><code>replace_control_chars</code></td><td>Replace Control Characters with Descriptive Names</td><td><code>replace_control_chars.Rd</code></td></tr>
+<tr><td><code>rtf_encode</code></td><td>Encode Tables and Figures to RTF Format</td><td><code>rtf_encode.Rd</code></td></tr>
+<tr><td><code>set_label_on_sep_columns</code></td><td>Set a label on split columns based on specified column in a data frame</td><td><code>set_label_on_sep_columns.Rd</code></td></tr>
+<tr><td><code>split_column_by_max_bytes</code></td><td>Split a specified column into multiple columns based on maximum byte length</td><td><code>split_column_by_max_bytes.Rd</code></td></tr>
+<tr><td><code>split_key_text</code></td><td>Split Key Text</td><td><code>split_key_text.Rd</code></td></tr>
+<tr><td><code>split_supp_qval</code></td><td>Split the QVAL column in a supplementary data frame</td><td><code>split_supp_qval.Rd</code></td></tr>
+<tr><td><code>split_text_by_max_bytes</code></td><td>Split a text into multiple parts based on maximum byte length</td><td><code>split_text_by_max_bytes.Rd</code></td></tr>
+<tr><td><code>text_width</code></td><td>Calculate the Width of a String in a Specified Font</td><td><code>text_width.Rd</code></td></tr>
+<tr><td><code>text_width_arial</code></td><td>Calculate the Width of a String in Arial Font</td><td><code>text_width_arial.Rd</code></td></tr>
+<tr><td><code>text_width_courier_new</code></td><td>Calculate the Width of a String in Courier New Font</td><td><code>text_width_courier_new.Rd</code></td></tr>
+<tr><td><code>to_hex</code></td><td>Convert a String to Hexadecimal Representation</td><td><code>to_hex.Rd</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <div class="footer">ydisctools documentation site · hosted on GitHub Pages</div>
+</body>
+</html>

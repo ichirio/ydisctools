@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sankey Guide - ydisctools</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <nav class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">ydisctools</div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="FUNCTION_REFERENCE.html">Reference</a>
+        <a class="active" href="SANKEY_GUIDE.html">Sankey Guide</a>
+        <a href="PAGES_SETUP.html">Pages Setup</a>
+        <a href="https://github.com/ichirio/ydisctools">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-box">
+      <h1>Sankey Guide</h1>
+      <p>How to use <code>plot_sankey_polygon()</code> for treatment line transition analysis.</p>
+      <div class="chips">
+        <span class="chip">Bezier Polygon Links</span>
+        <span class="chip">Isolated Node Support</span>
+        <span class="chip">Color Modes</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="panel">
+      <h2>Key features</h2>
+      <ul>
+        <li>Node: <code>geom_rect</code></li>
+        <li>Link: Bezier-based <code>geom_polygon</code></li>
+        <li>Supports isolated nodes (nodes with no links)</li>
+        <li>Orientation: <code>horizontal</code> / <code>vertical</code></li>
+        <li>Baseline alignment: <code>top</code> / <code>bottom</code></li>
+        <li>Scale modes: <code>auto</code>, <code>shared</code>, <code>adaptive</code></li>
+        <li>Treatment color mode:
+          <ul>
+            <li><code>across_lines</code> (default): same treatment keeps same color across stages</li>
+            <li><code>by_line</code>: colors are reassigned by stage</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h2>Example script</h2>
+      <p><a href="../output/create_line1_line5_sankey_sample.R">output/create_line1_line5_sankey_sample.R</a></p>
+
+      <pre><code>Rscript output/create_line1_line5_sankey_sample.R</code></pre>
+
+      <h2>Output files</h2>
+      <ul>
+        <li><a href="../output/sankey_line1_line5_sample_across_lines.png">output/sankey_line1_line5_sample_across_lines.png</a></li>
+        <li><a href="../output/sankey_line1_line5_sample_by_line.png">output/sankey_line1_line5_sample_by_line.png</a></li>
+      </ul>
+
+      <h2>Minimal call</h2>
+      <pre><code>p <- plot_sankey_polygon(
+  nodes = nodes,
+  links = links,
+  node_id = "id",
+  node_stage = "stage",
+  node_label = "label",
+  node_value = "node_n",
+  node_treatment = "treatment",
+  treatment_color_mode = "across_lines",
+  link_source = "source",
+  link_target = "target",
+  link_value = "value",
+  baseline = "top"
+)</code></pre>
+    </section>
+  </main>
+
+  <div class="footer">ydisctools documentation site · hosted on GitHub Pages</div>
+</body>
+</html>
