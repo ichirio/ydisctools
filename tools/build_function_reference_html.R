@@ -21,6 +21,10 @@ parse_row <- function(x) {
 rows <- lapply(data_lines, parse_row)
 rows <- rows[!vapply(rows, is.null, logical(1))]
 
+make_id <- function(fn) {
+  gsub("[^a-z0-9]+", "-", tolower(fn))
+}
+
 escape_html <- function(x) {
   x <- gsub("&", "&amp;", x, fixed = TRUE)
   x <- gsub("<", "&lt;", x, fixed = TRUE)
@@ -29,12 +33,32 @@ escape_html <- function(x) {
 }
 
 tr_html <- vapply(rows, function(r) {
+  fid <- make_id(r$fn)
   paste0(
     "<tr>",
-    "<td><code>", escape_html(r$fn), "</code></td>",
+    "<td><a href=\"#fn-", fid, "\"><code>", escape_html(r$fn), "</code></a></td>",
     "<td>", escape_html(r$desc), "</td>",
     "<td><code>", escape_html(r$rd), "</code></td>",
     "</tr>"
+  )
+}, character(1))
+
+detail_html <- vapply(rows, function(r) {
+  fid <- make_id(r$fn)
+  rd_url <- paste0("https://github.com/ichirio/ydisctools/blob/main/man/", r$rd)
+  src_url <- paste0("https://github.com/ichirio/ydisctools/search?q=", utils::URLencode(r$fn), "&type=code")
+  paste0(
+    "<article id=\"fn-", fid, "\" class=\"doc-card\" style=\"margin-bottom:12px;\">",
+    "<strong><code>", escape_html(r$fn), "</code></strong>",
+    "<div class=\"meta\">", escape_html(r$desc), "</div>",
+    "<div style=\"margin-top:8px;font-size:14px;\">",
+    "<a href=\"", rd_url, "\">Rd manual</a>",
+    " · ",
+    "<a href=\"", src_url, "\">Source search</a>",
+    " · ",
+    "<a href=\"#top\">Back to top</a>",
+    "</div>",
+    "</article>"
   )
 }, character(1))
 
@@ -47,7 +71,7 @@ html <- c(
   "  <title>Function Reference - ydisctools</title>",
   "  <link rel=\"stylesheet\" href=\"assets/site.css\">",
   "</head>",
-  "<body>",
+  "<body id=\"top\">",
   "  <nav class=\"topbar\">",
   "    <div class=\"topbar-inner\">",
   "      <div class=\"brand\">ydisctools</div>",
@@ -75,12 +99,18 @@ html <- c(
   "  <main class=\"content\">",
   "    <section class=\"panel\">",
   "      <p class=\"meta\">For in-R docs: <code>?function_name</code></p>",
+  "      <p class=\"meta\">Click a function name to jump to its detail card below.</p>",
   "      <table>",
   "        <thead><tr><th>Function</th><th>Description</th><th>Rd</th></tr></thead>",
   "        <tbody>",
   tr_html,
   "        </tbody>",
   "      </table>",
+  "    </section>",
+  "",
+  "    <section class=\"panel\">",
+  "      <h2>Function Details</h2>",
+  detail_html,
   "    </section>",
   "  </main>",
   "",
