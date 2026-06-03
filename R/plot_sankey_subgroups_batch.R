@@ -1,10 +1,11 @@
 #' Batch Create Sankey Plots for Subgroup Analysis
 #'
 #' Create multiple Sankey plots from subgroup-specific filters in one call.
-#' The function supports two scaling strategies across subgroups:
+#' The function supports scaling strategies across subgroups:
 #' 
 #' 1) Shared scale across all subgroup plots.
 #' 2) First-stage normalization with optional magnification cap, then shared scale.
+#' 3) Shared scale anchored to the first-stage span of a reference subgroup.
 #'
 #' @param nodes Node data frame.
 #' @param links Link data frame.
@@ -18,7 +19,11 @@
 #'   - `file_name`: output file name (optional).
 #' @param node_id,node_stage,node_label,node_value Node mapping columns passed to `plot_sankey_polygon()`.
 #' @param link_source,link_target,link_value Link mapping columns passed to `plot_sankey_polygon()`.
-#' @param scale_strategy Scale strategy across subgroups: `"shared_max"` or `"first_stage_normalized"`.
+#' @param scale_strategy Scale strategy across subgroups:
+#'   `"shared_max"`, `"shared_first_stage"`, or `"first_stage_normalized"`.
+#' @param scale_reference_subgroup Reference subgroup name used when
+#'   `scale_strategy = "shared_first_stage"`. If `NULL`, the first subgroup in
+#'   `subgroup_specs` is used.
 #' @param first_stage_max_multiplier Magnification cap used when
 #'   `scale_strategy = "first_stage_normalized"`. Use `Inf` (or `NULL`) for no cap.
 #' @param output_dir Optional output directory to save PNG files.
@@ -41,7 +46,8 @@ plot_sankey_subgroups_batch <- function(
     link_source = "source",
     link_target = "target",
     link_value = "value",
-    scale_strategy = c("shared_max", "first_stage_normalized"),
+    scale_strategy = c("shared_max", "shared_first_stage", "first_stage_normalized"),
+    scale_reference_subgroup = NULL,
     first_stage_max_multiplier = 3,
     output_dir = NULL,
     save_png = TRUE,
@@ -65,6 +71,10 @@ plot_sankey_subgroups_batch <- function(
 
   if (!"subgroup" %in% names(subgroup_specs)) {
     subgroup_specs$subgroup <- paste0("subgroup_", seq_len(nrow(subgroup_specs)))
+  }
+
+  if (!is.null(scale_reference_subgroup) && (!is.character(scale_reference_subgroup) || length(scale_reference_subgroup) != 1)) {
+    stop("`scale_reference_subgroup` must be NULL or a single character string.")
   }
 
   cap <- first_stage_max_multiplier
@@ -231,12 +241,33 @@ plot_sankey_subgroups_batch <- function(
     }
   }
 
-  local_max <- vapply(
+  scale_info <- lapply(
     subgroup_data,
-    function(x) compute_scale_info(x$nodes, x$links, node_gap_in, node_min_size_in)$local_scale_max,
-    numeric(1)
+    function(x) compute_scale_info(x$nodes, x$links, node_gap_in, node_min_size_in)
   )
-  shared_max <- max(local_max)
+  local_max <- vapply(scale_info, function(x) x$local_scale_max, numeric(1))
+  first_span <- vapply(scale_info, function(x) x$first_stage_span, numeric(1))
+
+  if (scale_strategy == "shared_max") {
+    shared_max <- max(local_max)
+  } else if (scale_strategy == "shared_first_stage") {
+    ref_idx <- 1L
+    if (!is.null(scale_reference_subgroup)) {
+      idx <- which(vapply(subgroup_data, function(x) identical(x$subgroup, scale_reference_subgroup), logical(1)))[1]
+      if (!is.na(idx)) {
+        ref_idx <- idx
+      } else {
+        warning("`scale_reference_subgroup` not found in `subgroup_specs`; using first subgroup as reference.")
+      }
+    }
+    shared_max <- first_span[ref_idx]
+  } else {
+    shared_max <- max(local_max)
+  }
+
+  if (!is.finite(shared_max) || shared_max <= 0) {
+    shared_max <- 1
+  }
 
   if (!is.null(output_dir) && save_png && !dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
@@ -306,6 +337,7 @@ plot_sankey_subgroups_batch <- function(
       title = ifelse(is.na(title_i), "", title_i),
       file_name = file_i,
       local_scale_max = local_max[i],
+      first_stage_span = first_span[i],
       shared_scale_max = shared_max,
       multiplier = s$multiplier,
       stringsAsFactors = FALSE
