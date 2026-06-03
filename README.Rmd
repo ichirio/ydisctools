@@ -41,8 +41,10 @@ devtools::install_github("ichirio/ydisctools")
 
 ## Documentation
 
+- GitHub Pages: <https://ichirio.github.io/ydisctools/>
 - Function reference: `docs/FUNCTION_REFERENCE.md`
 - Sankey usage guide: `docs/SANKEY_GUIDE.md`
+- Pages setup note: `docs/PAGES_SETUP.md`
 
 Regenerate function reference from `man/*.Rd`:
 

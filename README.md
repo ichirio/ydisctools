@@ -4,13 +4,15 @@
 # ydisctools
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
-`ydisctools` is a utility package for CDISC-related programming workflows
-(SDTM/ADaM helpers, metadata utilities, text/RTF helpers, and data QC helpers).
+`ydisctools` is a utility package for CDISC-related programming
+workflows (SDTM/ADaM helpers, metadata utilities, text/RTF helpers, and
+data QC helpers).
 
-This repository also includes a Sankey plotting utility for treatment transition
-visualization:
+This repository also includes a Sankey plotting utility for treatment
+transition visualization:
 
 - `plot_sankey_polygon()` (Bezier links + rectangle nodes)
 - isolated node support (nodes with zero incoming/outgoing links)
@@ -29,8 +31,10 @@ devtools::install_github("ichirio/ydisctools")
 
 ## Documentation
 
+- GitHub Pages: <https://ichirio.github.io/ydisctools/>
 - Function reference: `docs/FUNCTION_REFERENCE.md`
 - Sankey usage guide: `docs/SANKEY_GUIDE.md`
+- Pages setup note: `docs/PAGES_SETUP.md`
 
 Regenerate function reference from `man/*.Rd`:
 
