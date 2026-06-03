@@ -1,6 +1,6 @@
-# ydisctools Documentation
+# Your CDISC Tools Documentation
 
-`ydisctools` is an R utility package for CDISC-related workflows and reporting helpers.
+`Your CDISC Tools` is an R utility package for CDISC-related workflows and reporting helpers.
 
 ## Documents
 
