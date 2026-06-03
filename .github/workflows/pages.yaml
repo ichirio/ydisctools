@@ -5,6 +5,9 @@ on:
     branches: [main, master]
     paths:
       - docs/**
+      - R/**
+      - tools/**
+      - output/**
       - .github/workflows/pages.yaml
   workflow_dispatch:
 
