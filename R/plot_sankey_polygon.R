@@ -1,0 +1,499 @@
+#' Plot Sankey Diagram with Rectangular Nodes and Bezier Polygon Links
+#'
+#' Draw a Sankey-style plot using `ggplot2` primitives (`geom_rect` for nodes and
+#' `geom_polygon` for links). This implementation can draw nodes that have no
+#' incoming or outgoing links.
+#'
+#' @param nodes A data frame of nodes.
+#' @param links A data frame of links.
+#' @param node_id Column name in `nodes` for unique node IDs.
+#' @param node_stage Column name in `nodes` for stage/layer.
+#' @param node_label Optional column name in `nodes` for labels.
+#' @param node_value Optional column name in `nodes` for node values. If `NULL`,
+#'   values are derived from links.
+#' @param link_source Column name in `links` for source node IDs.
+#' @param link_target Column name in `links` for target node IDs.
+#' @param link_value Column name in `links` for link values.
+#' @param orientation Plot direction: `"horizontal"` or `"vertical"`.
+#' @param baseline Node stacking baseline: `"top"` or `"bottom"`.
+#' @param scale_mode Scale behavior: `"auto"`, `"shared"`, or `"adaptive"`.
+#' @param shared_scale_max Shared maximum span used in `"shared"` mode and as
+#'   reference in `"adaptive"` mode.
+#' @param adaptive_max_multiplier Maximum magnification in `"adaptive"` mode.
+#'   Effective minimum span is `shared_scale_max / adaptive_max_multiplier`.
+#' @param node_width Width of each node along stage axis.
+#' @param node_gap Gap between nodes in the same stage.
+#' @param node_min_size Minimum visible node size (keeps isolated zero-value
+#'   nodes visible).
+#' @param link_curvature Bezier curvature factor in `[0, 1]`.
+#' @param bezier_n Number of points used to sample Bezier curves.
+#' @param node_fill Node fill color, or a column name in `nodes` containing
+#'   colors.
+#' @param node_treatment Optional column name in `nodes` for treatment class
+#'   (e.g., Chemo, IO, Targeted, No Treatment). If supplied, node colors can be
+#'   assigned by treatment with `treatment_color_mode`.
+#' @param node_line Optional column name in `nodes` for line identifier used
+#'   when `treatment_color_mode = "by_line"`. If `NULL`, `node_stage` is used.
+#' @param treatment_color_mode Treatment color mapping mode:
+#'   `"across_lines"` keeps same treatment color across lines,
+#'   `"by_line"` reassigns colors per line.
+#' @param treatment_palette Optional color palette (character vector). Named
+#'   vectors are matched by treatment names.
+#' @param node_color Node border color.
+#' @param node_alpha Node alpha.
+#' @param link_fill Link fill color, or a column name in `links` containing
+#'   colors.
+#' @param link_color Link border color.
+#' @param link_alpha Link alpha.
+#' @param show_labels Whether to draw labels.
+#' @param label_size Label size.
+#' @param label_color Label color.
+#' @param label_nudge Label offset from node edge.
+#' @param use_link_color_by_source If `TRUE`, link fill uses source node color.
+#' @param use_link_color_by_target If `TRUE`, link fill uses target node color.
+#'
+#' @return A `ggplot` object.
+#' @export
+#' @importFrom rlang .data
+if (getRversion() >= "2.15.1") {
+  utils::globalVariables(c(
+    "x", "y", "poly_id", ".link_fill",
+    "xmin", "xmax", "ymin", "ymax", ".node_fill",
+    "label_x", "label_y", "label"
+  ))
+}
+
+plot_sankey_polygon <- function(
+    nodes,
+    links,
+    node_id = "id",
+    node_stage = "stage",
+    node_label = NULL,
+    node_value = NULL,
+    link_source = "source",
+    link_target = "target",
+    link_value = "value",
+    orientation = c("horizontal", "vertical"),
+    baseline = c("top", "bottom"),
+    scale_mode = c("auto", "shared", "adaptive"),
+    shared_scale_max = NULL,
+    adaptive_max_multiplier = 3,
+    node_width = 0.18,
+    node_gap = 0.03,
+    node_min_size = 0.015,
+    link_curvature = 0.45,
+    bezier_n = 60,
+    node_fill = "#4F6D7A",
+    node_treatment = NULL,
+    node_line = NULL,
+    treatment_color_mode = c("across_lines", "by_line"),
+    treatment_palette = NULL,
+    node_color = "white",
+    node_alpha = 1,
+    link_fill = "#8AA1B1",
+    link_color = NA,
+    link_alpha = 0.6,
+    show_labels = TRUE,
+    label_size = 3,
+    label_color = "#1F2A30",
+    label_nudge = 0.03,
+    use_link_color_by_source = FALSE,
+    use_link_color_by_target = FALSE
+) {
+  orientation <- match.arg(orientation)
+  baseline <- match.arg(baseline)
+  scale_mode <- match.arg(scale_mode)
+  treatment_color_mode <- match.arg(treatment_color_mode)
+
+  if (!is.data.frame(nodes) || nrow(nodes) == 0) {
+    stop("`nodes` must be a non-empty data.frame.")
+  }
+  if (!is.data.frame(links)) {
+    stop("`links` must be a data.frame.")
+  }
+
+  required_node_cols <- c(node_id, node_stage)
+  missing_node_cols <- setdiff(required_node_cols, names(nodes))
+  if (length(missing_node_cols) > 0) {
+    stop("Missing node columns: ", paste(missing_node_cols, collapse = ", "))
+  }
+
+  required_link_cols <- c(link_source, link_target, link_value)
+  missing_link_cols <- setdiff(required_link_cols, names(links))
+  if (length(missing_link_cols) > 0) {
+    stop("Missing link columns: ", paste(missing_link_cols, collapse = ", "))
+  }
+
+  if (!is.null(node_label) && !node_label %in% names(nodes)) {
+    stop("`node_label` column not found in `nodes`.")
+  }
+
+  if (!is.null(node_value) && !node_value %in% names(nodes)) {
+    stop("`node_value` column not found in `nodes`.")
+  }
+
+  if (!is.null(node_treatment) && !node_treatment %in% names(nodes)) {
+    stop("`node_treatment` column not found in `nodes`.")
+  }
+
+  if (!is.null(node_line) && !node_line %in% names(nodes)) {
+    stop("`node_line` column not found in `nodes`.")
+  }
+
+  if (!is.numeric(adaptive_max_multiplier) || adaptive_max_multiplier <= 0) {
+    stop("`adaptive_max_multiplier` must be a positive number.")
+  }
+
+  if (!is.numeric(node_width) || node_width <= 0) {
+    stop("`node_width` must be > 0.")
+  }
+
+  if (!is.numeric(node_gap) || node_gap < 0) {
+    stop("`node_gap` must be >= 0.")
+  }
+
+  if (!is.numeric(bezier_n) || bezier_n < 8) {
+    stop("`bezier_n` must be >= 8.")
+  }
+
+  bezier_n <- as.integer(bezier_n)
+  link_curvature <- max(0, min(1, link_curvature))
+
+  resolve_style <- function(df, style_value, default_value) {
+    if (length(style_value) == 1 && is.character(style_value) && style_value %in% names(df)) {
+      return(as.character(df[[style_value]]))
+    }
+    if (length(style_value) == 1) {
+      return(rep(as.character(style_value), nrow(df)))
+    }
+    if (length(style_value) == nrow(df)) {
+      return(as.character(style_value))
+    }
+    rep(as.character(default_value), nrow(df))
+  }
+
+  bezier_cubic <- function(p0, p1, p2, p3, n = 60) {
+    t <- seq(0, 1, length.out = n)
+    (1 - t)^3 * p0 + 3 * (1 - t)^2 * t * p1 + 3 * (1 - t) * t^2 * p2 + t^3 * p3
+  }
+
+  node_df <- data.frame(
+    node_id = as.character(nodes[[node_id]]),
+    stage = as.character(nodes[[node_stage]]),
+    stringsAsFactors = FALSE
+  )
+
+  node_df$label <- if (is.null(node_label)) node_df$node_id else as.character(nodes[[node_label]])
+  node_df$value_input <- if (is.null(node_value)) 0 else suppressWarnings(as.numeric(nodes[[node_value]]))
+  node_df$value_input[is.na(node_df$value_input)] <- 0
+  node_df$treatment <- if (is.null(node_treatment)) NA_character_ else as.character(nodes[[node_treatment]])
+  node_df$line_id <- if (is.null(node_line)) as.character(nodes[[node_stage]]) else as.character(nodes[[node_line]])
+
+  link_df <- data.frame(
+    source = as.character(links[[link_source]]),
+    target = as.character(links[[link_target]]),
+    value = suppressWarnings(as.numeric(links[[link_value]])),
+    stringsAsFactors = FALSE
+  )
+  link_df$value[is.na(link_df$value)] <- 0
+  link_df <- link_df[link_df$value > 0, , drop = FALSE]
+
+  if (nrow(link_df) > 0) {
+    valid <- link_df$source %in% node_df$node_id & link_df$target %in% node_df$node_id
+    link_df <- link_df[valid, , drop = FALSE]
+  }
+
+  in_flow <- stats::setNames(rep(0, nrow(node_df)), node_df$node_id)
+  out_flow <- stats::setNames(rep(0, nrow(node_df)), node_df$node_id)
+  if (nrow(link_df) > 0) {
+    in_tmp <- tapply(link_df$value, link_df$target, sum)
+    out_tmp <- tapply(link_df$value, link_df$source, sum)
+    in_flow[names(in_tmp)] <- as.numeric(in_tmp)
+    out_flow[names(out_tmp)] <- as.numeric(out_tmp)
+  }
+
+  node_df$value <- pmax(node_df$value_input, as.numeric(in_flow[node_df$node_id]), as.numeric(out_flow[node_df$node_id]), 0)
+  node_df$display_value <- pmax(node_df$value, node_min_size)
+
+  if (!all(is.na(node_df$treatment))) {
+    rotate_palette <- function(x, k) {
+      if (length(x) <= 1) {
+        return(x)
+      }
+      k <- k %% length(x)
+      if (k == 0) {
+        return(x)
+      }
+      c(x[(k + 1):length(x)], x[1:k])
+    }
+
+    trt_levels <- unique(node_df$treatment)
+    trt_levels <- trt_levels[!is.na(trt_levels)]
+
+    if (is.null(treatment_palette)) {
+      base_palette <- grDevices::hcl.colors(max(length(trt_levels), 3), palette = "Set 2")
+    } else {
+      base_palette <- as.character(treatment_palette)
+    }
+
+    if (length(base_palette) == 0) {
+      base_palette <- c("#4F6D7A")
+    }
+
+    if (!is.null(names(treatment_palette)) && any(nzchar(names(treatment_palette)))) {
+      named_pal <- treatment_palette
+      fallback <- rep(base_palette, length.out = length(trt_levels))
+      names(fallback) <- trt_levels
+      fallback[names(named_pal)] <- as.character(named_pal)
+      trt_map <- fallback
+    } else {
+      trt_map <- rep(base_palette, length.out = length(trt_levels))
+      names(trt_map) <- trt_levels
+    }
+
+    if (treatment_color_mode == "across_lines") {
+      node_df$.node_fill <- unname(trt_map[node_df$treatment])
+    } else {
+      line_levels <- unique(node_df$line_id)
+      line_levels <- line_levels[!is.na(line_levels)]
+      node_df$.node_fill <- NA_character_
+
+      for (li in seq_along(line_levels)) {
+        lv <- line_levels[li]
+        idx <- which(node_df$line_id == lv)
+        if (length(idx) == 0) {
+          next
+        }
+        trt_in_line <- unique(node_df$treatment[idx])
+        trt_in_line <- trt_in_line[!is.na(trt_in_line)]
+
+        pal_line <- rotate_palette(base_palette, li - 1)
+        if (!is.null(names(treatment_palette)) && any(nzchar(names(treatment_palette)))) {
+          pal_map_line <- rep(pal_line, length.out = length(trt_in_line))
+          names(pal_map_line) <- trt_in_line
+          pal_map_line[names(treatment_palette)] <- as.character(treatment_palette)
+        } else {
+          pal_map_line <- rep(pal_line, length.out = length(trt_in_line))
+          names(pal_map_line) <- trt_in_line
+        }
+
+        node_df$.node_fill[idx] <- unname(pal_map_line[node_df$treatment[idx]])
+      }
+    }
+
+    node_df$.node_fill[is.na(node_df$.node_fill)] <- "#4F6D7A"
+  } else {
+    node_df$.node_fill <- resolve_style(nodes, node_fill, "#4F6D7A")
+  }
+
+  stage_levels <- unique(node_df$stage)
+  node_df$stage <- factor(node_df$stage, levels = stage_levels)
+  node_df$node_index <- seq_len(nrow(node_df))
+  node_df <- node_df[order(node_df$stage, node_df$node_index), , drop = FALSE]
+
+  n_stage <- length(stage_levels)
+  stage_position <- stats::setNames(seq_len(n_stage) - 1, stage_levels)
+  node_df$p_center <- as.numeric(stage_position[as.character(node_df$stage)])
+  node_df$pmin <- node_df$p_center - node_width / 2
+  node_df$pmax <- node_df$p_center + node_width / 2
+
+  stage_ids <- as.character(node_df$stage)
+  stage_span <- tapply(node_df$display_value, stage_ids, sum)
+  stage_count <- table(stage_ids)
+  stage_span <- stage_span + pmax(0, as.numeric(stage_count) - 1) * node_gap
+
+  local_scale_max <- max(stage_span)
+  if (!is.finite(local_scale_max) || local_scale_max <= 0) {
+    local_scale_max <- 1
+  }
+
+  if (scale_mode == "auto") {
+    scale_max <- local_scale_max
+  } else if (scale_mode == "shared") {
+    if (is.null(shared_scale_max) || !is.numeric(shared_scale_max) || shared_scale_max <= 0) {
+      stop("`shared_scale_max` must be a positive number when `scale_mode = 'shared'`.")
+    }
+    scale_max <- shared_scale_max
+  } else {
+    if (is.null(shared_scale_max) || !is.numeric(shared_scale_max) || shared_scale_max <= 0) {
+      scale_max <- local_scale_max
+    } else {
+      min_span <- shared_scale_max / adaptive_max_multiplier
+      scale_max <- max(local_scale_max, min_span)
+    }
+  }
+
+  max_nodes_per_stage <- max(as.numeric(stage_count))
+  panel_span <- scale_max + pmax(0, max_nodes_per_stage - 1) * node_gap
+
+  node_df$smin <- 0
+  node_df$smax <- 0
+  for (st in stage_levels) {
+    idx <- which(as.character(node_df$stage) == st)
+    if (length(idx) == 0) {
+      next
+    }
+    dvals <- node_df$display_value[idx]
+    st_span <- sum(dvals) + pmax(0, length(idx) - 1) * node_gap
+    if (baseline == "top") {
+      # Keep input order as top -> bottom when top-aligned.
+      if (length(idx) == 1) {
+        ymax <- panel_span
+      } else {
+        ymax <- panel_span - c(0, cumsum(dvals[-length(dvals)] + node_gap))
+      }
+      node_df$smax[idx] <- ymax
+      node_df$smin[idx] <- ymax - dvals
+    } else {
+      # Keep input order as bottom -> top when bottom-aligned.
+      base_offset <- 0
+      if (length(idx) == 1) {
+        starts <- base_offset
+      } else {
+        starts <- base_offset + c(0, cumsum(dvals[-length(dvals)] + node_gap))
+      }
+      node_df$smin[idx] <- starts
+      node_df$smax[idx] <- starts + dvals
+    }
+  }
+
+  links_for_plot <- link_df
+  polygons <- data.frame(x = numeric(0), y = numeric(0), poly_id = character(0), .link_fill = character(0), stringsAsFactors = FALSE)
+
+  if (nrow(links_for_plot) > 0) {
+    links_for_plot$row_id <- seq_len(nrow(links_for_plot))
+
+    src_sorted <- links_for_plot[order(links_for_plot$source, links_for_plot$target, links_for_plot$row_id), , drop = FALSE]
+    src_sorted$source_offset <- ave(src_sorted$value, src_sorted$source, FUN = function(v) c(0, cumsum(utils::head(v, -1))))
+
+    tgt_sorted <- links_for_plot[order(links_for_plot$target, links_for_plot$source, links_for_plot$row_id), , drop = FALSE]
+    tgt_sorted$target_offset <- ave(tgt_sorted$value, tgt_sorted$target, FUN = function(v) c(0, cumsum(utils::head(v, -1))))
+
+    links_for_plot <- merge(src_sorted, tgt_sorted[, c("row_id", "target_offset")], by = "row_id", all.x = TRUE, sort = FALSE)
+    links_for_plot <- links_for_plot[order(links_for_plot$row_id), , drop = FALSE]
+
+    src_idx <- match(links_for_plot$source, node_df$node_id)
+    tgt_idx <- match(links_for_plot$target, node_df$node_id)
+
+    links_for_plot$p0 <- node_df$pmax[src_idx]
+    links_for_plot$p1 <- node_df$pmin[tgt_idx]
+    links_for_plot$s0_min <- node_df$smin[src_idx] + links_for_plot$source_offset
+    links_for_plot$s0_max <- links_for_plot$s0_min + links_for_plot$value
+    links_for_plot$s1_min <- node_df$smin[tgt_idx] + links_for_plot$target_offset
+    links_for_plot$s1_max <- links_for_plot$s1_min + links_for_plot$value
+
+    links_for_plot$.link_fill <- resolve_style(links, link_fill, "#8AA1B1")
+
+    if (use_link_color_by_source) {
+      src_fill_map <- stats::setNames(node_df$.node_fill, node_df$node_id)
+      links_for_plot$.link_fill <- unname(src_fill_map[links_for_plot$source])
+    }
+
+    if (use_link_color_by_target) {
+      tgt_fill_map <- stats::setNames(node_df$.node_fill, node_df$node_id)
+      links_for_plot$.link_fill <- unname(tgt_fill_map[links_for_plot$target])
+    }
+
+    poly_list <- vector("list", nrow(links_for_plot))
+    for (i in seq_len(nrow(links_for_plot))) {
+      p0 <- links_for_plot$p0[i]
+      p1 <- links_for_plot$p1[i]
+      dp <- p1 - p0
+      c1 <- p0 + link_curvature * dp
+      c2 <- p1 - link_curvature * dp
+
+      top_p <- bezier_cubic(p0, c1, c2, p1, n = bezier_n)
+      top_s <- bezier_cubic(links_for_plot$s0_max[i], links_for_plot$s0_max[i], links_for_plot$s1_max[i], links_for_plot$s1_max[i], n = bezier_n)
+      bot_p <- bezier_cubic(p0, c1, c2, p1, n = bezier_n)
+      bot_s <- bezier_cubic(links_for_plot$s0_min[i], links_for_plot$s0_min[i], links_for_plot$s1_min[i], links_for_plot$s1_min[i], n = bezier_n)
+
+      p_vals <- c(top_p, rev(bot_p))
+      s_vals <- c(top_s, rev(bot_s))
+
+      if (orientation == "horizontal") {
+        x_vals <- p_vals
+        y_vals <- s_vals
+      } else {
+        x_vals <- s_vals
+        y_vals <- p_vals
+      }
+
+      poly_list[[i]] <- data.frame(
+        x = x_vals,
+        y = y_vals,
+        poly_id = paste0("link_", links_for_plot$row_id[i]),
+        .link_fill = links_for_plot$.link_fill[i],
+        stringsAsFactors = FALSE
+      )
+    }
+    polygons <- do.call(rbind, poly_list)
+  }
+
+  if (orientation == "horizontal") {
+    node_rect <- data.frame(
+      xmin = node_df$pmin,
+      xmax = node_df$pmax,
+      ymin = node_df$smin,
+      ymax = node_df$smax,
+      label_x = node_df$pmax + label_nudge,
+      label_y = (node_df$smin + node_df$smax) / 2,
+      hjust = 0,
+      vjust = 0.5,
+      label = node_df$label,
+      .node_fill = node_df$.node_fill,
+      stringsAsFactors = FALSE
+    )
+  } else {
+    node_rect <- data.frame(
+      xmin = node_df$smin,
+      xmax = node_df$smax,
+      ymin = node_df$pmin,
+      ymax = node_df$pmax,
+      label_x = (node_df$smin + node_df$smax) / 2,
+      label_y = node_df$pmax + label_nudge,
+      hjust = 0.5,
+      vjust = 0,
+      label = node_df$label,
+      .node_fill = node_df$.node_fill,
+      stringsAsFactors = FALSE
+    )
+  }
+
+  p <- ggplot2::ggplot()
+
+  if (nrow(polygons) > 0) {
+    p <- p + ggplot2::geom_polygon(
+      data = polygons,
+      mapping = ggplot2::aes(x = .data$x, y = .data$y, group = .data$poly_id, fill = .data$.link_fill),
+      color = link_color,
+      alpha = link_alpha,
+      inherit.aes = FALSE
+    )
+  }
+
+  p <- p +
+    ggplot2::geom_rect(
+      data = node_rect,
+      mapping = ggplot2::aes(xmin = .data$xmin, xmax = .data$xmax, ymin = .data$ymin, ymax = .data$ymax, fill = .data$.node_fill),
+      color = node_color,
+      alpha = node_alpha,
+      inherit.aes = FALSE
+    ) +
+    ggplot2::scale_fill_identity() +
+    ggplot2::coord_cartesian(clip = "off") +
+    ggplot2::theme_void()
+
+  if (show_labels) {
+    p <- p + ggplot2::geom_text(
+      data = node_rect,
+      mapping = ggplot2::aes(x = .data$label_x, y = .data$label_y, label = .data$label),
+      size = label_size,
+      color = label_color,
+      hjust = node_rect$hjust,
+      vjust = node_rect$vjust,
+      inherit.aes = FALSE
+    )
+  }
+
+  p
+}
