@@ -1,0 +1,316 @@
+#' Batch Create Sankey Plots for Subgroup Analysis
+#'
+#' Create multiple Sankey plots from subgroup-specific filters in one call.
+#' The function supports two scaling strategies across subgroups:
+#' 
+#' 1) Shared scale across all subgroup plots.
+#' 2) First-stage normalization with optional magnification cap, then shared scale.
+#'
+#' @param nodes Node data frame.
+#' @param links Link data frame.
+#' @param subgroup_specs Data frame with subgroup definitions.
+#'   Recommended columns:
+#'   - `subgroup`: subgroup name.
+#'   - `filter`: expression string applied to both `nodes` and `links`.
+#'   - `node_filter`: expression string for `nodes` only (optional).
+#'   - `link_filter`: expression string for `links` only (optional).
+#'   - `title`: plot title override (optional).
+#'   - `file_name`: output file name (optional).
+#' @param node_id,node_stage,node_label,node_value Node mapping columns passed to `plot_sankey_polygon()`.
+#' @param link_source,link_target,link_value Link mapping columns passed to `plot_sankey_polygon()`.
+#' @param scale_strategy Scale strategy across subgroups: `"shared_max"` or `"first_stage_normalized"`.
+#' @param first_stage_max_multiplier Magnification cap used when
+#'   `scale_strategy = "first_stage_normalized"`. Use `Inf` (or `NULL`) for no cap.
+#' @param output_dir Optional output directory to save PNG files.
+#' @param save_png Whether to write PNG files.
+#' @param width,height,dpi,bg PNG rendering options for `ggsave()`.
+#' @param ... Additional arguments passed to `plot_sankey_polygon()`.
+#'
+#' @return A list with:
+#'   - `plots`: named list of ggplot objects.
+#'   - `metadata`: data frame with subgroup, scales, multipliers, and output file names.
+#' @export
+plot_sankey_subgroups_batch <- function(
+    nodes,
+    links,
+    subgroup_specs,
+    node_id = "id",
+    node_stage = "stage",
+    node_label = NULL,
+    node_value = NULL,
+    link_source = "source",
+    link_target = "target",
+    link_value = "value",
+    scale_strategy = c("shared_max", "first_stage_normalized"),
+    first_stage_max_multiplier = 3,
+    output_dir = NULL,
+    save_png = TRUE,
+    width = 14,
+    height = 8,
+    dpi = 180,
+    bg = "white",
+    ...
+) {
+  scale_strategy <- match.arg(scale_strategy)
+
+  if (!is.data.frame(nodes) || nrow(nodes) == 0) {
+    stop("`nodes` must be a non-empty data.frame.")
+  }
+  if (!is.data.frame(links)) {
+    stop("`links` must be a data.frame.")
+  }
+  if (!is.data.frame(subgroup_specs) || nrow(subgroup_specs) == 0) {
+    stop("`subgroup_specs` must be a non-empty data.frame.")
+  }
+
+  if (!"subgroup" %in% names(subgroup_specs)) {
+    subgroup_specs$subgroup <- paste0("subgroup_", seq_len(nrow(subgroup_specs)))
+  }
+
+  cap <- first_stage_max_multiplier
+  if (is.null(cap)) {
+    cap <- Inf
+  }
+  if (!is.numeric(cap) || length(cap) != 1 || is.na(cap) || cap <= 0) {
+    stop("`first_stage_max_multiplier` must be a positive number, `Inf`, or `NULL`.")
+  }
+
+  apply_filter_expr <- function(df, expr_text) {
+    if (is.null(expr_text) || length(expr_text) == 0 || is.na(expr_text) || !nzchar(expr_text)) {
+      return(df)
+    }
+
+    idx <- eval(parse(text = expr_text), envir = df, enclos = parent.frame())
+
+    if (!is.logical(idx)) {
+      stop("Filter expression must return logical values: ", expr_text)
+    }
+    if (length(idx) == 1) {
+      idx <- rep(idx, nrow(df))
+    }
+    if (length(idx) != nrow(df)) {
+      stop("Filter expression length mismatch: ", expr_text)
+    }
+
+    df[which(!is.na(idx) & idx), , drop = FALSE]
+  }
+
+  compute_scale_info <- function(nodes_df, links_df, node_gap_in = 0.03, node_min_size_in = 0.015) {
+    if (!node_id %in% names(nodes_df) || !node_stage %in% names(nodes_df)) {
+      stop("Subgroup nodes are missing required columns.")
+    }
+    if (!link_source %in% names(links_df) || !link_target %in% names(links_df) || !link_value %in% names(links_df)) {
+      stop("Subgroup links are missing required columns.")
+    }
+
+    node_tmp <- data.frame(
+      node_id = as.character(nodes_df[[node_id]]),
+      stage = as.character(nodes_df[[node_stage]]),
+      stringsAsFactors = FALSE
+    )
+
+    node_tmp$value_input <- if (is.null(node_value)) {
+      rep(0, nrow(node_tmp))
+    } else {
+      suppressWarnings(as.numeric(nodes_df[[node_value]]))
+    }
+    node_tmp$value_input[is.na(node_tmp$value_input)] <- 0
+
+    link_tmp <- data.frame(
+      source = as.character(links_df[[link_source]]),
+      target = as.character(links_df[[link_target]]),
+      value = suppressWarnings(as.numeric(links_df[[link_value]])),
+      stringsAsFactors = FALSE
+    )
+    link_tmp$value[is.na(link_tmp$value)] <- 0
+    link_tmp <- link_tmp[link_tmp$value > 0, , drop = FALSE]
+
+    if (nrow(link_tmp) > 0) {
+      valid <- link_tmp$source %in% node_tmp$node_id & link_tmp$target %in% node_tmp$node_id
+      link_tmp <- link_tmp[valid, , drop = FALSE]
+    }
+
+    in_flow <- stats::setNames(rep(0, nrow(node_tmp)), node_tmp$node_id)
+    out_flow <- stats::setNames(rep(0, nrow(node_tmp)), node_tmp$node_id)
+
+    if (nrow(link_tmp) > 0) {
+      in_tmp <- tapply(link_tmp$value, link_tmp$target, sum)
+      out_tmp <- tapply(link_tmp$value, link_tmp$source, sum)
+      in_flow[names(in_tmp)] <- as.numeric(in_tmp)
+      out_flow[names(out_tmp)] <- as.numeric(out_tmp)
+    }
+
+    value_raw <- pmax(
+      node_tmp$value_input,
+      as.numeric(in_flow[node_tmp$node_id]),
+      as.numeric(out_flow[node_tmp$node_id]),
+      0
+    )
+    value_display <- pmax(value_raw, node_min_size_in)
+
+    stage_levels <- unique(node_tmp$stage)
+    stage_ids <- as.character(node_tmp$stage)
+    stage_span <- tapply(value_display, stage_ids, sum)
+    stage_count <- table(stage_ids)
+    stage_span <- stage_span + pmax(0, as.numeric(stage_count) - 1) * node_gap_in
+
+    local_scale_max <- max(stage_span)
+    if (!is.finite(local_scale_max) || local_scale_max <= 0) {
+      local_scale_max <- 1
+    }
+
+    first_stage <- stage_levels[1]
+    first_stage_span <- as.numeric(stage_span[first_stage])
+    if (!is.finite(first_stage_span) || length(first_stage_span) == 0 || is.na(first_stage_span) || first_stage_span <= 0) {
+      first_stage_span <- node_min_size_in
+    }
+
+    list(local_scale_max = local_scale_max, first_stage_span = first_stage_span)
+  }
+
+  args_extra <- list(...)
+  node_gap_in <- if (!is.null(args_extra$node_gap)) args_extra$node_gap else 0.03
+  node_min_size_in <- if (!is.null(args_extra$node_min_size)) args_extra$node_min_size else 0.015
+
+  get_col_or_default <- function(df, col_name, default = NA_character_) {
+    if (col_name %in% names(df)) as.character(df[[col_name]]) else rep(default, nrow(df))
+  }
+
+  filter_all <- get_col_or_default(subgroup_specs, "filter", "")
+  filter_nodes <- get_col_or_default(subgroup_specs, "node_filter", "")
+  filter_links <- get_col_or_default(subgroup_specs, "link_filter", "")
+  title_vec <- get_col_or_default(subgroup_specs, "title", "")
+  file_vec <- get_col_or_default(subgroup_specs, "file_name", "")
+
+  subgroup_data <- vector("list", nrow(subgroup_specs))
+
+  for (i in seq_len(nrow(subgroup_specs))) {
+    nf <- filter_nodes[i]
+    lf <- filter_links[i]
+
+    if (!nzchar(nf)) nf <- filter_all[i]
+    if (!nzchar(lf)) lf <- filter_all[i]
+
+    nd <- apply_filter_expr(nodes, nf)
+    lk <- apply_filter_expr(links, lf)
+
+    subgroup_data[[i]] <- list(
+      subgroup = as.character(subgroup_specs$subgroup[i]),
+      title = title_vec[i],
+      file_name = file_vec[i],
+      nodes = nd,
+      links = lk,
+      multiplier = 1
+    )
+  }
+
+  if (scale_strategy == "first_stage_normalized") {
+    first_span <- vapply(
+      subgroup_data,
+      function(x) compute_scale_info(x$nodes, x$links, node_gap_in, node_min_size_in)$first_stage_span,
+      numeric(1)
+    )
+
+    ref_first <- max(first_span)
+
+    for (i in seq_along(subgroup_data)) {
+      mul <- ref_first / first_span[i]
+      if (is.finite(cap)) {
+        mul <- min(mul, cap)
+      }
+
+      subgroup_data[[i]]$multiplier <- mul
+      subgroup_data[[i]]$links[[link_value]] <- suppressWarnings(as.numeric(subgroup_data[[i]]$links[[link_value]])) * mul
+
+      if (!is.null(node_value) && node_value %in% names(subgroup_data[[i]]$nodes)) {
+        nv <- suppressWarnings(as.numeric(subgroup_data[[i]]$nodes[[node_value]]))
+        idx <- !is.na(nv)
+        nv[idx] <- nv[idx] * mul
+        subgroup_data[[i]]$nodes[[node_value]] <- nv
+      }
+    }
+  }
+
+  local_max <- vapply(
+    subgroup_data,
+    function(x) compute_scale_info(x$nodes, x$links, node_gap_in, node_min_size_in)$local_scale_max,
+    numeric(1)
+  )
+  shared_max <- max(local_max)
+
+  if (!is.null(output_dir) && save_png && !dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+  }
+
+  plot_list <- list()
+  meta <- data.frame(
+    subgroup = character(0),
+    title = character(0),
+    file_name = character(0),
+    local_scale_max = numeric(0),
+    shared_scale_max = numeric(0),
+    multiplier = numeric(0),
+    stringsAsFactors = FALSE
+  )
+
+  for (i in seq_along(subgroup_data)) {
+    s <- subgroup_data[[i]]
+
+    p_args <- c(list(
+      nodes = s$nodes,
+      links = s$links,
+      node_id = node_id,
+      node_stage = node_stage,
+      node_label = node_label,
+      node_value = node_value,
+      link_source = link_source,
+      link_target = link_target,
+      link_value = link_value,
+      scale_mode = "shared",
+      shared_scale_max = shared_max
+    ), args_extra)
+
+    p <- do.call(plot_sankey_polygon, p_args)
+
+    title_i <- s$title
+    if (!is.na(title_i) && nzchar(title_i)) {
+      p <- p + ggplot2::labs(title = title_i)
+    }
+
+    subgroup_name <- s$subgroup
+    if (is.na(subgroup_name) || !nzchar(subgroup_name)) {
+      subgroup_name <- paste0("subgroup_", i)
+    }
+
+    file_i <- s$file_name
+    if (is.na(file_i) || !nzchar(file_i)) {
+      file_i <- paste0("sankey_", subgroup_name, ".png")
+    }
+
+    if (save_png) {
+      out_path <- if (is.null(output_dir)) file_i else file.path(output_dir, file_i)
+      ggplot2::ggsave(
+        filename = out_path,
+        plot = p,
+        width = width,
+        height = height,
+        dpi = dpi,
+        bg = bg
+      )
+    }
+
+    plot_list[[subgroup_name]] <- p
+
+    meta <- rbind(meta, data.frame(
+      subgroup = subgroup_name,
+      title = ifelse(is.na(title_i), "", title_i),
+      file_name = file_i,
+      local_scale_max = local_max[i],
+      shared_scale_max = shared_max,
+      multiplier = s$multiplier,
+      stringsAsFactors = FALSE
+    ))
+  }
+
+  list(plots = plot_list, metadata = meta)
+}

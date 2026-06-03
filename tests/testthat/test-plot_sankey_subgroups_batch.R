@@ -1,0 +1,94 @@
+test_that("plot_sankey_subgroups_batch applies shared scale across subgroups", {
+  nodes <- data.frame(
+    id = c("A", "B"),
+    stage = c("L1", "L2"),
+    stringsAsFactors = FALSE
+  )
+
+  links <- data.frame(
+    source = c("A", "A"),
+    target = c("B", "B"),
+    value = c(100, 50),
+    scenario = c("full", "sub"),
+    stringsAsFactors = FALSE
+  )
+
+  specs <- data.frame(
+    subgroup = c("full", "sub"),
+    link_filter = c("scenario == 'full'", "scenario == 'sub'"),
+    stringsAsFactors = FALSE
+  )
+
+  res <- plot_sankey_subgroups_batch(
+    nodes = nodes,
+    links = links,
+    subgroup_specs = specs,
+    scale_strategy = "shared_max",
+    save_png = FALSE,
+    show_labels = FALSE,
+    node_min_size = 0,
+    node_gap = 0
+  )
+
+  expect_equal(nrow(res$metadata), 2)
+  expect_equal(length(unique(res$metadata$shared_scale_max)), 1)
+
+  rect_full <- ggplot2::layer_data(res$plots$full, 2)
+  rect_sub <- ggplot2::layer_data(res$plots$sub, 2)
+
+  h_full <- rect_full$ymax[1] - rect_full$ymin[1]
+  h_sub <- rect_sub$ymax[1] - rect_sub$ymin[1]
+  expect_equal(h_sub / h_full, 0.5, tolerance = 1e-8)
+})
+
+test_that("plot_sankey_subgroups_batch supports first-stage normalization with cap", {
+  nodes <- data.frame(
+    id = c("A", "B"),
+    stage = c("L1", "L2"),
+    stringsAsFactors = FALSE
+  )
+
+  links <- data.frame(
+    source = c("A", "A"),
+    target = c("B", "B"),
+    value = c(100, 20),
+    scenario = c("full", "sub"),
+    stringsAsFactors = FALSE
+  )
+
+  specs <- data.frame(
+    subgroup = c("full", "sub"),
+    link_filter = c("scenario == 'full'", "scenario == 'sub'"),
+    stringsAsFactors = FALSE
+  )
+
+  res_cap <- plot_sankey_subgroups_batch(
+    nodes = nodes,
+    links = links,
+    subgroup_specs = specs,
+    scale_strategy = "first_stage_normalized",
+    first_stage_max_multiplier = 2,
+    save_png = FALSE,
+    show_labels = FALSE,
+    node_min_size = 0,
+    node_gap = 0
+  )
+
+  mul_sub_cap <- res_cap$metadata$multiplier[res_cap$metadata$subgroup == "sub"]
+  expect_equal(mul_sub_cap, 2)
+
+  res_nocap <- plot_sankey_subgroups_batch(
+    nodes = nodes,
+    links = links,
+    subgroup_specs = specs,
+    scale_strategy = "first_stage_normalized",
+    first_stage_max_multiplier = Inf,
+    save_png = FALSE,
+    show_labels = FALSE,
+    node_min_size = 0,
+    node_gap = 0
+  )
+
+  mul_sub_nocap <- res_nocap$metadata$multiplier[res_nocap$metadata$subgroup == "sub"]
+  expect_equal(mul_sub_nocap, 5)
+})
