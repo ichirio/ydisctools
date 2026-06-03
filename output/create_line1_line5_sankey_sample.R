@@ -1,8 +1,9 @@
-library(devtools)
 library(ggplot2)
+library(rlang)
 
-# Load current source (including plot_sankey_polygon added in this workspace)
-devtools::load_all(".", quiet = TRUE)
+# Load plotting function without requiring full package load.
+.data <- rlang::.data
+source("R/plot_sankey_polygon.R")
 
 # Color mode options to render.
 color_modes <- c("across_lines", "by_line")

@@ -46,6 +46,32 @@ test_that("make_sdtm_supp_dataset Test 1: Create SDTM Supplemental Dataset with 
   expect_equal(nrow(suppdm), 6)
 })
 
+test_that("make_sdtm_dataset Test 2: core domain creation and xpt output", {
+  tmp <- tempdir()
+  dm <- make_sdtm_dataset(df, "DM", sdtm_meta, xpt_path = tmp)
+
+  expect_true(is.data.frame(dm))
+  expect_true(all(c("USUBJID", "SEX", "RACE") %in% names(dm)))
+  expect_true(file.exists(file.path(tmp, "dm.xpt")))
+})
+
+test_that("make_sdtm_all_dataset Test 1: include supplemental vars and xpt output", {
+  tmp <- tempdir()
+  dm_all <- make_sdtm_all_dataset(df, "DM", sdtm_meta, xpt_path = tmp)
+
+  expect_true(is.data.frame(dm_all))
+  expect_true(any(names(dm_all) %in% c("RACE1", "RACE2")))
+  expect_true(file.exists(file.path(tmp, "dm_all.xpt")))
+})
+
+test_that("make_sdtm_supp_dataset Test 2: supp xpt output branch", {
+  tmp <- tempdir()
+  suppdm <- make_sdtm_supp_dataset(df, "SUPPDM", sdtm_meta, xpt_path = tmp)
+
+  expect_true(is.data.frame(suppdm))
+  expect_true(file.exists(file.path(tmp, "suppdm.xpt")))
+})
+
 
 
 

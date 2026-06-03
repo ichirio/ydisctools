@@ -25,6 +25,50 @@ make_id <- function(fn) {
   gsub("[^a-z0-9]+", "-", tolower(fn))
 }
 
+extract_rd_block <- function(rd_path, block) {
+  if (!file.exists(rd_path)) {
+    return(NA_character_)
+  }
+  lines <- readLines(rd_path, warn = FALSE, encoding = "UTF-8")
+    start_prefix <- paste0("\\", block, "{")
+    i <- which(startsWith(lines, start_prefix))
+  if (length(i) == 0) {
+    return(NA_character_)
+  }
+  i <- i[1]
+
+    txt <- sub(start_prefix, "", lines[i], fixed = TRUE)
+  depth <- 1L
+  j <- i
+
+  count_char <- function(s, ch) {
+    nchar(gsub(paste0("[^", ch, "]"), "", s))
+  }
+
+  while (depth > 0 && j < length(lines)) {
+    depth <- depth + count_char(txt, "{") - count_char(txt, "}")
+    if (depth <= 0) {
+      break
+    }
+    j <- j + 1
+    txt <- paste0(txt, "\n", lines[j])
+  }
+
+  txt <- sub("\\}\\s*$", "", txt)
+  txt <- gsub("\\\\code{", "", txt, fixed = TRUE)
+  txt <- gsub("\\\\link{", "", txt, fixed = TRUE)
+  txt <- gsub("\\\\itemize{", "", txt, fixed = TRUE)
+  txt <- gsub("\\\\item ", "- ", txt, fixed = TRUE)
+  txt <- gsub("\\\\dontrun{", "", txt, fixed = TRUE)
+  txt <- gsub("\\\\", "", txt, fixed = TRUE)
+  txt <- gsub("}", "", txt, fixed = TRUE)
+  txt <- trimws(txt)
+  if (!nzchar(txt)) {
+    return(NA_character_)
+  }
+  txt
+}
+
 escape_html <- function(x) {
   x <- gsub("&", "&amp;", x, fixed = TRUE)
   x <- gsub("<", "&lt;", x, fixed = TRUE)
@@ -47,6 +91,22 @@ detail_html <- vapply(rows, function(r) {
   fid <- make_id(r$fn)
   rd_url <- paste0("https://github.com/ichirio/ydisctools/blob/main/man/", r$rd)
   src_url <- paste0("https://github.com/ichirio/ydisctools/search?q=", utils::URLencode(r$fn), "&type=code")
+  rd_path <- file.path("man", r$rd)
+  usage <- extract_rd_block(rd_path, "usage")
+  examples <- extract_rd_block(rd_path, "examples")
+
+  usage_html <- if (!is.na(usage)) {
+    paste0("<h3>Usage</h3><pre><code>", escape_html(usage), "</code></pre>")
+  } else {
+    ""
+  }
+
+  examples_html <- if (!is.na(examples)) {
+    paste0("<h3>Examples</h3><pre><code>", escape_html(examples), "</code></pre>")
+  } else {
+    ""
+  }
+
   paste0(
     "<article id=\"fn-", fid, "\" class=\"doc-card\" style=\"margin-bottom:12px;\">",
     "<strong><code>", escape_html(r$fn), "</code></strong>",
@@ -58,6 +118,8 @@ detail_html <- vapply(rows, function(r) {
     " · ",
     "<a href=\"#top\">Back to top</a>",
     "</div>",
+    usage_html,
+    examples_html,
     "</article>"
   )
 }, character(1))
