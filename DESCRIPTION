@@ -20,12 +20,17 @@ Roxygen: list(markdown = TRUE)
 Suggests: 
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Imports: 
+Imports:
     dplyr,
     ggplot2,
     purrr,
     rlang,
     stringr,
+    stringi,
     lubridate,
     haven,
-    r2rtf
+    r2rtf,
+    readr,
+    readxl,
+    tidyr,
+    xportr
