@@ -14,15 +14,28 @@ knitr::opts_chunk$set(
 devtools::load_all()
 ```
 
-# ydisctools
+# ydisctools <img src="man/figures/logo.png" align="right" height="130" alt="ydisctools logo — a mini CDISC SDTM/ADaM/TFL pipeline" />
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/ichirio/ydisctools/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ichirio/ydisctools/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/ichirio/ydisctools/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/ichirio/ydisctools/actions/workflows/pkgdown.yaml)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![License: GPL v3](https://img.shields.io/badge/license-GPL%20(%3E%3D%203)-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 <!-- badges: end -->
 
-`ydisctools` is a utility package for CDISC-related programming workflows
-(SDTM/ADaM helpers, metadata utilities, text/RTF helpers, and data QC helpers).
+`ydisctools` is a **grab-bag of small, focused CDISC tools** for R — SDTM/ADaM
+dataset building, Define-XML / Pinnacle 21 metadata reading, ISO 8601 date
+helpers, controlled-terminology lookups, byte-aware text splitting, RTF table
+encoding, and a Sankey treatment-flow plotter.
 
-This repository also includes a Sankey plotting utility for treatment transition
+It is a **Proof of Concept** by design: a workshop where many little CDISC
+utilities live side by side, rather than a single-purpose package. Tools that
+mature here can graduate into standalone packages — this is exactly how
+[rtfreporter](https://github.com/ichirio/rtfreporter) began, as the RTF-reporting
+code inside ydisctools before it was spun out on its own. There is no CRAN
+submission planned, and the API may change at any time.
+
+The repository also includes a Sankey plotting utility for treatment-transition
 visualization:
 
 - `plot_sankey()` (Bezier links + rectangle nodes)
@@ -32,7 +45,7 @@ visualization:
 
 ## Installation
 
-You can install the development version of ydisctools from [GitHub](https://github.com/) with:
+You can install the development version of ydisctools from [GitHub](https://github.com/ichirio/ydisctools) with:
 
 ``` r
 # install.packages("devtools")
@@ -41,16 +54,11 @@ devtools::install_github("ichirio/ydisctools")
 
 ## Documentation
 
-- GitHub Pages: <https://ichirio.github.io/ydisctools/>
-- Function reference: `docs/FUNCTION_REFERENCE.md`
-- Sankey usage guide: `docs/SANKEY_GUIDE.md`
-- Pages setup note: `docs/PAGES_SETUP.md`
+Full documentation is published with [pkgdown](https://pkgdown.r-lib.org/):
 
-Regenerate function reference from `man/*.Rd`:
-
-``` r
-Rscript tools/build_function_reference.R
-```
+- **Website:** <https://ichirio.github.io/ydisctools/>
+- **Function reference:** <https://ichirio.github.io/ydisctools/reference/>
+- **Changelog:** <https://ichirio.github.io/ydisctools/news/>
 
 ## Quick Example
 

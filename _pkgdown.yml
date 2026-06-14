@@ -1,0 +1,184 @@
+url: https://ichirio.github.io/ydisctools/
+
+template:
+  bootstrap: 5
+  bootswatch: cosmo
+  bslib:
+    # ydisctools is the *indigo* sibling of the navy rtfreporter site --
+    # same design language, slightly shifted hue.
+    primary: "#4a3a8a"
+    base_font: {google: "Source Sans 3"}
+    heading_font: {google: "Source Sans 3"}
+    code_font: {google: "JetBrains Mono"}
+  opengraph:
+    twitter:
+      creator: "@ichirio"
+      site: "@ichirio"
+      card: summary
+
+# Development-version banner: the package is pre-v0.1.0, so every push
+# overwrites the published docs at the root (no version subdir).
+#
+# `mode: unreleased` is deliberate (NOT "release") so pkgdown still lifts
+# the README's <!-- badges --> block into the sidebar `dev` slot.
+development:
+  mode: unreleased
+  version_label: warning
+  version_tooltip: >
+    Pre-release.  ydisctools is a Proof-of-Concept collection of small
+    CDISC tools; the API may change at any time and there is no CRAN
+    submission planned.
+
+home:
+  title: "ydisctools — Your CDISC Toolbox for R"
+  description: >
+    A grab-bag of small, focused R helpers for CDISC work — SDTM / ADaM
+    dataset building, Define-XML / Pinnacle 21 metadata reading, ISO 8601
+    date helpers, controlled-terminology lookups, byte-aware text
+    splitting, RTF table encoding, and a Sankey treatment-flow plotter.
+  # Keep README's H1 (which contains the logo image) on the home page.
+  strip_header: false
+  sidebar:
+    # User-facing info first; dev-status (badges) and the dev-stage note
+    # are pushed to the BOTTOM so they don't dominate the landing page.
+    # `dev` is the built-in slot pkgdown uses to inject the README's
+    # `<!-- badges: start --> ... <!-- badges: end -->` block.
+    structure: [links, community, citation, authors, license, devnotes, dev]
+    components:
+      devnotes:
+        title: Dev stage
+        text: |
+          **Proof of Concept** — ydisctools is a workshop for small CDISC
+          utilities, not a single-purpose package. Tools may be promoted out
+          into standalone packages once they mature (this is how
+          [rtfreporter](https://github.com/ichirio/rtfreporter) began life
+          here). No CRAN submission is planned; expect the API to move.
+      community:
+        title: Community
+        text: |
+          [Open an issue](https://github.com/ichirio/ydisctools/issues/new)
+          ·
+          [Browse issues](https://github.com/ichirio/ydisctools/issues)
+          ·
+          [Contributing](https://github.com/ichirio/ydisctools/blob/main/README.md)
+
+navbar:
+  structure:
+    left:  [reference, news]
+    right: [search, github]
+  components:
+    reference:
+      text: Reference
+      href: reference/index.html
+    news:
+      text: Changelog
+      href: news/index.html
+    github:
+      icon: fab fa-github
+      href: https://github.com/ichirio/ydisctools
+      aria-label: GitHub
+
+footer:
+  structure:
+    left:  [developed_by, built_with]
+    right: [package, license]
+  components:
+    package: "[ydisctools](https://github.com/ichirio/ydisctools) (development version)"
+    license: "[GPL (>= 3)](https://github.com/ichirio/ydisctools/blob/main/LICENSE.md)"
+
+reference:
+  - title: SDTM / ADaM datasets
+    desc: >
+      Build SDTM and ADaM datasets (and their SUPP-- companions) from
+      source data and metadata.
+    contents:
+      - make_sdtm_dataset
+      - make_sdtm_all_dataset
+      - make_sdtm_supp_dataset
+      - make_supp_df
+      - make_adam_dataset
+      - set_label_on_sep_columns
+      - get_split_var_names
+      - split_supp_qval
+
+  - title: Metadata & specifications
+    desc: >
+      Read Define-XML / Pinnacle 21 specification workbooks and SDTM
+      metadata into tidy tables.
+    contents:
+      - read_p21_spec
+      - read_metadata_spec_p21
+      - read_sdtm_meta_supp
+      - read_sdtm_metadata_p21
+
+  - title: Reading data
+    desc: Load SAS transport / dataset files and Excel workbooks.
+    contents:
+      - read_sas_datasets
+      - read_xpts
+      - read_excel_all_sheets
+
+  - title: Dates & study day (ISO 8601)
+    desc: >
+      Convert and compare ISO 8601 date/time character values, derive
+      imputation flags, and compute study day.
+    contents:
+      - conv_iso8601
+      - conv_iso8601_num_d
+      - conv_iso8601_num_hm
+      - conv_iso8601_num_hms
+      - comp_char_date
+      - comp_char_dates
+      - compute_dy
+      - derive_dtm_from_dtc
+      - derive_dtf_from_dtc
+      - derive_tmf_from_dtc
+
+  - title: Controlled terminology
+    desc: Look up CDISC controlled-terminology submission values and decodes.
+    contents:
+      - get_ct_decode
+      - get_ct_term
+
+  - title: Data QC & validation
+    desc: >
+      Check key uniqueness, find invalid / control characters, and pick up
+      subject subsets.
+    contents:
+      - check_sdtm_keys
+      - is_unique_key
+      - check_invalid_chars
+      - check_invalid_chars_in_datasets
+      - detect_invalid_chars
+      - replace_control_chars
+      - pickup_subjects
+
+  - title: Text & byte-width helpers
+    desc: >
+      Concatenate skipping blanks, measure rendered string width per font,
+      and split text / columns at a maximum byte length.
+    contents:
+      - catx
+      - text_width
+      - text_width_arial
+      - text_width_courier_new
+      - split_text_by_max_bytes
+      - split_column_by_max_bytes
+      - split_key_text
+      - to_hex
+
+  - title: RTF output
+    desc: Encode tables to Rich Text Format (built on r2rtf).
+    contents:
+      - rtf_encode
+      - convert_units
+
+  - title: Sankey treatment-flow plots
+    desc: >
+      Draw treatment-transition Sankey diagrams (Bezier links, rectangle
+      nodes, isolated-node support, per-line / across-line colouring).
+    contents:
+      - plot_sankey
+
+news:
+  one_page: true

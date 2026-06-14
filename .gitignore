@@ -2,3 +2,6 @@
 .Rhistory
 .RData
 .Ruserdata
+
+# pkgdown build output -- deployed to gh-pages branch via GitHub Actions
+/docs/

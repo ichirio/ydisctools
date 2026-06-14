@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  ydisctools hex logo
+  ===================
+
+  Part of the **ichirio** package family.  Shared design language:
+    * pointy-top hexagon (R community convention)
+    * coloured frame with depth: gradient body, glossy top-edge
+      highlight, soft outer drop shadow
+    * package wordmark large, centred, below the per-package
+      illustration
+    * subtle "ichirio" attribution along the lower hex edge
+
+  ydisctools is the family's *indigo* sibling (rtfreporter is navy).
+
+  ydisctools-specific element: a miniature CDISC pipeline rendered as a
+  Sankey-style flow (SDTM to ADaM to TFL) on a soft lavender sheet: a
+  nod to the package's breadth of small CDISC tools and to its flagship
+  `plot_sankey()` treatment-flow visualiser.
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     width="560" height="620"
+     viewBox="0 0 560 620">
+
+  <!-- ── Definitions: gradients, filters, clipPath ─────────────────── -->
+  <defs>
+    <!-- Hex body: indigo with subtle vertical lift -->
+    <linearGradient id="hexbg" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%"   stop-color="#6a5ab8"/>
+      <stop offset="60%"  stop-color="#4a3a8a"/>
+      <stop offset="100%" stop-color="#2a1f5a"/>
+    </linearGradient>
+
+    <!-- Inner top highlight (gloss feel on the top half of the hex) -->
+    <radialGradient id="topgloss" cx="50%" cy="0%" r="65%" fx="50%" fy="0%">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.32"/>
+      <stop offset="40%"  stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Vignette: subtle darkening near the lower hex corners -->
+    <radialGradient id="vignette" cx="50%" cy="100%" r="80%" fx="50%" fy="100%">
+      <stop offset="0%"   stop-color="#000000" stop-opacity="0"/>
+      <stop offset="80%"  stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.30"/>
+    </radialGradient>
+
+    <!-- Paper background: very pale indigo/lavender tint (NOT pure white) -->
+    <linearGradient id="paperbg" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%"   stop-color="#f6f4fd"/>
+      <stop offset="100%" stop-color="#e4def4"/>
+    </linearGradient>
+
+    <!-- Outer drop shadow for the whole hex (soft, 3D lift) -->
+    <filter id="hex-shadow" x="-12%" y="-8%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="9" stdDeviation="11"
+                    flood-color="#0b0820" flood-opacity="0.45"/>
+    </filter>
+
+    <!-- Paper drop shadow inside the hex (smaller, crisp) -->
+    <filter id="paper-shadow" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4"
+                    flood-color="#1a1240" flood-opacity="0.55"/>
+    </filter>
+
+    <!-- Soft drop shadow for the wordmark (subtle depth) -->
+    <filter id="text-shadow" x="-10%" y="-50%" width="120%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2"
+                    flood-color="#0b0820" flood-opacity="0.55"/>
+    </filter>
+
+    <clipPath id="hex-clip">
+      <polygon points="280,28 512,163 512,431 280,566 48,431 48,163"/>
+    </clipPath>
+  </defs>
+
+  <!-- ────────────────────────────────────────────────────────────────── -->
+  <!-- 3D-lifted hexagon body                                              -->
+  <!-- ────────────────────────────────────────────────────────────────── -->
+  <g filter="url(#hex-shadow)">
+    <polygon points="280,28 512,163 512,431 280,566 48,431 48,163"
+             fill="url(#hexbg)"/>
+  </g>
+
+  <!-- Top gloss + bottom vignette, clipped to the hex shape -->
+  <g clip-path="url(#hex-clip)">
+    <rect x="0" y="0" width="560" height="620" fill="url(#topgloss)"/>
+    <rect x="0" y="0" width="560" height="620" fill="url(#vignette)"/>
+  </g>
+
+  <!-- ────────────────────────────────────────────────────────────────── -->
+  <!-- Mini CDISC pipeline (Sankey-style flow) INSIDE the hex             -->
+  <!-- ────────────────────────────────────────────────────────────────── -->
+  <g clip-path="url(#hex-clip)">
+
+    <!-- Soft, slightly-lavender paper sheet (landscape) -->
+    <rect x="92" y="138" width="376" height="252" rx="7" ry="7"
+          fill="url(#paperbg)"
+          stroke="#b3a9d4" stroke-width="1.4"
+          filter="url(#paper-shadow)"/>
+
+    <!-- Page-top hairline (paper edge highlight) -->
+    <line x1="98" y1="141" x2="462" y2="141"
+          stroke="#ffffff" stroke-width="1" opacity="0.8"/>
+
+    <!-- Caption -->
+    <text x="280" y="164"
+          font-family="Source Sans 3, Helvetica, Arial, sans-serif"
+          font-size="12.5" font-weight="700" letter-spacing="1.5"
+          text-anchor="middle" fill="#4a3a8a">CDISC&#160;PIPELINE&#160;TOOLKIT</text>
+
+    <!-- Sankey-style ribbons (drawn first, nodes overlay them) -->
+    <!-- Left -> Mid -->
+    <g fill="none" stroke-linecap="round">
+      <path d="M134,196 C205,196 205,200 276,200" stroke="#8a7ad0" stroke-width="17" opacity="0.55"/>
+      <path d="M134,232 C205,232 205,246 276,246" stroke="#6a5ab8" stroke-width="19" opacity="0.50"/>
+      <path d="M134,265 C205,265 205,248 276,248" stroke="#4a3a8a" stroke-width="11" opacity="0.45"/>
+      <!-- Mid -> Right -->
+      <path d="M289,200 C360,200 360,203 431,203" stroke="#8a7ad0" stroke-width="16" opacity="0.55"/>
+      <path d="M289,246 C360,246 360,241 431,241" stroke="#6a5ab8" stroke-width="16" opacity="0.50"/>
+      <path d="M289,250 C360,250 360,272 431,272" stroke="#4a3a8a" stroke-width="9"  opacity="0.45"/>
+    </g>
+
+    <!-- Nodes: left column (SDTM domains) -->
+    <g fill="#4a3a8a" stroke="#2a1f5a" stroke-width="1">
+      <rect x="120" y="180" width="14" height="32" rx="2"/>
+      <rect x="120" y="218" width="14" height="28" rx="2"/>
+      <rect x="120" y="254" width="14" height="22" rx="2"/>
+      <!-- mid column (ADaM) -->
+      <rect x="276" y="183" width="13" height="34" rx="2"/>
+      <rect x="276" y="226" width="13" height="40" rx="2"/>
+      <!-- right column (TFL) -->
+      <rect x="431" y="188" width="13" height="30" rx="2"/>
+      <rect x="431" y="228" width="13" height="26" rx="2"/>
+      <rect x="431" y="262" width="13" height="20" rx="2"/>
+    </g>
+
+    <!-- Stage labels -->
+    <g font-family="Source Sans 3, Helvetica, Arial, sans-serif"
+       font-size="13" font-weight="700" letter-spacing="1" fill="#3a2f6a">
+      <text x="127" y="305" text-anchor="middle">SDTM</text>
+      <text x="282" y="305" text-anchor="middle">ADaM</text>
+      <text x="437" y="305" text-anchor="middle">TFL</text>
+    </g>
+
+    <!-- Flow arrows between stages -->
+    <g fill="#7a6ac4">
+      <polygon points="196,322 206,328 196,334"/>
+      <polygon points="352,322 362,328 352,334"/>
+    </g>
+
+    <!-- Baseline rule under the pipeline -->
+    <line x1="108" y1="345" x2="452" y2="345"
+          stroke="#b3a9d4" stroke-width="1.2"/>
+    <text x="280" y="362"
+          font-family="Source Sans 3, Helvetica, Arial, sans-serif"
+          font-size="9.5" font-style="italic" fill="#7a6f96"
+          text-anchor="middle">SDTM &#183; ADaM &#183; TFL helpers, all in one place.</text>
+  </g>
+
+  <!-- ────────────────────────────────────────────────────────────────── -->
+  <!-- Package wordmark (with subtle drop shadow for depth)               -->
+  <!-- ────────────────────────────────────────────────────────────────── -->
+  <text x="280" y="490"
+        font-family="Source Sans 3, Helvetica, Arial, sans-serif"
+        font-size="46" font-weight="700"
+        text-anchor="middle" fill="#ffffff"
+        letter-spacing="-0.5"
+        filter="url(#text-shadow)">ydisctools</text>
+
+  <!-- Per-package tagline -->
+  <text x="280" y="522"
+        font-family="Source Sans 3, Helvetica, Arial, sans-serif"
+        font-size="13.5" font-weight="500"
+        text-anchor="middle" fill="#d9d2f4"
+        letter-spacing="3.5">YOUR · CDISC · TOOLBOX</text>
+
+  <!-- ── Shared "ichirio" attribution (subtle) ──────────────────────── -->
+  <text x="280" y="555"
+        font-family="Source Sans 3, Helvetica, Arial, sans-serif"
+        font-size="11" font-weight="500"
+        text-anchor="middle" fill="#ffffff" opacity="0.32"
+        letter-spacing="6">i c h i r i o</text>
+
+  <!-- ────────────────────────────────────────────────────────────────── -->
+  <!-- Hexagon outline (with subtle inner highlight stripe for a bevel)   -->
+  <!-- ────────────────────────────────────────────────────────────────── -->
+  <!-- Outer stroke (darker, thicker) -->
+  <polygon points="280,28 512,163 512,431 280,566 48,431 48,163"
+           fill="none" stroke="#221a4a" stroke-width="14"
+           stroke-linejoin="round"/>
+
+  <!-- Inner highlight (thin, white, low-opacity = bevel look) -->
+  <polygon points="280,38 502,168 502,425 280,556 58,425 58,168"
+           fill="none" stroke="#ffffff" stroke-width="1.5"
+           stroke-linejoin="round" opacity="0.18"/>
+</svg>

@@ -3,5 +3,8 @@
 ^LICENSE\.md$
 ^README\.Rmd$
 ^\.github$
+^_pkgdown\.yml$
+^pkgdown$
 ^docs$
 ^output$
+^pageby-ae-listing\.rtf$

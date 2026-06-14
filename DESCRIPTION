@@ -1,13 +1,18 @@
 Package: ydisctools
 Type: Package
-Title: Your CDISC Relate Tools
+Title: Your CDISC Related Tools
 Version: 0.0.228
 Author: Yoichi Masui
 Maintainer: Yoichi Masui <masui.yoichi@gmail.com>
-Description: Tools for CDISC(SDTM at the moment) programming. 
-    RTF table generation functions are based on the r2rtf package 
-    (Wang et al., 2020).
+Description: A collection of small, focused tools for CDISC programming
+    (SDTM, ADaM and TFL), including dataset builders, Define-XML /
+    Pinnacle 21 metadata readers, ISO 8601 date helpers, controlled
+    terminology lookups, byte-aware text splitting, and a Sankey
+    treatment-flow plotter. RTF table generation functions are based on
+    the r2rtf package (Wang et al., 2020).
 License: GPL (>= 3)
+URL: https://ichirio.github.io/ydisctools/, https://github.com/ichirio/ydisctools
+BugReports: https://github.com/ichirio/ydisctools/issues
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
