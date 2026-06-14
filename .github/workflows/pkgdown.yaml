@@ -1,5 +1,7 @@
 # Build a pkgdown site and deploy it to GitHub Pages.
-# Derived from r-lib/actions examples (mirrors the rtfreporter setup).
+# ydisctools' Pages source is the GitHub Actions artifact (build_type:
+# workflow), so we build the site and publish it with the official
+# actions/deploy-pages, rather than pushing a gh-pages branch.
 on:
   push:
     branches: [main, master]
@@ -11,16 +13,18 @@ on:
 name: pkgdown
 
 permissions:
-  contents: write
+  contents: read
   pages: write
   id-token: write
 
+# Allow one concurrent deployment.
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
 jobs:
-  pkgdown:
+  build:
     runs-on: ubuntu-latest
-    # Only restrict concurrency for non-PR jobs
-    concurrency:
-      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
     steps:
@@ -38,19 +42,27 @@ jobs:
           needs: website
 
       - name: Build site
-        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        run: pkgdown::build_site(new_process = FALSE, install = FALSE)
         shell: Rscript {0}
 
-      - name: Deploy to GitHub Pages
+      - name: Setup Pages
         if: github.event_name != 'pull_request'
-        uses: peaceiris/actions-gh-pages@v4
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs
-          publish_branch: gh-pages
-          # Re-write gh-pages as a single-commit branch each deploy so we
-          # never see merge / fast-forward errors from accumulated history.
-          force_orphan: true
-          user_name:  "github-actions[bot]"
-          user_email: "41898282+github-actions[bot]@users.noreply.github.com"
-          commit_message: "Deploy pkgdown site (${{ github.sha }})"
+          path: ./docs
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
