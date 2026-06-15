@@ -39,6 +39,13 @@ components. For figures: Returns RTF encoded figure object.
 The exact structure depends on the input type and verbose setting.
 }
 \description{
+\strong{Deprecated.} The RTF output tools in ydisctools were a Proof of
+Concept and have been superseded by the standalone
+\href{https://ichirio.github.io/rtfreporter/}{rtfreporter} package. Use
+\code{rtfreporter::rtf_document()} together with
+\code{rtfreporter::generate_rtfreport()} instead. These functions are kept
+only for backward compatibility and may be removed in a future version.
+
 This function provides a unified interface for encoding tables and figures
 into Rich Text Format (RTF) with customizable page layout options.
 Supports both single tables/figures and lists of multiple objects.

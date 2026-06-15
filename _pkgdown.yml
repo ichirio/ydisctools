@@ -167,8 +167,12 @@ reference:
       - split_key_text
       - to_hex
 
-  - title: RTF output
-    desc: Encode tables to Rich Text Format (built on r2rtf).
+  - title: Deprecated — RTF output (use rtfreporter)
+    desc: >
+      The RTF output tools were a Proof of Concept and are now deprecated.
+      Use the standalone [rtfreporter](https://ichirio.github.io/rtfreporter/)
+      package instead — `rtfreporter::rtf_document()` with
+      `rtfreporter::generate_rtfreport()`.
     contents:
       - rtf_encode
       - convert_units

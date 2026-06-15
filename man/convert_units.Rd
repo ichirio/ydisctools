@@ -17,5 +17,8 @@ convert_units(values, from = "mm", to = "mm")
 Converted values
 }
 \description{
-Convert Units
+\strong{Deprecated.} A helper for the ydisctools RTF output tools, which have
+been superseded by the standalone
+\href{https://ichirio.github.io/rtfreporter/}{rtfreporter} package. Retained
+only for backward compatibility and may be removed in a future version.
 }

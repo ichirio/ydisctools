@@ -1,8 +1,13 @@
 #' Plot Sankey Diagram with Rectangular Nodes and Bezier Polygon Links
 #'
 #' Draw a Sankey-style plot using `ggplot2` primitives (`geom_rect` for nodes and
-#' `geom_polygon` for links). This implementation can draw nodes that have no
-#' incoming or outgoing links.
+#' `geom_polygon` for links).
+#'
+#' A key feature of this implementation is that nodes are laid out from the node
+#' table rather than inferred from the links, so a node with **no links at all**
+#' is still drawn, sized by its `node_value`. For example, a "Line1: No
+#' Treatment" group that no patients enter or leave still appears in the diagram
+#' as a standalone node (see the example).
 #'
 #' @param nodes A data frame of nodes.
 #' @param links A data frame of links.
@@ -53,6 +58,69 @@
 #' @param use_link_color_by_target If `TRUE`, link fill uses target node color.
 #'
 #' @return A `ggplot` object.
+#' @examples
+#' # A five-line oncology treatment-sequence cohort (Line 1 -> Line 5).
+#' #
+#' # Highlighted feature: nodes are laid out from the node table, so a node with
+#' # NO links at all is still drawn, sized by `node_value`. Here every
+#' # "No Treatment" node (e.g. "Line1: No Treatment") is such an isolated node --
+#' # no patients flow into or out of it -- yet it appears in the diagram. Linked
+#' # nodes are left as NA and are sized from the link values.
+#' trt <- c("Chemo", "Immunotherapy", "Targeted", "No Treatment")
+#' key <- c("Chemo", "IO", "Target", "NoTx")
+#'
+#' nodes <- data.frame(
+#'   id        = paste0("L", rep(1:5, each = 4), "_", rep(key, 5)),
+#'   stage     = paste0("Line", rep(1:5, each = 4)),
+#'   line      = paste0("Line", rep(1:5, each = 4)),
+#'   treatment = rep(trt, 5),
+#'   label     = paste0("Line", rep(1:5, each = 4), ": ", rep(trt, 5)),
+#'   node_n    = NA_real_,
+#'   stringsAsFactors = FALSE
+#' )
+#' # Give the link-less "No Treatment" nodes an explicit size.
+#' nodes$node_n[nodes$treatment == "No Treatment"] <- c(20, 18, 15, 12, 10)
+#'
+#' # Patients flow only among the active treatments between consecutive lines;
+#' # the "No Treatment" nodes deliberately have no links.
+#' active <- c("Chemo", "IO", "Target")
+#' flow <- c(45, 8, 4, 10, 28, 5, 6, 6, 16) # source-by-target, tapering per line
+#' links <- do.call(rbind, lapply(1:4, function(k) {
+#'   g <- expand.grid(s = active, t = active, stringsAsFactors = FALSE)
+#'   data.frame(
+#'     source = paste0("L", k, "_", g$s),
+#'     target = paste0("L", k + 1, "_", g$t),
+#'     value  = round(flow * 0.75^(k - 1)),
+#'     stringsAsFactors = FALSE
+#'   )
+#' }))
+#'
+#' treatment_palette <- c(
+#'   "Chemo"         = "#2F6C8F",
+#'   "Immunotherapy" = "#4B9F7A",
+#'   "Targeted"      = "#D08C3E",
+#'   "No Treatment"  = "#7F7F7F"
+#' )
+#'
+#' plot_sankey(
+#'   nodes = nodes,
+#'   links = links,
+#'   node_id = "id",
+#'   node_stage = "stage",
+#'   node_label = "label",
+#'   node_value = "node_n",
+#'   link_source = "source",
+#'   link_target = "target",
+#'   link_value = "value",
+#'   node_treatment = "treatment",
+#'   node_line = "line",
+#'   treatment_color_mode = "across_lines",
+#'   treatment_palette = treatment_palette,
+#'   baseline = "top",
+#'   use_link_color_by_source = TRUE,
+#'   link_alpha = 0.55,
+#'   label_size = 3
+#' )
 #' @export
 #' @importFrom rlang .data
 if (getRversion() >= "2.15.1") {

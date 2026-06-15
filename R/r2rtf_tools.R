@@ -1,5 +1,13 @@
 #' Encode Tables and Figures to RTF Format
 #'
+#' @description
+#' **Deprecated.** The RTF output tools in
+#' ydisctools were a Proof of Concept and have been superseded by the
+#' standalone [rtfreporter](https://ichirio.github.io/rtfreporter/) package.
+#' Use `rtfreporter::rtf_document()` together with
+#' `rtfreporter::generate_rtfreport()` instead. These functions are kept only
+#' for backward compatibility and may be removed in a future version.
+#'
 #' This function provides a unified interface for encoding tables and figures
 #' into Rich Text Format (RTF) with customizable page layout options.
 #' Supports both single tables/figures and lists of multiple objects.
@@ -86,6 +94,14 @@ rtf_encode <- function(tbl,
                        page_footnote = "all",
                        page_source = "last",
                        verbose = FALSE) {
+  .Deprecated(
+    msg = paste0(
+      "rtf_encode() is deprecated. The RTF output tools in ydisctools have ",
+      "been superseded by the standalone 'rtfreporter' package ",
+      "(https://ichirio.github.io/rtfreporter/). Use ",
+      "rtfreporter::rtf_document() with rtfreporter::generate_rtfreport()."
+    )
+  )
   r2rtf:::match_arg(doc_type, c("table", "figure"))
   r2rtf:::match_arg(page_title, c("all", "first", "last"))
   r2rtf:::match_arg(page_footnote, c("all", "first", "last"))
@@ -1230,6 +1246,12 @@ get_paper_dimension <- function(paper_size = "letter",
 }
 
 #' Convert Units
+#'
+#' @description
+#' **Deprecated.** A helper for the ydisctools RTF output tools, which have been
+#' superseded by the standalone
+#' [rtfreporter](https://ichirio.github.io/rtfreporter/) package. Retained only
+#' for backward compatibility and may be removed in a future version.
 #'
 #' @param values Numeric vector of values
 #' @param from Source unit
