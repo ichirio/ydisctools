@@ -19,6 +19,13 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## Tools
 
+* `format_stats()` — collapse a long ("tidy", ARD-like) statistic table into one
+  formatted display string per group, driven by a format-spec table with inline
+  digit tokens (`{mean:2} ({sd:3})`). Grouping-key columns are arbitrary; bare
+  `{stat}` tokens pass pre-formatted character values through verbatim.
+* `pivot_stats_wider()` — spread one or more columns into combined wide headers
+  (joined with `____` by default), filling cells from a value column.
+
 * `plot_sankey()` — treatment-transition Sankey plotter (Bezier links,
   rectangle nodes, isolated-node support, per-line / across-line colouring),
   plus `plot_sankey_subgroups_batch()` for subgroup batches.
