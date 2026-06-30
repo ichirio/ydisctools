@@ -183,6 +183,7 @@ reference:
       nodes, isolated-node support, per-line / across-line colouring).
     contents:
       - plot_sankey
+      - plot_sankey_subgroups_batch
 
 news:
   one_page: true

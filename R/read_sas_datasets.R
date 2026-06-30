@@ -6,6 +6,8 @@
 #' @param folder A character string specifying the path to the folder containing the SAS datasets.
 #' @param datasets A character vector of dataset names (without file extensions) to be read.
 #' If `NA`, all datasets in the folder with the `.sas7bdat` extension are read. Default is `NA`.
+#' @param tz A character string giving the time zone applied to `POSIXct` columns
+#' (read as UTC, then converted). Default `""` (the system time zone).
 #'
 #' @return A named list of data frames, where each data frame corresponds to a SAS dataset.
 #' The names of the list are derived from the dataset filenames (without the `.sas7bdat` extension).
@@ -44,6 +46,8 @@ read_sas_datasets <- function(folder, datasets=NA, tz="") {
 #'
 #' @param folder A character string specifying the path to the folder containing the XPT files.
 #' @param xpts A character vector specifying the names of the XPT files to read (without the .xpt extension). If NA, all XPT files in the folder are read. Default is NA.
+#' @param tz A character string giving the time zone applied to `POSIXct` columns
+#' (read as UTC, then converted). Default `""` (the system time zone).
 #' @return A named list of data frames, where each data frame corresponds to an XPT file.
 #' @examples
 #' \dontrun{

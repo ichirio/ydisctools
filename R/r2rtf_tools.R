@@ -56,8 +56,8 @@
 #' \url{https://pharmasug.org/proceedings/2020/DV/PharmaSUG-2020-DV-198.pdf}
 #'
 #' @seealso
-#' \code{\link{rtf_encode_table2}} for advanced table encoding,
-#' \code{\link{rtf_encode_table3}} for enhanced table encoding
+#' \code{rtf_encode_table2} for advanced table encoding,
+#' \code{rtf_encode_table3} for enhanced table encoding (both internal)
 #'
 #' @export
 #' @examples
@@ -418,7 +418,7 @@ rtf_encode_list <- function(tbl) {
 
     info$total <- min(info$total)
 
-    info$page1 <- r2rtf::page_dict_page(info)
+    info$page1 <- r2rtf:::page_dict_page(info)
 
     page1 <- info[info$page == 1, ]
     page1 <- split(page1, page1$item)

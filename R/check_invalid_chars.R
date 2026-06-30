@@ -3,14 +3,18 @@
 #' This function checks for invalid characters in multiple datasets and combines the results into a single data frame.
 #'
 #' @param datasets A list of data frames in which to check for invalid characters.
+#'   If the list is named, the names are used as the dataset labels in the report;
+#'   otherwise generic labels (`dataset1`, `dataset2`, ...) are generated.
 #' @param question A logical value indicating whether to detect and remove the question mark character. Default is FALSE.
+#' @param report_file Optional path to a CSV file. When supplied, the combined
+#'   result is written there with [readr::write_csv()]. Default `NULL` (no file).
 #' @return A data frame with the results of the invalid character checks for all datasets combined.
 #' @examples
 #' library(dplyr)
 #' library(purrr)
 #' df1 <- data.frame(text = c("Hello\x01World", "Example\x0AString"))
 #' df2 <- data.frame(text = c("Another\x0DTest", "More\x0AData"))
-#' datasets <- list(df1, df2)
+#' datasets <- list(DF1 = df1, DF2 = df2)
 #' check_invalid_chars_in_datasets(datasets)
 #' check_invalid_chars_in_datasets(datasets, question = TRUE)
 #' @import dplyr
@@ -18,7 +22,11 @@
 #' @import readr
 #' @export
 check_invalid_chars_in_datasets <- function(datasets, question=FALSE, report_file = NULL) {
-  result <- map2(datasets, names(datasets), ~ check_invalid_chars(.x, .y, question = question)) |>
+  dataset_names <- names(datasets)
+  if (is.null(dataset_names)) {
+    dataset_names <- paste0("dataset", seq_along(datasets))
+  }
+  result <- map2(datasets, dataset_names, ~ check_invalid_chars(.x, .y, question = question)) |>
     bind_rows()
 
   if(!is.null(report_file)) {

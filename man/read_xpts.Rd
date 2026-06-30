@@ -10,6 +10,9 @@ read_xpts(folder, xpts = NA, tz = "")
 \item{folder}{A character string specifying the path to the folder containing the XPT files.}
 
 \item{xpts}{A character vector specifying the names of the XPT files to read (without the .xpt extension). If NA, all XPT files in the folder are read. Default is NA.}
+
+\item{tz}{A character string giving the time zone applied to \code{POSIXct} columns
+(read as UTC, then converted). Default \code{""} (the system time zone).}
 }
 \value{
 A named list of data frames, where each data frame corresponds to an XPT file.

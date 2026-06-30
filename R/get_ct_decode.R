@@ -27,8 +27,8 @@
 #'
 #' df2 <- data.frame(USUBJID = rep(1:3), LBTEST = c("Erythrocyte Count", "Monocyte Count", "Lymphocyte Count"))
 #'
-#' # Get decode value with reverse lookup
-#' df2 |> mutate(LBTEST = get_ct_decode(ct_meta, "LBTESTCD", LBTESTCD, reverse = TRUE))
+#' # Get the term (code) back from the decode value with a reverse lookup
+#' df2 |> mutate(LBTESTCD = get_ct_decode(ct_meta, "LBTESTCD", LBTEST, reverse = TRUE))
 #'
 #' @import dplyr
 #' @export
@@ -67,7 +67,7 @@ get_ct_decode <- function(ct_meta, id, term, reverse = FALSE) {
 #'
 #' @param ct_meta A `data.frame` containing the metadata with columns `id`, `term`, and `decode`. The metadata can be read using `read_sdtm_metadata_p21()` from a P21 specification file.
 #' @param id A single character string representing the ID.
-#' @param term A character vector representing the decode value(s).
+#' @param decode A character vector representing the decode value(s).
 #'
 #' @return A character vector of term values corresponding to the specified ID and decode value(s).
 #'

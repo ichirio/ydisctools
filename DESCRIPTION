@@ -1,7 +1,7 @@
 Package: ydisctools
 Type: Package
 Title: Your CDISC Related Tools
-Version: 0.0.228
+Version: 0.0.229
 Author: Yoichi Masui
 Maintainer: Yoichi Masui <masui.yoichi@gmail.com>
 Description: A collection of small, focused tools for CDISC programming
@@ -17,8 +17,12 @@ Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
-Suggests: 
-    testthat (>= 3.0.0)
+Depends:
+    R (>= 4.1.0)
+Suggests:
+    testthat (>= 3.0.0),
+    tibble,
+    magrittr
 Config/testthat/edition: 3
 Imports:
     dplyr,

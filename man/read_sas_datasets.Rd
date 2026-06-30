@@ -11,6 +11,9 @@ read_sas_datasets(folder, datasets = NA, tz = "")
 
 \item{datasets}{A character vector of dataset names (without file extensions) to be read.
 If \code{NA}, all datasets in the folder with the \code{.sas7bdat} extension are read. Default is \code{NA}.}
+
+\item{tz}{A character string giving the time zone applied to \code{POSIXct} columns
+(read as UTC, then converted). Default \code{""} (the system time zone).}
 }
 \value{
 A named list of data frames, where each data frame corresponds to a SAS dataset.

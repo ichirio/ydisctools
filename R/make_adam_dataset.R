@@ -7,6 +7,7 @@
 #' @param adam_meta A list containing metadata for the ADaM dataset, including dataset-level and variable-level metadata.
 #' @param xpt_path A character string specifying the directory path where the XPT file should be saved. Defaults to `NULL`, meaning no file will be written.
 #' @param meta_length A logical value indicating whether to apply variable length metadata to the dataset. Defaults to `TRUE`.
+#' @param sort_by_spec_key A logical value indicating whether to sort the output rows by the dataset's key variables (from the dataset-level metadata `key` column). Defaults to `FALSE`.
 #'
 #' @return A transformed data frame representing the ADaM dataset, with metadata-driven labels, types, and ordering applied.
 #'
@@ -18,7 +19,8 @@
 #' 4. Optionally writes the resulting dataset to an XPT file in the specified directory.
 #'
 #' @examples
-#' # Example usage:
+#' \dontrun{
+#' # Example usage (requires a complete ADaM metadata spec):
 #' df <- tibble::tibble(
 #'   USUBJID = c("01", "02"),
 #'   AGE = c(34, 45),
@@ -40,6 +42,7 @@
 #' )
 #'
 #' result <- make_adam_dataset(df, domain = "ADSL", adam_meta = adam_meta)
+#' }
 #'
 #' @import dplyr
 #' @importFrom xportr xportr_df_label xportr_order xportr_type xportr_label xportr_format xportr_length

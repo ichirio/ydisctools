@@ -70,13 +70,15 @@ make_sdtm_all_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
 #' @importFrom haven write_xpt
 #' @export
 #' @examples
-#' # Example usage:
+#' \dontrun{
+#' # Example usage (requires a complete SDTM metadata spec):
 #' df <- data.frame(ID = 1:3, VAR1 = c("A", "B", "C"), VAR2 = c(10, 20, 30))
 #' sdtm_meta <- list(
 #'   datasets = data.frame(dataset = "DM", label = "Demographics"),
 #'   variables = data.frame(dataset = "DM", variable = c("ID", "VAR1", "VAR2"), label = c("Identifier", "Variable 1", "Variable 2"))
 #' )
 #' make_sdtm_dataset(df, "DM", sdtm_meta)
+#' }
 make_sdtm_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
   target_domain <- toupper(domain)
   target_file <- paste0(tolower(target_domain), ".xpt")
@@ -121,7 +123,8 @@ make_sdtm_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
 #' @importFrom haven write_xpt
 #' @export
 #' @examples
-#' # Example usage:
+#' \dontrun{
+#' # Example usage (requires a complete SDTM metadata spec):
 #' df <- data.frame(ID = 1:3, VAR1 = c("A", "B", "C"), VAR2 = c(10, 20, 30))
 #' sdtm_meta <- list(
 #'   datasets = data.frame(dataset = "DM", label = "Demographics"),
@@ -129,6 +132,7 @@ make_sdtm_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
 #'   suppqual = data.frame(RDOMAIN = "DM", QNAM = "VAR3", QLABEL = "Supplemental Variable")
 #' )
 #' make_sdtm_supp_dataset(df, "DM", sdtm_meta)
+#' }
 make_sdtm_supp_dataset <- function(df, domain, sdtm_meta, xpt_path = NULL) {
   target_domain <- toupper(domain)
   target_file <- paste0(tolower(target_domain), ".xpt")

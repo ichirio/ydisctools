@@ -23,6 +23,8 @@ make_adam_dataset(
 \item{xpt_path}{A character string specifying the directory path where the XPT file should be saved. Defaults to \code{NULL}, meaning no file will be written.}
 
 \item{meta_length}{A logical value indicating whether to apply variable length metadata to the dataset. Defaults to \code{TRUE}.}
+
+\item{sort_by_spec_key}{A logical value indicating whether to sort the output rows by the dataset's key variables (from the dataset-level metadata \code{key} column). Defaults to \code{FALSE}.}
 }
 \value{
 A transformed data frame representing the ADaM dataset, with metadata-driven labels, types, and ordering applied.
@@ -40,7 +42,8 @@ The function performs the following steps:
 }
 }
 \examples{
-# Example usage:
+\dontrun{
+# Example usage (requires a complete ADaM metadata spec):
 df <- tibble::tibble(
   USUBJID = c("01", "02"),
   AGE = c(34, 45),
@@ -62,5 +65,6 @@ adam_meta <- list(
 )
 
 result <- make_adam_dataset(df, domain = "ADSL", adam_meta = adam_meta)
+}
 
 }

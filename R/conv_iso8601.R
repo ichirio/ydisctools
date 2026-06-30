@@ -59,19 +59,22 @@ conv_iso8601 <- function(datetime, time = NA, type = "DMY") {
 
     month <- str_sub(month, 1, 3)
     month_upper <- toupper(month)
-    if     (month_upper %in% c("JAN", "1月", "１月"))    return("01")
-    else if(month_upper %in% c("FEB", "2月", "２月"))    return("02")
-    else if(month_upper %in% c("MAR", "3月", "３月"))    return("03")
-    else if(month_upper %in% c("APR", "4月", "４月"))    return("04")
-    else if(month_upper %in% c("MAY", "5月", "５月"))    return("05")
-    else if(month_upper %in% c("JUN", "6月", "６月"))    return("06")
-    else if(month_upper %in% c("JUL", "7月", "７月"))    return("07")
-    else if(month_upper %in% c("AUG", "8月", "８月"))    return("08")
-    else if(month_upper %in% c("SEP", "9月", "９月"))    return("09")
-    else if(month_upper %in% c("OCT", "10月", "１０月")) return("10")
-    else if(month_upper %in% c("NOV", "11月", "１１月")) return("11")
-    else if(month_upper %in% c("DEC", "12月", "１２月")) return("12")
-    else if(month_upper %in% c("UNK", "UN", "不明"))     return("")
+    # Japanese month / 'unknown' labels use Unicode escapes to keep the
+    # source ASCII-only; the decoded values match the original
+    # kanji / full-width-digit literals.
+    if     (month_upper %in% c("JAN", "1\u6708", "\uff11\u6708"))    return("01")
+    else if(month_upper %in% c("FEB", "2\u6708", "\uff12\u6708"))    return("02")
+    else if(month_upper %in% c("MAR", "3\u6708", "\uff13\u6708"))    return("03")
+    else if(month_upper %in% c("APR", "4\u6708", "\uff14\u6708"))    return("04")
+    else if(month_upper %in% c("MAY", "5\u6708", "\uff15\u6708"))    return("05")
+    else if(month_upper %in% c("JUN", "6\u6708", "\uff16\u6708"))    return("06")
+    else if(month_upper %in% c("JUL", "7\u6708", "\uff17\u6708"))    return("07")
+    else if(month_upper %in% c("AUG", "8\u6708", "\uff18\u6708"))    return("08")
+    else if(month_upper %in% c("SEP", "9\u6708", "\uff19\u6708"))    return("09")
+    else if(month_upper %in% c("OCT", "10\u6708", "\uff11\uff10\u6708")) return("10")
+    else if(month_upper %in% c("NOV", "11\u6708", "\uff11\uff11\u6708")) return("11")
+    else if(month_upper %in% c("DEC", "12\u6708", "\uff11\uff12\u6708")) return("12")
+    else if(month_upper %in% c("UNK", "UN", "\u4e0d\u660e"))     return("")
     else return(month)
   }
 
