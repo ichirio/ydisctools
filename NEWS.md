@@ -11,6 +11,9 @@ not versioned for release; this changelog tracks notable changes only.
   tolerates unnamed dataset lists), escaped non-ASCII source to `\u` literals,
   declared `R (>= 4.1.0)` and the `tibble` / `magrittr` test dependencies, and
   tidied internal cross-references.
+* Added a [CONTRIBUTING.md](https://github.com/ichirio/ydisctools/blob/main/CONTRIBUTING.md)
+  documenting the issue -> branch -> PR -> green-CI workflow, the `exec:*`
+  labels, and the hand-maintained-docs rule (no `devtools::document()`).
 * Added a [pkgdown](https://pkgdown.r-lib.org/) documentation site published to
   GitHub Pages at <https://ichirio.github.io/ydisctools/>, replacing the earlier
   hand-built HTML pages. The site mirrors the
