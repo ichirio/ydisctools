@@ -167,6 +167,14 @@ reference:
       - split_key_text
       - to_hex
 
+  - title: Summary-table shaping
+    desc: >
+      Collapse long-format (ARD-like) statistic rows into formatted display
+      strings and expand chosen columns into combined wide headers.
+    contents:
+      - format_stats
+      - pivot_stats_wider
+
   - title: Deprecated — RTF output (use rtfreporter)
     desc: >
       The RTF output tools were a Proof of Concept and are now deprecated.

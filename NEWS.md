@@ -11,6 +11,9 @@ not versioned for release; this changelog tracks notable changes only.
   tolerates unnamed dataset lists), escaped non-ASCII source to `\u` literals,
   declared `R (>= 4.1.0)` and the `tibble` / `magrittr` test dependencies, and
   tidied internal cross-references.
+* Added a [CONTRIBUTING.md](https://github.com/ichirio/ydisctools/blob/main/CONTRIBUTING.md)
+  documenting the issue -> branch -> PR -> green-CI workflow, the `exec:*`
+  labels, and the hand-maintained-docs rule (no `devtools::document()`).
 * Added a [pkgdown](https://pkgdown.r-lib.org/) documentation site published to
   GitHub Pages at <https://ichirio.github.io/ydisctools/>, replacing the earlier
   hand-built HTML pages. The site mirrors the
@@ -18,6 +21,13 @@ not versioned for release; this changelog tracks notable changes only.
   indigo theme, hex logo, and favicons.
 
 ## Tools
+
+* `format_stats()` — collapse a long ("tidy", ARD-like) statistic table into one
+  formatted display string per group, driven by a format-spec table with inline
+  digit tokens (`{mean:2} ({sd:3})`). Grouping-key columns are arbitrary; bare
+  `{stat}` tokens pass pre-formatted character values through verbatim.
+* `pivot_stats_wider()` — spread one or more columns into combined wide headers
+  (joined with `____` by default), filling cells from a value column.
 
 * `plot_sankey()` — treatment-transition Sankey plotter (Bezier links,
   rectangle nodes, isolated-node support, per-line / across-line colouring),
