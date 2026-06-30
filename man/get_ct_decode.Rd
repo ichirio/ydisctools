@@ -39,7 +39,7 @@ df |> mutate(LBTEST = get_ct_decode(ct_meta, "LBTESTCD", LBTESTCD))
 
 df2 <- data.frame(USUBJID = rep(1:3), LBTEST = c("Erythrocyte Count", "Monocyte Count", "Lymphocyte Count"))
 
-# Get decode value with reverse lookup
-df2 |> mutate(LBTEST = get_ct_decode(ct_meta, "LBTESTCD", LBTESTCD, reverse = TRUE))
+# Get the term (code) back from the decode value with a reverse lookup
+df2 |> mutate(LBTESTCD = get_ct_decode(ct_meta, "LBTESTCD", LBTEST, reverse = TRUE))
 
 }

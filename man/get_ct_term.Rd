@@ -11,7 +11,7 @@ get_ct_term(ct_meta, id, decode)
 
 \item{id}{A single character string representing the ID.}
 
-\item{term}{A character vector representing the decode value(s).}
+\item{decode}{A character vector representing the decode value(s).}
 }
 \value{
 A character vector of term values corresponding to the specified ID and decode value(s).

@@ -47,6 +47,12 @@ read_p21_spec_define(spec, define_sheet)
 \item{dictionaries_sheet}{A character string specifying the name of the sheet containing dictionary metadata.}
 
 \item{methods_sheet}{A character string specifying the name of the sheet containing method metadata.}
+
+\item{comments_sheet}{A character string specifying the name of the sheet containing comment metadata.}
+
+\item{documents_sheet}{A character string specifying the name of the sheet containing document metadata.}
+
+\item{define_sheet}{A character string specifying the name of the sheet containing define / study-level metadata.}
 }
 \value{
 A data frame containing the specified metadata.

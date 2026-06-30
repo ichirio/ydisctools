@@ -5,6 +5,12 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## Site & tooling
 
+* `R CMD check` is now clean (no WARNINGs/ERROR) so CI is green: documented
+  previously-undocumented arguments and the `plot_sankey_subgroups_batch()`
+  object, fixed a failing `check_invalid_chars_in_datasets()` example (now also
+  tolerates unnamed dataset lists), escaped non-ASCII source to `\u` literals,
+  declared `R (>= 4.1.0)` and the `tibble` / `magrittr` test dependencies, and
+  tidied internal cross-references.
 * Added a [pkgdown](https://pkgdown.r-lib.org/) documentation site published to
   GitHub Pages at <https://ichirio.github.io/ydisctools/>, replacing the earlier
   hand-built HTML pages. The site mirrors the

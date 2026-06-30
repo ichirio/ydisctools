@@ -55,7 +55,7 @@
 #'   QEVAL = c("", "", "", "", "", "", "", "", "")
 #' )
 #'
-#' library(tidyverse)
+#' library(dplyr)
 #' suppdm <- make_supp_df(dm, suppmeta)
 #' suppae <- make_supp_df(ae, suppmeta)
 #' suppcm <- make_supp_df(apcm, suppmeta)
@@ -154,9 +154,9 @@ make_supp_df <- function(df, suppmeta, idver = NULL) {
 #' @importFrom purrr map
 #' @export
 split_supp_qval <- function(supp_df) {
-  ## Check if supp_df is a tibble
-  if (!is_tibble(supp_df)) {
-    stop("supp_df must be a tibble")
+  ## Check if supp_df is a data frame (a tibble qualifies)
+  if (!inherits(supp_df, "data.frame")) {
+    stop("supp_df must be a data frame")
   }
 
   ## Check if QVAL is in supp_df

@@ -22,7 +22,8 @@ A data frame representing the SDTM supplemental dataset for the specified domain
 This function creates an SDTM (Study Data Tabulation Model) supplemental dataset for a specified domain.
 }
 \examples{
-# Example usage:
+\dontrun{
+# Example usage (requires a complete SDTM metadata spec):
 df <- data.frame(ID = 1:3, VAR1 = c("A", "B", "C"), VAR2 = c(10, 20, 30))
 sdtm_meta <- list(
   datasets = data.frame(dataset = "DM", label = "Demographics"),
@@ -30,4 +31,5 @@ sdtm_meta <- list(
   suppqual = data.frame(RDOMAIN = "DM", QNAM = "VAR3", QLABEL = "Supplemental Variable")
 )
 make_sdtm_supp_dataset(df, "DM", sdtm_meta)
+}
 }

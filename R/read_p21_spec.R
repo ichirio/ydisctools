@@ -12,6 +12,9 @@
 #' @param valuelevel_sheet A character string specifying the name of the sheet containing value level metadata.
 #' @param dictionaries_sheet A character string specifying the name of the sheet containing dictionary metadata.
 #' @param methods_sheet A character string specifying the name of the sheet containing method metadata.
+#' @param comments_sheet A character string specifying the name of the sheet containing comment metadata.
+#' @param documents_sheet A character string specifying the name of the sheet containing document metadata.
+#' @param define_sheet A character string specifying the name of the sheet containing define / study-level metadata.
 #'
 #' @return A data frame containing the specified metadata.
 #'

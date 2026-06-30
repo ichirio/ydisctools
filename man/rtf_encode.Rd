@@ -103,6 +103,6 @@ Produce Rich Text Format (RTF) Tables and Figures. PharmaSUG.
 \url{https://pharmasug.org/proceedings/2020/DV/PharmaSUG-2020-DV-198.pdf}
 }
 \seealso{
-\code{\link{rtf_encode_table2}} for advanced table encoding,
-\code{\link{rtf_encode_table3}} for enhanced table encoding
+\code{rtf_encode_table2} for advanced table encoding,
+\code{rtf_encode_table3} for enhanced table encoding (both internal)
 }

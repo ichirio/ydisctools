@@ -22,11 +22,13 @@ A data frame representing the SDTM dataset for the specified domain.
 This function creates an SDTM (Study Data Tabulation Model) dataset for a specified domain.
 }
 \examples{
-# Example usage:
+\dontrun{
+# Example usage (requires a complete SDTM metadata spec):
 df <- data.frame(ID = 1:3, VAR1 = c("A", "B", "C"), VAR2 = c(10, 20, 30))
 sdtm_meta <- list(
   datasets = data.frame(dataset = "DM", label = "Demographics"),
   variables = data.frame(dataset = "DM", variable = c("ID", "VAR1", "VAR2"), label = c("Identifier", "Variable 1", "Variable 2"))
 )
 make_sdtm_dataset(df, "DM", sdtm_meta)
+}
 }

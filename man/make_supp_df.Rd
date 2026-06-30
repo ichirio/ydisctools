@@ -61,7 +61,7 @@ suppmeta <- data.frame(
   QEVAL = c("", "", "", "", "", "", "", "", "")
 )
 
-library(tidyverse)
+library(dplyr)
 suppdm <- make_supp_df(dm, suppmeta)
 suppae <- make_supp_df(ae, suppmeta)
 suppcm <- make_supp_df(apcm, suppmeta)
