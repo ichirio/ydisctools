@@ -3,6 +3,18 @@
 `ydisctools` is a Proof-of-Concept collection of small CDISC tools and is
 not versioned for release; this changelog tracks notable changes only.
 
+## New features
+
+* Added an ARS (CDISC Analysis Results Standard) generator for
+  [siera](https://cran.r-project.org/package=siera): `ars_param_template()`
+  writes a compact parameter workbook (one row per analysis, with a worked
+  demographics + adverse-event example), `read_ars_params()` reads it back,
+  `build_ars()` expands it into the full set of ARS metadata sheets
+  (de-duplicated analysis sets / groupings / data subsets, automatic
+  numerator-denominator wiring, method sheets expanded from siera's bundled
+  MIT-licensed method template catalog), and `write_ars_xlsx()` writes a
+  workbook that `siera::readARS()` consumes directly (#5).
+
 ## Site & tooling
 
 * `R CMD check` is now clean (no WARNINGs/ERROR) so CI is green: documented

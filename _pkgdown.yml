@@ -111,6 +111,16 @@ reference:
       - read_sdtm_meta_supp
       - read_sdtm_metadata_p21
 
+  - title: ARS metadata generation (siera)
+    desc: >
+      Generate CDISC Analysis Results Standard (ARS) workbooks for
+      siera::readARS() from a compact parameter set.
+    contents:
+      - ars_param_template
+      - read_ars_params
+      - build_ars
+      - write_ars_xlsx
+
   - title: Reading data
     desc: Load SAS transport / dataset files and Excel workbooks.
     contents:
