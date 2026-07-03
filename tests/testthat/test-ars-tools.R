@@ -282,19 +282,7 @@ test_that("siera::readARS() generates runnable ARD programmes from our ARS", {
   scripts <- list.files(out_dir, full.names = TRUE)
   expect_setequal(basename(scripts), c("ARD_Out_demog.R", "ARD_Out_teae.R"))
 
-  run_script <- function(path) {
-    # The generated scripts open with library() calls for siera's whole
-    # runtime stack (broom, cardx, ...), but the generated statements are
-    # namespace-qualified, so comment the library() lines out: under
-    # R CMD check --as-cran (_R_CHECK_SUGGESTS_ONLY_) attaching a package
-    # outside this package's dependency set would fail the test run.
-    code <- gsub("^\\s*library\\(", "# library(", readLines(path))
-    tf <- withr::local_tempfile(fileext = ".R", .local_envir = parent.frame())
-    writeLines(code, tf)
-    env <- new.env(parent = globalenv())
-    suppressMessages(suppressWarnings(source(tf, local = env)))
-    get("ARD", envir = env)
-  }
+  run_script <- run_ard_script   # helper-ars.R
 
   # demographics output
   ard <- run_script(scripts[basename(scripts) == "ARD_Out_demog.R"])

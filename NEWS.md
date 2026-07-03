@@ -5,6 +5,11 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* Shipped a runnable end-to-end ARS example set under
+  `inst/ars-examples/`: compact parameter workbook, the ARS workbook built
+  from it, the `siera::readARS()`-generated ARD programmes, and deterministic
+  dummy ADaM data (Demographics + Adverse Events displays mirroring the
+  rtfreporter showcase, CDISC-pilot arms) (#8).
 * Added an ARS (CDISC Analysis Results Standard) generator for
   [siera](https://cran.r-project.org/package=siera): `ars_param_template()`
   writes a compact parameter workbook (one row per analysis, with a worked

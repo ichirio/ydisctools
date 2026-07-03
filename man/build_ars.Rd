@@ -33,6 +33,13 @@ the same output).
 each output while deciding how to build the population filter, so
 \code{build_ars()} requires at least three analyses per output.
 }
+\section{Worked example set}{
+\code{system.file("ars-examples", package = "ydisctools")} ships the full
+artefact chain for a Demographics and an Adverse Events display: the compact
+parameter workbook, the ARS workbook built from it, the ARD programmes
+\code{siera::readARS()} generated, and dummy ADaM data the programmes run on
+(see the README there).
+}
 \examples{
 tmp <- file.path(tempdir(), "ars_params.xlsx")
 ars_param_template(tmp, overwrite = TRUE)
