@@ -5,6 +5,10 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* Added `ars_generate_ard()`: generate the per-output ARD programmes from an
+  ARS file (or a `build_ars()` result) via `siera::readARS()`, run them in
+  isolated environments, and return one combined ARD data frame keyed by
+  `OutputId` (or a per-output list) (#12).
 * Added `ars_params_from_code()` / `write_ars_params()`: statically analyse
   existing {cards}/{cardx} table programmes (or siera-generated ARD
   programmes) and draft the compact ARS parameter set from them, including
