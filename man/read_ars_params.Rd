@@ -11,7 +11,8 @@ read_ars_params(path)
 }
 \value{
 A named list with elements \code{study} (may be \code{NULL}),
-\code{outputs} and \code{analyses}.
+\code{outputs}, \code{analyses} and \code{displays} (\code{NULL} when the
+workbook has no \code{Displays} sheet).
 }
 \description{
 Reads a workbook in the format written by \code{\link{ars_param_template}}

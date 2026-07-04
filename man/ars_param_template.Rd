@@ -38,6 +38,13 @@ The workbook has three sheets:
     optional \code{analysis_id}, \code{name}, \code{population},
     \code{group_by}, \code{groups}, \code{groups2}, \code{where},
     \code{denominator}.}
+  \item{\code{Displays}}{(optional) display furniture, one row per
+    subsection: \code{output_id}, \code{section_type} (\code{Header},
+    \code{Title}, \code{Footnote}, \code{Footer}, \code{Abbreviations},
+    \code{Rowlabel Header}), \code{order}, \code{text}.  When present,
+    \code{\link{build_ars}} emits the ARS \code{Displays} /
+    \code{GlobalDisplaySections} sheets (siera does not consume them, but
+    they complete the ARS metadata).}
 }
 
 Conditions (\code{population}, \code{where}) use a mini syntax: a bare flag

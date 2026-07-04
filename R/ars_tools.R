@@ -195,6 +195,13 @@
 #'     optional \code{analysis_id}, \code{name}, \code{population},
 #'     \code{group_by}, \code{groups}, \code{groups2}, \code{where},
 #'     \code{denominator}.}
+#'   \item{\code{Displays}}{(optional) display furniture, one row per
+#'     subsection: \code{output_id}, \code{section_type} (\code{Header},
+#'     \code{Title}, \code{Footnote}, \code{Footer}, \code{Abbreviations},
+#'     \code{Rowlabel Header}), \code{order}, \code{text}.  When present,
+#'     [build_ars()] emits the ARS \code{Displays} /
+#'     \code{GlobalDisplaySections} sheets (siera does not consume them, but
+#'     they complete the ARS metadata).}
 #' }
 #'
 #' Conditions (\code{population}, \code{where}) use a mini syntax: a bare flag
@@ -265,8 +272,21 @@ ars_param_template <- function(path, overwrite = FALSE) {
     denominator = c("", "", "auto", "auto", "", "An_05", "An_05"),
     stringsAsFactors = FALSE
   )
+  displays <- data.frame(
+    output_id    = c("Out_demog", "Out_demog", "Out_demog", "Out_demog",
+                     "Out_demog"),
+    section_type = c("Header", "Title", "Title", "Footnote", "Footer"),
+    order        = c(1L, 1L, 2L, 1L, 1L),
+    text         = c("Protocol STUDY01",
+                     "Table 14.1.1",
+                     "Summary of Demographic Data",
+                     "Note: Percentages are based on the number of subjects in the safety population.",
+                     "Source: ADSL"),
+    stringsAsFactors = FALSE
+  )
   writexl::write_xlsx(
-    list(Study = study, Outputs = outputs, Analyses = analyses),
+    list(Study = study, Outputs = outputs, Analyses = analyses,
+         Displays = displays),
     path
   )
   invisible(path)
@@ -280,7 +300,8 @@ ars_param_template <- function(path, overwrite = FALSE) {
 #' @param path Path to the compact parameter workbook (\code{.xlsx}).
 #'
 #' @return A named list with elements \code{study} (may be \code{NULL}),
-#'   \code{outputs} and \code{analyses}.
+#'   \code{outputs}, \code{analyses} and \code{displays} (\code{NULL} when
+#'   the workbook has no \code{Displays} sheet).
 #'
 #' @seealso [ars_param_template()], [build_ars()]
 #'
@@ -316,10 +337,16 @@ read_ars_params <- function(path) {
   } else {
     NULL
   }
+  displays <- if ("Displays" %in% sheets) {
+    as_chr_df(readxl::read_excel(path, sheet = "Displays"))
+  } else {
+    NULL
+  }
   list(
     study    = study,
     outputs  = as_chr_df(readxl::read_excel(path, sheet = "Outputs")),
-    analyses = as_chr_df(readxl::read_excel(path, sheet = "Analyses"))
+    analyses = as_chr_df(readxl::read_excel(path, sheet = "Analyses")),
+    displays = displays
   )
 }
 
@@ -336,6 +363,10 @@ read_ars_params <- function(path) {
 #' numerator/denominator wiring for percentage-based methods is resolved from
 #' the \code{denominator} column (\code{"auto"} finds the \code{total_n}
 #' analysis with the same population and first grouping in the same output).
+#' An ARS \code{Outputs} sheet is always emitted; when the parameters carry
+#' display metadata (a \code{Displays} sheet / element, see
+#' [ars_param_template()]), the ARS \code{Displays} and
+#' \code{GlobalDisplaySections} sheets are emitted as well.
 #'
 #' @param params Either the path to a compact parameter workbook (read via
 #'   [read_ars_params()]) or a named list with elements \code{outputs} and
@@ -850,11 +881,23 @@ build_ars <- function(params) {
     stringsAsFactors = FALSE
   )
 
-  list(
+  # --- Display metadata (optional Displays params sheet) ----------------------
+  disp <- .ars_display_sheets(params$displays, outputs)
+
+  out <- list(
     About = About,
     ReportingEvent = ReportingEvent,
     MainListOfContents = MainListOfContents,
-    OtherListsOfContents = lopo,
+    OtherListsOfContents = lopo
+  )
+  if (!is.null(disp$Displays)) {
+    out$GlobalDisplaySections <- disp$GlobalDisplaySections
+  }
+  out$Outputs <- disp$Outputs
+  if (!is.null(disp$Displays)) {
+    out$Displays <- disp$Displays
+  }
+  c(out, list(
     DataSubsets = DataSubsets,
     AnalysisSets = AnalysisSets,
     AnalysisGroupings = AnalysisGroupings,
@@ -862,7 +905,93 @@ build_ars <- function(params) {
     AnalysisMethods = AnalysisMethods,
     AnalysisMethodCodeTemplate = AnalysisMethodCodeTemplate,
     AnalysisMethodCodeParameters = AnalysisMethodCodeParameters
+  ))
+}
+
+# Build the ARS Outputs sheet (always) and -- when the optional compact
+# `Displays` parameter sheet (output_id / section_type / order / text) is
+# present -- the Displays + GlobalDisplaySections sheets, laid out one row per
+# display subsection as in siera's bundled example workbooks.
+.ars_display_sheets <- function(displays, outputs) {
+  allowed <- c("Header", "Title", "Footnote", "Footer", "Abbreviations",
+               "Rowlabel Header")
+  has_disp <- !is.null(displays) && nrow(as.data.frame(displays)) > 0
+
+  disp_id_of <- function(oid) paste0("Disp_", oid)
+
+  if (has_disp) {
+    displays <- as.data.frame(displays, stringsAsFactors = FALSE)
+    need <- c("output_id", "section_type", "order", "text")
+    missing_cols <- setdiff(need, names(displays))
+    if (length(missing_cols) > 0) {
+      stop("`displays` is missing column(s): ",
+           paste(missing_cols, collapse = ", "), ".", call. = FALSE)
+    }
+    bad_out <- setdiff(displays$output_id, outputs$output_id)
+    if (length(bad_out) > 0) {
+      stop("`displays$output_id` values not present in `outputs`: ",
+           paste(unique(bad_out), collapse = ", "), ".", call. = FALSE)
+    }
+    bad_type <- setdiff(displays$section_type, allowed)
+    if (length(bad_type) > 0) {
+      stop("`displays$section_type` must be one of ",
+           paste(allowed, collapse = ", "), " (got: ",
+           paste(unique(bad_type), collapse = ", "), ").", call. = FALSE)
+    }
+  }
+
+  Outputs <- data.frame(
+    id = outputs$output_id,
+    version = 1L,
+    name = outputs$name,
+    categoryIds = NA_character_,
+    display1_Id = if (has_disp) {
+      ifelse(outputs$output_id %in% displays$output_id,
+             disp_id_of(outputs$output_id), NA_character_)
+    } else {
+      NA_character_
+    },
+    fileSpecification_file_name = NA_character_,
+    fileSpecification_file_location = NA_character_,
+    stringsAsFactors = FALSE
   )
+
+  if (!has_disp) {
+    return(list(Outputs = Outputs, Displays = NULL,
+                GlobalDisplaySections = NULL))
+  }
+
+  rows <- list()
+  for (oid in unique(displays$output_id)) {
+    d <- displays[displays$output_id == oid, , drop = FALSE]
+    d$order <- suppressWarnings(as.integer(d$order))
+    d <- d[order(match(d$section_type, allowed), d$order), , drop = FALSE]
+    oname <- outputs$name[outputs$output_id == oid][1]
+    titles <- d$text[d$section_type == "Title"]
+    disp_title <- if (length(titles) > 0) titles[length(titles)] else oname
+    type_key <- gsub(" ", "", d$section_type, fixed = TRUE)
+    rows[[oid]] <- data.frame(
+      id = disp_id_of(oid),
+      name = oname,
+      version = 1L,
+      displayTitle = disp_title,
+      displaySection_sectionType = d$section_type,
+      displaySection_orderedSubSection_order = d$order,
+      displaySection_subSection_id = sprintf("%s_%s_%02d", disp_id_of(oid),
+                                             type_key, d$order),
+      displaySection_subSection_text = d$text,
+      stringsAsFactors = FALSE
+    )
+  }
+  Displays <- do.call(rbind, rows)
+  row.names(Displays) <- NULL
+
+  GlobalDisplaySections <- data.frame(
+    sectionType = character(0), subSection_id = character(0),
+    subSection_text = character(0), stringsAsFactors = FALSE
+  )
+  list(Outputs = Outputs, Displays = Displays,
+       GlobalDisplaySections = GlobalDisplaySections)
 }
 
 # -- write_ars_xlsx() ---------------------------------------------------------
