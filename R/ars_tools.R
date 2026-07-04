@@ -350,6 +350,13 @@ read_ars_params <- function(path) {
 #'   each output while deciding how to build the population filter, so
 #'   \code{build_ars()} requires at least three analyses per output.
 #'
+#' @section Worked example set:
+#'   \code{system.file("ars-examples", package = "ydisctools")} ships the full
+#'   artefact chain for a Demographics and an Adverse Events display: the
+#'   compact parameter workbook, the ARS workbook built from it, the ARD
+#'   programmes \code{siera::readARS()} generated, and dummy ADaM data the
+#'   programmes run on (see the README there).
+#'
 #' @seealso [ars_param_template()] for the parameter format,
 #'   [write_ars_xlsx()] to write the result, and
 #'   \code{siera::ars_xlsx_to_json()} (siera > 0.5.6) to convert the written
