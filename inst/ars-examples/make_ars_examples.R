@@ -51,32 +51,35 @@ outputs <- data.frame(
 )
 
 analyses <- data.frame(
-  output_id   = c(rep("Out_dm", 5), rep("Out_ae", 5)),
-  analysis_id = sprintf("An_%02d", 1:10),
+  output_id   = c(rep("Out_dm", 7), rep("Out_ae", 5)),
+  analysis_id = sprintf("An_%02d", 1:12),
   name        = c("Number of subjects",
                   "Age (years)",
-                  "Age group, n (%)",
+                  "Age group 1, n (%)",
+                  "Age group 2, n (%)",
                   "Sex, n (%)",
                   "Race, n (%)",
+                  "Ethnicity, n (%)",
                   "Number of subjects",
                   "Subjects with at least one TEAE, n (%)",
                   "TEAE by System Organ Class, n (%)",
                   "TEAE by Preferred Term, n (%)",
                   "TEAE by severity, n (%)"),
-  method      = c("total_n", "continuous_summary", "categorical_summary",
-                  "categorical_summary", "categorical_summary",
+  method      = c("total_n", "continuous_summary",
+                  rep("categorical_summary", 5),
                   "total_n", "categorical_summary", "categorical_summary",
                   "categorical_summary", "categorical_summary"),
-  dataset     = c(rep("ADSL", 5), "ADSL", rep("ADAE", 4)),
-  variable    = c("USUBJID", "AGE", rep("USUBJID", 8)),
+  dataset     = c(rep("ADSL", 7), "ADSL", rep("ADAE", 4)),
+  variable    = c("USUBJID", "AGE", rep("USUBJID", 10)),
   population  = "",
-  group_by    = c("", "", "TRT01A, AGEGR1", "TRT01A, SEX", "TRT01A, RACE",
+  group_by    = c("", "", "TRT01A, AGEGR1", "TRT01A, AGEGR2", "TRT01A, SEX",
+                  "TRT01A, RACE", "TRT01A, ETHNIC",
                   "", "TRT01A", "TRT01A, ADAE.AEBODSYS",
                   "TRT01A, ADAE.AEDECOD", "TRT01A, ADAE.AESEV"),
   groups      = "",
   groups2     = "",
-  where       = c(rep("", 6), rep("TRTEMFL EQ Y", 4)),
-  denominator = c("", "", "auto", "auto", "auto",
+  where       = c(rep("", 8), rep("TRTEMFL EQ Y", 4)),
+  denominator = c("", "", rep("auto", 5),
                   "", "auto", "auto", "auto", "auto"),
   stringsAsFactors = FALSE
 )
@@ -101,13 +104,17 @@ adsl <- data.frame(
   TRT01A  = rep(arms, each = 10),
   AGE     = sample(51:89, n, replace = TRUE),
   AGEGR1  = NA_character_,
+  AGEGR2  = NA_character_,
   SEX     = sample(c("F", "M"), n, replace = TRUE),
   RACE    = sample(c("WHITE", "BLACK OR AFRICAN AMERICAN", "ASIAN"),
                    n, replace = TRUE, prob = c(.7, .2, .1)),
+  ETHNIC  = sample(c("HISPANIC OR LATINO", "NOT HISPANIC OR LATINO"),
+                   n, replace = TRUE, prob = c(.15, .85)),
   stringsAsFactors = FALSE
 )
 adsl$AGEGR1 <- cut(adsl$AGE, breaks = c(-Inf, 64, 80, Inf),
                    labels = c("<65", "65-80", ">80")) |> as.character()
+adsl$AGEGR2 <- ifelse(adsl$AGE < 75, "<75", ">=75")
 
 soc_pt <- data.frame(
   AEBODSYS = c(rep("GASTROINTESTINAL DISORDERS", 3),

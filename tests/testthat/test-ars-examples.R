@@ -52,24 +52,27 @@ test_that("the shipped ARD programmes run and match the shipped ADaM data", {
   truth_bign <- vapply(split(saf$USUBJID, saf$TRT01A), length, numeric(1))
 
   ard <- run_ard_script("ARD_Out_dm.R")
-  expect_setequal(unique(ard$AnalysisId),
-                  c("An_01", "An_02", "An_03", "An_04", "An_05"))
+  expect_setequal(unique(ard$AnalysisId), sprintf("An_%02d", 1:7))
   n01 <- ard[ard$AnalysisId == "An_01" & ard$stat_name == "n", ]
   got <- vapply(n01$stat, as.numeric, numeric(1))
   names(got) <- n01$variable_level
   expect_equal(got[names(truth_bign)], truth_bign)
+  # the overlay categorical template keeps the real variable names
+  expect_false(any(ard$variable == "dummy", na.rm = TRUE))
+  expect_true(all(c("AGEGR1", "AGEGR2", "SEX", "RACE", "ETHNIC") %in%
+                    ard$variable))
 
   ard2 <- run_ard_script("ARD_Out_ae.R")
-  expect_setequal(unique(ard2$AnalysisId),
-                  c("An_06", "An_07", "An_08", "An_09", "An_10"))
+  expect_setequal(unique(ard2$AnalysisId), sprintf("An_%02d", 8:12))
   # any-TEAE distinct-subject counts against an independent computation
+  # (single-grouping categorical: the arm lands in variable_level)
   adae <- read.csv("adam/ADAE.csv", stringsAsFactors = FALSE)
   m <- merge(adae[adae$TRTEMFL == "Y", ],
              adsl[adsl$SAFFL == "Y", c("USUBJID", "TRT01A")], by = "USUBJID")
   truth_any <- vapply(split(m$USUBJID, m$TRT01A),
                       function(x) length(unique(x)), numeric(1))
-  a07 <- ard2[ard2$AnalysisId == "An_07" & ard2$stat_name == "n", ]
-  got_any <- vapply(a07$stat, as.numeric, numeric(1))
-  names(got_any) <- a07$group1_level
+  a09 <- ard2[ard2$AnalysisId == "An_09" & ard2$stat_name == "n", ]
+  got_any <- vapply(a09$stat, as.numeric, numeric(1))
+  names(got_any) <- a09$variable_level
   expect_equal(got_any[names(truth_any)], truth_any)
 })

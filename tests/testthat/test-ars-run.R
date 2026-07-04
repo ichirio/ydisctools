@@ -30,7 +30,7 @@ test_that("ars_generate_ard runs the programmes and combines the ARDs", {
   expect_setequal(unique(ard$OutputId), c("Out_dm", "Out_ae"))
   expect_setequal(
     unique(ard$AnalysisId),
-    sprintf("An_%02d", 1:10)
+    sprintf("An_%02d", 1:12)
   )
   # generated programmes are kept and reported
   scripts <- attr(ard, "scripts")

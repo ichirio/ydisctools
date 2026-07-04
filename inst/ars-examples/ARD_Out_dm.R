@@ -1,7 +1,7 @@
 
 # Programme:    Generate code to produce ARD for Out_dm
 # Output:       Summary of Demographic Data
-# Date created: 2026-07-04 13:41:02
+# Date created: 2026-07-04 16:07:03
 
   # load libraries ----
     library(dplyr)
@@ -122,7 +122,7 @@ df3_An_02 <- df3_An_02 |>
 
 
 # Analysis An_03----
-#Age group, n (%)
+#Age group 1, n (%)
 #Apply Data Subset ---
 df2_An_03 <- df_pop
 
@@ -131,33 +131,30 @@ df2_An_03 <- df_pop
 
 # Method ID:              Mth_categorical_summary
 # Method name:            Summary of a categorical variable (n and %)
-# Method description:     n and percentage of a categorical analysis variable per group, with a referenced denominator analysis and a data-driven/pre-defined grouping branch. Verified against Common_Safety_Displays Mth01_CatVar_Summ_ByGrp; current cards API. Spurious by_vars/strata_vars params from the legacy sheet have been dropped (the template uses by_listc).
+# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
 
 if(nrow(df2_An_03) != 0) {
                               denom_dataset = df2_An_01 |>
   dplyr::select(TRT01A)
 
 in_data = df2_An_03 |>
-    dplyr::distinct(TRT01A, AGEGR1, USUBJID) |>
-    dplyr::mutate(dummy = 'dummyvar')
+    dplyr::distinct(TRT01A, AGEGR1, USUBJID)
 
 dataDriven = TRUE
 if(dataDriven == TRUE){
 df3_An_03 <-
   cards::ard_tabulate(
-    data = in_data,
-    strata = c('TRT01A', 'AGEGR1'),
-    variables = 'dummy',
+    data = in_data
+    , strata = 'TRT01A' , variables = 'AGEGR1',
     denominator = denom_dataset
   ) } else {
 df3_An_03 <-
  cards::ard_tabulate(
-    data = in_data,
-    by = c('TRT01A', 'AGEGR1'),
-    variables = 'dummy',
+    data = in_data
+    , by = 'TRT01A' , variables = 'AGEGR1',
     denominator = denom_dataset
   ) }
-df3_An_03 <- df3_An_03|>
+df3_An_03 <- df3_An_03 |>
   dplyr::filter(stat_name %in% c('n', 'p')) |>
   dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',
                                                stat_name == 'p' ~ 'opid2here'))}
@@ -180,10 +177,7 @@ df3_An_03 <- df3_An_03 |>
         as.character(group1_level) == 'Xanomeline Low Dose' ~ 'AnlsGrp_01_TRT01A_02',
         as.character(group1_level) == 'Xanomeline High Dose' ~ 'AnlsGrp_01_TRT01A_03',
         TRUE ~ NA_character_
-      ),
-      group2_groupingId = 'AnlsGrp_02_AGEGR1',
-      group2_groupId = NA_character_,
-      group2_groupValue = as.character(group2_level)
+      )
   )
 }
 df3_An_03 <- df3_An_03 |>
@@ -194,7 +188,7 @@ df3_An_03 <- df3_An_03 |>
 
 
 # Analysis An_04----
-#Sex, n (%)
+#Age group 2, n (%)
 #Apply Data Subset ---
 df2_An_04 <- df_pop
 
@@ -203,33 +197,30 @@ df2_An_04 <- df_pop
 
 # Method ID:              Mth_categorical_summary
 # Method name:            Summary of a categorical variable (n and %)
-# Method description:     n and percentage of a categorical analysis variable per group, with a referenced denominator analysis and a data-driven/pre-defined grouping branch. Verified against Common_Safety_Displays Mth01_CatVar_Summ_ByGrp; current cards API. Spurious by_vars/strata_vars params from the legacy sheet have been dropped (the template uses by_listc).
+# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
 
 if(nrow(df2_An_04) != 0) {
                               denom_dataset = df2_An_01 |>
   dplyr::select(TRT01A)
 
 in_data = df2_An_04 |>
-    dplyr::distinct(TRT01A, SEX, USUBJID) |>
-    dplyr::mutate(dummy = 'dummyvar')
+    dplyr::distinct(TRT01A, AGEGR2, USUBJID)
 
 dataDriven = TRUE
 if(dataDriven == TRUE){
 df3_An_04 <-
   cards::ard_tabulate(
-    data = in_data,
-    strata = c('TRT01A', 'SEX'),
-    variables = 'dummy',
+    data = in_data
+    , strata = 'TRT01A' , variables = 'AGEGR2',
     denominator = denom_dataset
   ) } else {
 df3_An_04 <-
  cards::ard_tabulate(
-    data = in_data,
-    by = c('TRT01A', 'SEX'),
-    variables = 'dummy',
+    data = in_data
+    , by = 'TRT01A' , variables = 'AGEGR2',
     denominator = denom_dataset
   ) }
-df3_An_04 <- df3_An_04|>
+df3_An_04 <- df3_An_04 |>
   dplyr::filter(stat_name %in% c('n', 'p')) |>
   dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',
                                                stat_name == 'p' ~ 'opid2here'))}
@@ -252,10 +243,7 @@ df3_An_04 <- df3_An_04 |>
         as.character(group1_level) == 'Xanomeline Low Dose' ~ 'AnlsGrp_01_TRT01A_02',
         as.character(group1_level) == 'Xanomeline High Dose' ~ 'AnlsGrp_01_TRT01A_03',
         TRUE ~ NA_character_
-      ),
-      group2_groupingId = 'AnlsGrp_03_SEX',
-      group2_groupId = NA_character_,
-      group2_groupValue = as.character(group2_level)
+      )
   )
 }
 df3_An_04 <- df3_An_04 |>
@@ -266,7 +254,7 @@ df3_An_04 <- df3_An_04 |>
 
 
 # Analysis An_05----
-#Race, n (%)
+#Sex, n (%)
 #Apply Data Subset ---
 df2_An_05 <- df_pop
 
@@ -275,33 +263,30 @@ df2_An_05 <- df_pop
 
 # Method ID:              Mth_categorical_summary
 # Method name:            Summary of a categorical variable (n and %)
-# Method description:     n and percentage of a categorical analysis variable per group, with a referenced denominator analysis and a data-driven/pre-defined grouping branch. Verified against Common_Safety_Displays Mth01_CatVar_Summ_ByGrp; current cards API. Spurious by_vars/strata_vars params from the legacy sheet have been dropped (the template uses by_listc).
+# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
 
 if(nrow(df2_An_05) != 0) {
                               denom_dataset = df2_An_01 |>
   dplyr::select(TRT01A)
 
 in_data = df2_An_05 |>
-    dplyr::distinct(TRT01A, RACE, USUBJID) |>
-    dplyr::mutate(dummy = 'dummyvar')
+    dplyr::distinct(TRT01A, SEX, USUBJID)
 
 dataDriven = TRUE
 if(dataDriven == TRUE){
 df3_An_05 <-
   cards::ard_tabulate(
-    data = in_data,
-    strata = c('TRT01A', 'RACE'),
-    variables = 'dummy',
+    data = in_data
+    , strata = 'TRT01A' , variables = 'SEX',
     denominator = denom_dataset
   ) } else {
 df3_An_05 <-
  cards::ard_tabulate(
-    data = in_data,
-    by = c('TRT01A', 'RACE'),
-    variables = 'dummy',
+    data = in_data
+    , by = 'TRT01A' , variables = 'SEX',
     denominator = denom_dataset
   ) }
-df3_An_05 <- df3_An_05|>
+df3_An_05 <- df3_An_05 |>
   dplyr::filter(stat_name %in% c('n', 'p')) |>
   dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',
                                                stat_name == 'p' ~ 'opid2here'))}
@@ -324,13 +309,142 @@ df3_An_05 <- df3_An_05 |>
         as.character(group1_level) == 'Xanomeline Low Dose' ~ 'AnlsGrp_01_TRT01A_02',
         as.character(group1_level) == 'Xanomeline High Dose' ~ 'AnlsGrp_01_TRT01A_03',
         TRUE ~ NA_character_
-      ),
-      group2_groupingId = 'AnlsGrp_04_RACE',
-      group2_groupId = NA_character_,
-      group2_groupValue = as.character(group2_level)
+      )
   )
 }
 df3_An_05 <- df3_An_05 |>
+  dplyr::mutate(dplyr::across(
+    dplyr::matches('_level$'),
+    ~ vapply(.x, function(v) if (is.null(v)) NA_character_ else as.character(v), character(1L))
+  ))
+
+
+# Analysis An_06----
+#Race, n (%)
+#Apply Data Subset ---
+df2_An_06 <- df_pop
+
+#Apply Method --- 
+#Apply Method --- 
+
+# Method ID:              Mth_categorical_summary
+# Method name:            Summary of a categorical variable (n and %)
+# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
+
+if(nrow(df2_An_06) != 0) {
+                              denom_dataset = df2_An_01 |>
+  dplyr::select(TRT01A)
+
+in_data = df2_An_06 |>
+    dplyr::distinct(TRT01A, RACE, USUBJID)
+
+dataDriven = TRUE
+if(dataDriven == TRUE){
+df3_An_06 <-
+  cards::ard_tabulate(
+    data = in_data
+    , strata = 'TRT01A' , variables = 'RACE',
+    denominator = denom_dataset
+  ) } else {
+df3_An_06 <-
+ cards::ard_tabulate(
+    data = in_data
+    , by = 'TRT01A' , variables = 'RACE',
+    denominator = denom_dataset
+  ) }
+df3_An_06 <- df3_An_06 |>
+  dplyr::filter(stat_name %in% c('n', 'p')) |>
+  dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',
+                                               stat_name == 'p' ~ 'opid2here'))}
+if(nrow(df2_An_06) != 0){
+df3_An_06 <- df3_An_06 |>
+        dplyr::mutate(AnalysisId = 'An_06',
+               MethodId = 'Mth_categorical_summary',
+               OutputId = 'Out_dm')
+} else {
+    df3_An_06 = data.frame(AnalysisId = 'An_06',
+               MethodId = 'Mth_categorical_summary',
+               OutputId = 'Out_dm')
+}
+    if(nrow(df2_An_06) != 0){
+df3_An_06 <- df3_An_06 |>
+  dplyr::mutate(
+      group1_groupingId = 'AnlsGrp_01_TRT01A',
+      group1_groupId = dplyr::case_when(
+        as.character(group1_level) == 'Placebo' ~ 'AnlsGrp_01_TRT01A_01',
+        as.character(group1_level) == 'Xanomeline Low Dose' ~ 'AnlsGrp_01_TRT01A_02',
+        as.character(group1_level) == 'Xanomeline High Dose' ~ 'AnlsGrp_01_TRT01A_03',
+        TRUE ~ NA_character_
+      )
+  )
+}
+df3_An_06 <- df3_An_06 |>
+  dplyr::mutate(dplyr::across(
+    dplyr::matches('_level$'),
+    ~ vapply(.x, function(v) if (is.null(v)) NA_character_ else as.character(v), character(1L))
+  ))
+
+
+# Analysis An_07----
+#Ethnicity, n (%)
+#Apply Data Subset ---
+df2_An_07 <- df_pop
+
+#Apply Method --- 
+#Apply Method --- 
+
+# Method ID:              Mth_categorical_summary
+# Method name:            Summary of a categorical variable (n and %)
+# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
+
+if(nrow(df2_An_07) != 0) {
+                              denom_dataset = df2_An_01 |>
+  dplyr::select(TRT01A)
+
+in_data = df2_An_07 |>
+    dplyr::distinct(TRT01A, ETHNIC, USUBJID)
+
+dataDriven = TRUE
+if(dataDriven == TRUE){
+df3_An_07 <-
+  cards::ard_tabulate(
+    data = in_data
+    , strata = 'TRT01A' , variables = 'ETHNIC',
+    denominator = denom_dataset
+  ) } else {
+df3_An_07 <-
+ cards::ard_tabulate(
+    data = in_data
+    , by = 'TRT01A' , variables = 'ETHNIC',
+    denominator = denom_dataset
+  ) }
+df3_An_07 <- df3_An_07 |>
+  dplyr::filter(stat_name %in% c('n', 'p')) |>
+  dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',
+                                               stat_name == 'p' ~ 'opid2here'))}
+if(nrow(df2_An_07) != 0){
+df3_An_07 <- df3_An_07 |>
+        dplyr::mutate(AnalysisId = 'An_07',
+               MethodId = 'Mth_categorical_summary',
+               OutputId = 'Out_dm')
+} else {
+    df3_An_07 = data.frame(AnalysisId = 'An_07',
+               MethodId = 'Mth_categorical_summary',
+               OutputId = 'Out_dm')
+}
+    if(nrow(df2_An_07) != 0){
+df3_An_07 <- df3_An_07 |>
+  dplyr::mutate(
+      group1_groupingId = 'AnlsGrp_01_TRT01A',
+      group1_groupId = dplyr::case_when(
+        as.character(group1_level) == 'Placebo' ~ 'AnlsGrp_01_TRT01A_01',
+        as.character(group1_level) == 'Xanomeline Low Dose' ~ 'AnlsGrp_01_TRT01A_02',
+        as.character(group1_level) == 'Xanomeline High Dose' ~ 'AnlsGrp_01_TRT01A_03',
+        TRUE ~ NA_character_
+      )
+  )
+}
+df3_An_07 <- df3_An_07 |>
   dplyr::mutate(dplyr::across(
     dplyr::matches('_level$'),
     ~ vapply(.x, function(v) if (is.null(v)) NA_character_ else as.character(v), character(1L))
@@ -342,4 +456,6 @@ ARD <- dplyr::bind_rows(df3_An_01,
 df3_An_02, 
 df3_An_03, 
 df3_An_04, 
-df3_An_05) 
+df3_An_05, 
+df3_An_06, 
+df3_An_07) 

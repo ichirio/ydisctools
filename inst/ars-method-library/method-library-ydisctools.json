@@ -1,0 +1,70 @@
+{
+  "$schema": "ydisctools ARS method-template overlay",
+  "name": "ydisctools method-template overlay",
+  "description": "Entries here are merged OVER the vendored siera catalog (method-library.json) by ydisctools::build_ars(); an entry with the same id replaces the vendored one. categorical_summary replaces siera's legacy distinct+dummy pattern with the modern cards denominator pattern (by = outer groupings, variables = the category variable), so generated ARDs carry the real variable name and levels (variable = AGEGR1, variable_level = '<65') instead of variable = 'dummy'. Statistics are identical; verified against the dummy pattern on distinct-subject counts.",
+  "context": "R (siera)",
+  "methods": [
+    {
+      "id": "categorical_summary",
+      "name": "Summary of a categorical variable (n and %)",
+      "label": "Categorical n (%)",
+      "description": "Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.",
+      "context": "R (siera)",
+      "status": "verified",
+      "verified_against": "identical n/p to siera's Mth01_CatVar_Summ_ByGrp dummy pattern on distinct-subject counts",
+      "operations": [
+        {
+          "order": 1,
+          "name": "n",
+          "label": "Count",
+          "resultPattern": "xx"
+        },
+        {
+          "order": 2,
+          "name": "p",
+          "label": "Percentage",
+          "resultPattern": "(xx.x)"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "distinctlisthere",
+          "valueSource": "distinct_list",
+          "label": "distinct list",
+          "description": "Grouping variables + analysis variable, comma separated"
+        },
+        {
+          "name": "denomanaidhere",
+          "valueSource": "DEN_analysisid",
+          "label": "denom ana id",
+          "description": "Analysis ID supplying the denominator"
+        },
+        {
+          "name": "denom_anagroupvarshere",
+          "valueSource": "AG_denom_var1",
+          "label": "denom grp var",
+          "description": "Grouping variable(s) of the denominator analysis"
+        },
+        {
+          "name": "isdatadrivenhere",
+          "valueSource": "AG_max_dataDriven",
+          "label": "is dataDriven",
+          "description": "TRUE/FALSE: highest grouping is data-driven"
+        },
+        {
+          "name": "byvarshere",
+          "valueSource": "by_vars",
+          "label": "by/variables args",
+          "description": "by = outer grouping(s), variables = category variable"
+        },
+        {
+          "name": "stratavarshere",
+          "valueSource": "strata_vars",
+          "label": "strata/variables args",
+          "description": "strata = outer grouping(s), variables = category variable"
+        }
+      ],
+      "templateCode": "denom_dataset = df2_denomanaidhere |>\n  dplyr::select(denom_anagroupvarshere)\n\nin_data = df2_analysisidhere |>\n    dplyr::distinct(distinctlisthere)\n\ndataDriven = isdatadrivenhere\nif(dataDriven == TRUE){\ndf3_analysisidhere <-\n  cards::ard_tabulate(\n    data = in_data\n    stratavarshere,\n    denominator = denom_dataset\n  ) } else {\ndf3_analysisidhere <-\n cards::ard_tabulate(\n    data = in_data\n    byvarshere,\n    denominator = denom_dataset\n  ) }\ndf3_analysisidhere <- df3_analysisidhere |>\n  dplyr::filter(stat_name %in% c('n', 'p')) |>\n  dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',\n                                               stat_name == 'p' ~ 'opid2here'))"
+    }
+  ]
+}

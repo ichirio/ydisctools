@@ -23,5 +23,17 @@ To refresh the catalog, copy the file from a newer siera release and re-run
 the ydisctools test suite (`tests/testthat/test-ars-tools.R` exercises every
 method key the compact format supports).
 
+## ydisctools overlay
+
+`method-library-ydisctools.json` is merged OVER the vendored catalog by
+`build_ars()`: an overlay entry with the same `id` replaces the vendored one,
+keeping `method-library.json` a verbatim upstream copy.  Currently the
+overlay replaces `categorical_summary`: the vendored template uses siera's
+legacy distinct+dummy pattern (the generated ARD shows
+`variable = "dummy"`), while the overlay uses the modern cards denominator
+pattern (`by =` outer groupings, `variables =` the category variable;
+`strata =` when the innermost grouping is data-driven), so the ARD carries
+the real variable name and levels.  The statistics are identical.
+
 MIT license text of the upstream package:
 <https://github.com/clymbclinical/siera/blob/main/LICENSE.md>
