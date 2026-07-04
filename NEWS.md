@@ -13,6 +13,11 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* TOC hub part 2: `ars_mock()` generates TFL mock shells from the same TOC
+  workbook the ARS is built from - one xlsx sheet per display ({openxlsx})
+  or one rtf document with a display per page ({rtfreporter}), with title
+  block, `(N=XXX)` arm columns and per-method statistic placeholder rows
+  (#21).
 * TOC hub (part 1 of the SAP -> TOC -> mock -> ARS chain, #18): a bundled
   display-recipe catalog (`inst/ars-display-recipes/`, transcribed from the
   FDA Standard Safety Tables & Figures Integrated Guide and PHUSE white

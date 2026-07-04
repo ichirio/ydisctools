@@ -135,6 +135,7 @@ reference:
       - write_ars_params
       - ars_toc_template
       - ars_from_toc
+      - ars_mock
       - ars_generate_ard
 
   - title: Reading data
