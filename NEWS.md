@@ -13,6 +13,13 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* TOC hub part 3: `read_csr_map()` derives the toc_no numbering section map
+  from a company CSR template's heading structure (literal numbers when
+  present, rule-based reconstruction of Word auto-numbering otherwise,
+  anchored to the tables section so body sections do not capture the map),
+  and `read_sap_toc()` drafts TOC rows from a SAP's planned-display table
+  (numbers cleaned, titles keyword-matched onto the recipe catalog,
+  everything else surfaced as review notes) (#23).
 * TOC hub part 2: `ars_mock()` generates TFL mock shells from the same TOC
   workbook the ARS is built from - one xlsx sheet per display ({openxlsx})
   or one rtf document with a display per page ({rtfreporter}), with title

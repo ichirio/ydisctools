@@ -137,6 +137,8 @@ reference:
       - ars_from_toc
       - ars_mock
       - ars_generate_ard
+      - read_sap_toc
+      - read_csr_map
 
   - title: Reading data
     desc: Load SAS transport / dataset files and Excel workbooks.
