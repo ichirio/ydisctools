@@ -73,6 +73,8 @@ navbar:
     articles:
       text: Articles
       menu:
+        - text: "From the SAP to the ARS: TOC, shells and ARD programmes"
+          href: articles/sap-to-ars.html
         - text: "The ARS chain: programme -> params -> ARS -> ARD"
           href: articles/ars-chain.html
     news:
@@ -95,6 +97,7 @@ articles:
   - title: ARS metadata generation
     navbar: ~
     contents:
+      - articles/sap-to-ars
       - articles/ars-chain
 
 reference:

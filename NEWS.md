@@ -5,6 +5,14 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## Documentation
 
+* New article [From the SAP to the ARS](https://ichirio.github.io/ydisctools/articles/sap-to-ars.html):
+  walks the upstream chain on two bundled ORIGINAL synthetic sample documents
+  (`inst/ars-doc-samples/`: a company-style CSR template whose displays live
+  under section 15, and a SAP whose planned-display appendix leaves the
+  numbers blank) - CSR numbering map, SAP TOC draft, the materialised review
+  step, mock shells, ARS build and ARD-programme generation, handing over to
+  the ARS-chain article (#25).
+
 * New article [The ARS chain](https://ichirio.github.io/ydisctools/articles/ars-chain.html):
   a runnable walk-through of the whole toolchain -- recovering compact
   parameters from an existing {cards} programme, expanding them to a

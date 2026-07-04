@@ -1,0 +1,191 @@
+---
+title: "From the SAP to the ARS: TOC, shells and ARD programmes"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+options(width = 100)
+```
+
+This article walks the **upstream half** of the ydisctools ARS toolchain on
+two bundled sample documents:
+
+```
+company CSR template ----> read_csr_map()  ..... numbering section map
+study SAP ---------------> read_sap_toc()  ..... draft TOC rows   (DRAFT)
+        |
+        v  human / agent review  (the semi-automated step, materialised below)
+completed TOC workbook  ==== the hub, single source of truth ====
+        |                        |
+        v                        v
+   ars_mock()               ars_from_toc() |> build_ars() |> write_ars_xlsx()
+   (shells)                      |
+                                 v
+                    siera::readARS() -> ARD programmes
+```
+
+The downstream half -- running the generated programmes into one
+`OutputId`-keyed study ARD -- is covered by
+[The ARS chain](ars-chain.html); this article ends where that one begins.
+
+## 0. The bundled sample documents
+
+Real SAP/CSR templates (TransCelerate's suite, SAPs on clinicaltrials.gov)
+cannot be redistributed, so ydisctools bundles two **original synthetic
+samples** (only the section layout is informed by the public ICH E3
+guideline; every sentence is our own -- see the folder README for the
+provenance note):
+
+```{r setup, message = FALSE}
+library(ydisctools)
+samples <- system.file("ars-doc-samples", package = "ydisctools")
+list.files(samples)
+```
+
+Two deliberate demo twists: the company template files its displays under
+section **15** (not ICH E3's 14), and the SAP's planned-display appendix
+leaves the display numbers **blank** -- numbering is the TFL spec's job.
+
+## 1. Numbering map from the company CSR template
+
+`read_csr_map()` walks the template's headings, anchors itself to the
+tables section, and keyword-maps the subsections to the numbering keys.
+Literal heading numbers are used when present; templates that rely on Word
+auto-numbering are reconstructed rule-based from the heading levels (and
+flagged for review):
+
+```{r}
+csr <- read_csr_map(file.path(samples, "sample_csr_template.docx"))
+csr$section_map
+csr$notes
+```
+
+The company convention (15.x) will now drive every display number -- no
+ICH default leaks through.
+
+## 2. Draft TOC from the SAP
+
+`read_sap_toc()` finds the planned-display table in the SAP and drafts TOC
+rows: titles are keyword-matched onto the bundled display recipes,
+everything undecidable becomes a review note:
+
+```{r}
+draft <- read_sap_toc(file.path(samples, "sample_sap.docx"))
+draft$toc[, c("toc_no", "output_id", "title", "display_type", "population")]
+draft$notes
+```
+
+## 3. The review step (what the human -- or agent -- edits)
+
+This is the deliberately semi-automated phase. The draft needs four
+decisions that live in the SAP's *prose* (its Analysis Sets and design
+sections), and here they are applied as explicit edits so the chain can
+continue -- do the same in Excel if you prefer:
+
+```{r}
+toc <- draft$toc
+
+# (a) meaningful output ids
+toc$output_id <- c("Out_dm", "Out_ds", "Out_ex", "Out_ae_ov",
+                   "Out_ae_soc", "Out_ae_sev", "Out_eff")
+
+# (b) populations: the SAP defines Safety = ADSL.SAFFL, ITT = ADSL.ITTFL
+toc$population <- ifelse(toc$population == "ITT", "ITTFL", "SAFFL")
+
+# (c) arm grouping and the three arms named in SAP section 1
+toc$group_by <- "TRT01A"
+toc$groups   <- "Placebo | Xanomeline Low Dose | Xanomeline High Dose"
+
+# (d) the efficacy display is 'custom': author its analyses by hand
+eff <- data.frame(
+  output_id   = "Out_eff",
+  analysis_id = "",
+  name        = c("Number of subjects", "Primary endpoint",
+                  "Responders, n (%)"),
+  method      = c("total_n", "continuous_summary", "categorical_summary"),
+  dataset     = c("ADSL", "ADEFF", "ADEFF"),
+  variable    = c("USUBJID", "AVAL", "USUBJID"),
+  population  = "", group_by = c("", "", "TRT01A, CRIT1FL"),
+  groups = "", groups2 = "",
+  where       = c("", "PARAMCD EQ PRIMEP", "PARAMCD EQ PRIMEP"),
+  denominator = c("", "", "auto"),
+  stringsAsFactors = FALSE
+)
+```
+
+Write the completed TOC workbook -- the reviewed artefact every later phase
+consumes (and the natural thing to keep under version control):
+
+```{r}
+toc_file <- file.path(tempdir(), "TOC_STUDY01.xlsx")
+writexl::write_xlsx(
+  list(Study = data.frame(key = c("study_id", "study_title"),
+                          value = c("STUDY01", "Sample Study")),
+       TOC = toc, Analyses = eff),
+  toc_file
+)
+```
+
+## 4. Mock shells
+
+Shells derive from the same TOC (and the same recipes) as the ARS, so they
+cannot drift apart. One sheet per display; the sponsor numbering from step 1
+lands in the title block:
+
+```{r}
+mock_file <- file.path(tempdir(), "shells_STUDY01.xlsx")
+ars_mock(toc_file, mock_file, section_map = csr$section_map)
+head(as.data.frame(suppressMessages(
+  readxl::read_excel(mock_file, sheet = "Out_dm", col_names = FALSE))), 10)
+```
+
+(`format = "rtf"` renders the same shells through
+[rtfreporter](https://ichirio.github.io/rtfreporter/) instead -- one page
+per display, with the furniture the final tables will use.)
+
+## 5. ARS metadata
+
+The same TOC + section map expand into the full ARS workbook. Note the
+auto-assigned numbers following the *company* convention:
+
+```{r}
+params <- ars_from_toc(toc_file, section_map = csr$section_map)
+params$toc[, c("toc_no", "output_id", "display_type")]
+
+ars <- build_ars(params)
+ars_file <- file.path(tempdir(), "ARS_STUDY01.xlsx")
+write_ars_xlsx(ars, ars_file, overwrite = TRUE)
+```
+
+## 6. ARD programmes
+
+`siera::readARS()` turns the workbook into one runnable {cards} programme
+per display:
+
+```{r, message = FALSE}
+prog_dir <- file.path(tempdir(), "ard_programmes")
+dir.create(prog_dir, showWarnings = FALSE)
+siera::readARS(ars_file, output_path = prog_dir, adam_path = "adam")
+list.files(prog_dir)
+```
+
+And they run: here the demographics display executes against the dummy ADaM
+data shipped with the package (the other displays need ADaM variables the
+dummy data does not carry -- point `adam_path` at your study data):
+
+```{r, message = FALSE, warning = FALSE}
+ex <- system.file("ars-examples", package = "ydisctools")
+ard <- ars_generate_ard(ars_file, adam_path = file.path(ex, "adam"),
+                        spec_output = "Out_dm")
+ard[ard$stat_name %in% c("n", "p") & !is.na(ard$variable_level),
+    c("OutputId", "group1_level", "variable", "variable_level",
+      "stat_name", "stat")] |> head(6)
+```
+
+## Where to next
+
+[The ARS chain](ars-chain.html) continues from exactly this point: running
+every generated programme and combining the results into one study-level
+ARD keyed by `OutputId`, plus recovering compact parameters from existing
+programmes (`ars_params_from_code()`) when you start from a past study
+instead of a SAP.
