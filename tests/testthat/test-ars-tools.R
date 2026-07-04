@@ -116,15 +116,15 @@ test_that("build_ars de-duplicates analysis sets, groupings and subsets", {
   expect_equal(nrow(ars$AnalysisSets), 1)
   expect_equal(ars$AnalysisSets$name, "Safety Population")
   expect_equal(unique(ars$Analyses$analysisSetId), "AnalysisSet_01")
-  # groupings: predefined TRT01A (demog), data-driven AGEGR1, SEX,
-  # TRT01A (teae), AEBODSYS, AESEV
-  expect_equal(nrow(unique(ars$AnalysisGroupings["id"])), 6)
+  # groupings: predefined TRT01A (demog), data-driven AGEGR1, AGEGR2, SEX,
+  # RACE, ETHNIC, TRT01A (teae), AEBODSYS, AESEV
+  expect_equal(nrow(unique(ars$AnalysisGroupings["id"])), 9)
   pre <- ars$AnalysisGroupings[ars$AnalysisGroupings$dataDriven == "FALSE", ]
   expect_equal(pre$group_condition_value, c("Placebo", "Active"))
   # the two TEAE analyses share one data subset
   expect_equal(nrow(ars$DataSubsets), 1)
   expect_equal(ars$DataSubsets$condition_dataset, "ADAE")
-  teae <- ars$Analyses[ars$Analyses$id %in% c("An_06", "An_07"), ]
+  teae <- ars$Analyses[ars$Analyses$id %in% c("An_09", "An_10"), ]
   expect_equal(unique(teae$dataSubsetId), "Dss_01")
 })
 
@@ -142,7 +142,7 @@ test_that("build_ars wires numerator/denominator analyses", {
   )
   # explicit denominator in the TEAE output
   expect_equal(
-    an$referencedAnalysisOperations_analysisId2[an$id == "An_06"], "An_05"
+    an$referencedAnalysisOperations_analysisId2[an$id == "An_09"], "An_08"
   )
   # total_n rows carry no reference
   expect_true(is.na(an$referencedAnalysisOperations_analysisId2[an$id == "An_01"]))
@@ -156,7 +156,7 @@ test_that("build_ars lays out the contents lists in siera's fill-down shape", {
   ana_rows <- main[!is.na(main$listItem_analysisId), ]
   expect_equal(out_rows$listItem_outputId, c("Out_demog", "Out_teae"))
   expect_true(all(is.na(out_rows$listItem_analysisId)))
-  expect_equal(nrow(ana_rows), 7)
+  expect_equal(nrow(ana_rows), 10)
   expect_equal(nrow(ars$OtherListsOfContents), 2)
 })
 
@@ -172,6 +172,12 @@ test_that("build_ars expands methods from the vendored catalog", {
   expect_equal(nrow(tpl), 3)
   expect_false(any(grepl("\r", tpl$templateCode, fixed = TRUE)))
   expect_true(all(tpl$specifiedAs == "Code"))
+  # the ydisctools overlay replaces the legacy dummy-variable categorical
+  # template with the modern by=/variables= pattern
+  cat_tpl <- tpl$templateCode[tpl$method_id == "Mth_categorical_summary"]
+  expect_false(grepl("dummy", cat_tpl, fixed = TRUE))
+  expect_true(grepl("byvarshere", cat_tpl, fixed = TRUE) ||
+                grepl("variables", cat_tpl, fixed = TRUE))
   pars <- ars$AnalysisMethodCodeParameters
   expect_true(all(nzchar(pars$parameter_valueSource)))
 })
@@ -185,8 +191,7 @@ test_that("build_ars validates its inputs", {
   p <- base; p$outputs <- rbind(p$outputs, p$outputs[1, ])
   expect_error(build_ars(p), "Duplicated `output_id`")
 
-  p <- base; p$analyses <- p$analyses[-2, ]   # demog drops to 3, still ok
-  p$analyses <- p$analyses[-2, ]              # now demog has 2 -> too few
+  p <- base; p$analyses <- p$analyses[-(2:6), ]   # demog drops to 2 -> too few
   expect_error(build_ars(p), "at least 3 analyses per output")
 
   p <- base; p$analyses$analysis_id[1] <- "An 01"
@@ -211,12 +216,12 @@ test_that("build_ars validates its inputs", {
   expect_error(build_ars(p), "single condition")
 
   p <- base
-  p$analyses$denominator[p$analyses$analysis_id == "An_06"] <- "auto"
-  # auto works here too (same population + grouping1 as An_05)
+  p$analyses$denominator[p$analyses$analysis_id == "An_09"] <- "auto"
+  # auto works here too (same population + grouping1 as An_08)
   ars <- build_ars(p)
   expect_equal(
     ars$Analyses$referencedAnalysisOperations_analysisId2[
-      ars$Analyses$id == "An_06"], "An_05"
+      ars$Analyses$id == "An_09"], "An_08"
   )
 })
 
@@ -256,7 +261,14 @@ test_that("siera::readARS() generates runnable ARD programmes from our ARS", {
     TRT01A  = c(rep("Placebo", 4), rep("Active", 4)),
     AGE     = c(50, 60, 70, 55, 65, 75, 45, 80),
     AGEGR1  = c("<65", "<65", ">=65", "<65", ">=65", ">=65", "<65", ">=65"),
+    AGEGR2  = c("<75", "<75", "<75", "<75", "<75", ">=75", "<75", ">=75"),
     SEX     = c("F", "M", "F", "M", "F", "M", "F", "M"),
+    RACE    = c("WHITE", "WHITE", "ASIAN", "WHITE",
+                "WHITE", "ASIAN", "WHITE", "WHITE"),
+    ETHNIC  = c("NOT HISPANIC OR LATINO", "NOT HISPANIC OR LATINO",
+                "HISPANIC OR LATINO", "NOT HISPANIC OR LATINO",
+                "NOT HISPANIC OR LATINO", "NOT HISPANIC OR LATINO",
+                "HISPANIC OR LATINO", "NOT HISPANIC OR LATINO"),
     stringsAsFactors = FALSE
   )
   adae <- data.frame(
@@ -284,40 +296,42 @@ test_that("siera::readARS() generates runnable ARD programmes from our ARS", {
 
   run_script <- run_ard_script   # helper-ars.R
 
-  # demographics output
+  # demographics output (N, Age, AGEGR1, AGEGR2, SEX, RACE, ETHNIC)
   ard <- run_script(scripts[basename(scripts) == "ARD_Out_demog.R"])
-  expect_setequal(unique(ard$AnalysisId), c("An_01", "An_02", "An_03", "An_04"))
+  expect_setequal(unique(ard$AnalysisId), sprintf("An_%02d", 1:7))
   # An_01 total N per arm (safety only): Placebo 4, Active 3
   n01 <- ard[ard$AnalysisId == "An_01" & ard$stat_name == "n", ]
   stats01 <- vapply(n01$stat, as.numeric, numeric(1))
   expect_setequal(stats01, c(4, 3))
   # An_03 age-group percentages use An_01 as denominator:
-  # Placebo <65 -> 3/4 (category variable = 2nd grouping)
+  # Placebo <65 -> 3/4.  With the overlay template the category variable
+  # lands in variable / variable_level (no dummy variable).
   a03 <- ard[ard$AnalysisId == "An_03" &
                ard$group1_level == "Placebo" &
-               ard$group2_level == "<65", ]
+               ard$variable_level == "<65", ]
+  expect_equal(unique(a03$variable), "AGEGR1")
   expect_equal(as.numeric(a03$stat[a03$stat_name == "n"][[1]]), 3)
   expect_equal(as.numeric(a03$stat[a03$stat_name == "p"][[1]]), 0.75)
-  # predefined 1st grouping stamps groupingId + groupId; data-driven 2nd
-  # grouping stamps groupValue
+  expect_false(any(ard$variable == "dummy", na.rm = TRUE))
+  # predefined 1st grouping stamps groupingId + groupId
   expect_true(all(a03$group1_groupingId == "AnlsGrp_01_TRT01A"))
   expect_true(all(a03$group1_groupId == "AnlsGrp_01_TRT01A_01"))
-  expect_equal(unique(a03$group2_groupValue), "<65")
 
   # TEAE output
   ard2 <- run_script(scripts[basename(scripts) == "ARD_Out_teae.R"])
-  expect_setequal(unique(ard2$AnalysisId), c("An_05", "An_06", "An_07"))
-  # An_05 denominator N per arm: Placebo 4, Active 3 (full safety population,
+  expect_setequal(unique(ard2$AnalysisId), c("An_08", "An_09", "An_10"))
+  # An_08 denominator N per arm: Placebo 4, Active 3 (full safety population,
   # not only AE subjects)
-  n05 <- ard2[ard2$AnalysisId == "An_05" & ard2$stat_name == "n", ]
-  expect_setequal(vapply(n05$stat, as.numeric, numeric(1)), c(4, 3))
-  # An_06: TEAE by SOC, TRTEMFL == Y applied ->
+  n08 <- ard2[ard2$AnalysisId == "An_08" & ard2$stat_name == "n", ]
+  expect_setequal(vapply(n08$stat, as.numeric, numeric(1)), c(4, 3))
+  # An_09: TEAE by SOC, TRTEMFL == Y applied ->
   # (Placebo, CARDIAC) = SUBJ-001 only: n = 1, p = 1/4
-  a06 <- ard2[ard2$AnalysisId == "An_06" &
+  a09 <- ard2[ard2$AnalysisId == "An_09" &
                 ard2$group1_level == "Placebo" &
-                ard2$group2_level == "CARDIAC DISORDERS", ]
-  expect_equal(as.numeric(a06$stat[a06$stat_name == "n"][[1]]), 1)
-  expect_equal(as.numeric(a06$stat[a06$stat_name == "p"][[1]]), 0.25)
-  # data-driven grouping stamps groupValue, not groupId
-  expect_equal(unique(a06$group2_groupValue), "CARDIAC DISORDERS")
+                ard2$variable_level == "CARDIAC DISORDERS", ]
+  expect_equal(unique(a09$variable), "AEBODSYS")
+  expect_equal(as.numeric(a09$stat[a09$stat_name == "n"][[1]]), 1)
+  expect_equal(as.numeric(a09$stat[a09$stat_name == "p"][[1]]), 0.25)
+  # data-driven 1st grouping stamps groupValue, not groupId
+  expect_equal(unique(a09$group1_groupValue), "Placebo")
 })

@@ -25,11 +25,12 @@ test_that("parameters are recovered from siera-generated ARD programmes", {
 
   dm <- an[an$output_id == "Out_dm", ]
   expect_equal(dm$method,
-               c("total_n", "continuous_summary", rep("categorical_summary", 3)))
-  expect_equal(dm$group_by[3:5],
-               c("TRT01A, AGEGR1", "TRT01A, SEX", "TRT01A, RACE"))
+               c("total_n", "continuous_summary", rep("categorical_summary", 5)))
+  expect_equal(dm$group_by[3:7],
+               c("TRT01A, AGEGR1", "TRT01A, AGEGR2", "TRT01A, SEX",
+                 "TRT01A, RACE", "TRT01A, ETHNIC"))
   expect_true(all(dm$population == "SAFFL"))
-  expect_true(all(dm$denominator[3:5] == "auto"))
+  expect_true(all(dm$denominator[3:7] == "auto"))
 
   ae <- an[an$output_id == "Out_ae", ]
   expect_true(all(ae$where[ae$method == "categorical_summary"] == "TRTEMFL EQ Y"))
@@ -161,7 +162,7 @@ test_that("write_ars_params round-trips through read_ars_params/build_ars", {
                     readxl::excel_sheets(tmp)))
 
   ars <- build_ars(tmp)
-  expect_equal(nrow(ars$Analyses), 5)
+  expect_equal(nrow(ars$Analyses), 7)
   expect_true("Outputs" %in% names(ars))
 
   expect_error(write_ars_params(list(analyses = data.frame()), tmp),

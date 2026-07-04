@@ -13,6 +13,15 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* Readable categorical ARDs: `build_ars()` now uses an improved
+  `categorical_summary` method template (a ydisctools overlay over the
+  vendored siera catalog) built on the modern cards
+  `by = ` / `variables = ` denominator pattern, so generated ARDs carry the
+  real category variable name and levels (`variable = "AGEGR1"`,
+  `variable_level = "<65"`) instead of the legacy `dummy` placeholder -
+  statistics unchanged. The parameter template and the shipped example set
+  now mirror a realistic DM display (big N, Age, two age groupings, Sex,
+  Race, Ethnicity) (#16).
 * Added `ars_generate_ard()`: generate the per-output ARD programmes from an
   ARS file (or a `build_ars()` result) via `siera::readARS()`, run them in
   isolated environments, and return one combined ARD data frame keyed by

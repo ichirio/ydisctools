@@ -185,9 +185,16 @@ of the box:
 ard <- ars_generate_ard(ars_file, adam_path = file.path(ex, "adam"))
 table(ard$OutputId)
 ard[ard$AnalysisId == "An_03" & ard$stat_name %in% c("n", "p"),
-    c("OutputId", "AnalysisId", "group1_level", "group2_level",
-      "stat_name", "stat")] |> head(8)
+    c("OutputId", "AnalysisId", "group1_level", "variable",
+      "variable_level", "stat_name", "stat")] |> head(8)
 ```
+
+Note how readable the categorical rows are: the treatment arm sits in
+`group1_level` and the category variable keeps its real name and levels
+(`variable = "AGEGR1"`, `variable_level = "<65"`, ...) -- ydisctools ships an
+improved categorical method template (an overlay over siera's catalog) that
+uses the modern cards `by = ` / `variables = ` pattern instead of the legacy
+dummy-variable idiom.
 
 The generated programmes stay available for review and re-execution:
 

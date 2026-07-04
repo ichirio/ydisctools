@@ -28,15 +28,28 @@
 
 # -- Method catalog -----------------------------------------------------------
 
-# Read the vendored siera method-template catalog.  Returns a named list of
-# method entries (name/label/description/operations/parameters/templateCode),
-# with the catalog-level template context stored in attr(, "context").
+# Read the method-template catalog: the vendored siera catalog
+# (method-library.json, kept verbatim) merged with the ydisctools overlay
+# (method-library-ydisctools.json) -- an overlay entry with the same id
+# REPLACES the vendored one.  Returns a named list of method entries
+# (name/label/description/operations/parameters/templateCode), with the
+# catalog-level template context stored in attr(, "context").
 .ars_method_catalog <- function() {
   path <- system.file("ars-method-library", "method-library.json",
                       package = "ydisctools", mustWork = TRUE)
   cat_json <- jsonlite::fromJSON(path, simplifyVector = FALSE)
   methods <- cat_json$methods
   names(methods) <- vapply(methods, function(m) m$id, character(1))
+
+  overlay_path <- system.file("ars-method-library",
+                              "method-library-ydisctools.json",
+                              package = "ydisctools")
+  if (nzchar(overlay_path)) {
+    overlay <- jsonlite::fromJSON(overlay_path, simplifyVector = FALSE)
+    for (m in overlay$methods) {
+      methods[[m$id]] <- m
+    }
+  }
   attr(methods, "context") <-
     if (!is.null(cat_json$context)) cat_json$context else "R (siera)"
   methods
@@ -246,30 +259,29 @@ ars_param_template <- function(path, overwrite = FALSE) {
   )
   # Note the ARS idiom for "n (%) of subjects per category": the analysis
   # variable stays USUBJID and the category variable (AGEGR1, SEX, AEBODSYS,
-  # ...) enters as the SECOND grouping.
+  # ...) enters as the SECOND grouping.  The demographics output mirrors a
+  # typical DM display: big N, Age (continuous), two age groupings, Sex,
+  # Race and Ethnicity.
   analyses <- data.frame(
-    output_id   = c("Out_demog", "Out_demog", "Out_demog", "Out_demog",
-                    "Out_teae", "Out_teae", "Out_teae"),
-    analysis_id = c("An_01", "An_02", "An_03", "An_04",
-                    "An_05", "An_06", "An_07"),
-    name        = c("Number of subjects", "Age (years)", "Age group",
-                    "Sex",
+    output_id   = c(rep("Out_demog", 7), rep("Out_teae", 3)),
+    analysis_id = sprintf("An_%02d", 1:10),
+    name        = c("Number of subjects", "Age (years)", "Age group 1",
+                    "Age group 2", "Sex", "Race", "Ethnicity",
                     "Number of subjects", "TEAE by System Organ Class",
                     "TEAE by severity"),
-    method      = c("total_n", "continuous_summary", "categorical_summary",
-                    "categorical_summary",
+    method      = c("total_n", "continuous_summary",
+                    rep("categorical_summary", 5),
                     "total_n", "categorical_summary", "categorical_summary"),
-    dataset     = c("ADSL", "ADSL", "ADSL", "ADSL",
-                    "ADSL", "ADAE", "ADAE"),
-    variable    = c("USUBJID", "AGE", "USUBJID", "USUBJID",
-                    "USUBJID", "USUBJID", "USUBJID"),
-    population  = c("", "", "", "", "", "", ""),
-    group_by    = c("", "", "TRT01A, AGEGR1", "TRT01A, SEX",
+    dataset     = c(rep("ADSL", 7), "ADSL", "ADAE", "ADAE"),
+    variable    = c("USUBJID", "AGE", rep("USUBJID", 8)),
+    population  = "",
+    group_by    = c("", "", "TRT01A, AGEGR1", "TRT01A, AGEGR2",
+                    "TRT01A, SEX", "TRT01A, RACE", "TRT01A, ETHNIC",
                     "", "TRT01A, ADAE.AEBODSYS", "TRT01A, ADAE.AESEV"),
-    groups      = c("", "", "", "", "", "", ""),
-    groups2     = c("", "", "", "", "", "", ""),
-    where       = c("", "", "", "", "", "TRTEMFL EQ Y", "TRTEMFL EQ Y"),
-    denominator = c("", "", "auto", "auto", "", "An_05", "An_05"),
+    groups      = "",
+    groups2     = "",
+    where       = c(rep("", 8), "TRTEMFL EQ Y", "TRTEMFL EQ Y"),
+    denominator = c("", "", rep("auto", 5), "", "An_08", "An_08"),
     stringsAsFactors = FALSE
   )
   displays <- data.frame(
