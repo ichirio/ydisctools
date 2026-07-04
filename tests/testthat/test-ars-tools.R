@@ -74,7 +74,7 @@ test_that("ars_param_template writes a workbook read_ars_params reads back", {
   expect_error(ars_param_template(tmp), "already exists")
 
   params <- read_ars_params(tmp)
-  expect_named(params, c("study", "outputs", "analyses"))
+  expect_named(params, c("study", "outputs", "analyses", "displays"))
   expect_true(all(c("output_id", "name") %in% names(params$outputs)))
   expect_true(all(c("output_id", "method", "dataset", "variable") %in%
                     names(params$analyses)))

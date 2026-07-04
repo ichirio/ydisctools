@@ -120,6 +120,8 @@ reference:
       - read_ars_params
       - build_ars
       - write_ars_xlsx
+      - ars_params_from_code
+      - write_ars_params
 
   - title: Reading data
     desc: Load SAS transport / dataset files and Excel workbooks.

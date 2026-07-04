@@ -26,7 +26,10 @@ siera method catalog).  Repeated structures are de-duplicated and IDs are
 assigned automatically; numerator/denominator wiring for percentage-based
 methods is resolved from the \code{denominator} column (\code{"auto"} finds
 the \code{total_n} analysis with the same population and first grouping in
-the same output).
+the same output).  An ARS \code{Outputs} sheet is always emitted; when the
+parameters carry display metadata (a \code{Displays} sheet / element, see
+\code{\link{ars_param_template}}), the ARS \code{Displays} and
+\code{GlobalDisplaySections} sheets are emitted as well.
 }
 \section{Sizing note}{
 \code{siera::readARS()} (as of siera 0.5.x) indexes the third analysis of

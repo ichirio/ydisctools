@@ -5,6 +5,15 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* Added `ars_params_from_code()` / `write_ars_params()`: statically analyse
+  existing {cards}/{cardx} table programmes (or siera-generated ARD
+  programmes) and draft the compact ARS parameter set from them, including
+  populations/subsets/group levels recovered from the `dplyr::filter()`
+  pipeline and display furniture (titles, footnotes, page headers/footers,
+  row-label column header) from rtfreporter idioms; everything undecidable
+  is surfaced as review notes. `build_ars()` now always emits the ARS
+  `Outputs` sheet and, when display metadata is present, the `Displays` /
+  `GlobalDisplaySections` sheets (#10).
 * Shipped a runnable end-to-end ARS example set under
   `inst/ars-examples/`: compact parameter workbook, the ARS workbook built
   from it, the `siera::readARS()`-generated ARD programmes, and deterministic
