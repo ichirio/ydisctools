@@ -122,6 +122,7 @@ reference:
       - write_ars_xlsx
       - ars_params_from_code
       - write_ars_params
+      - ars_generate_ard
 
   - title: Reading data
     desc: Load SAS transport / dataset files and Excel workbooks.
