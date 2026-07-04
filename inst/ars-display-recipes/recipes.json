@@ -1,0 +1,253 @@
+{
+  "$schema": "ydisctools ARS display-recipe catalog",
+  "description": "Display-type recipes for ars_from_toc() / ars_mock(): each recipe expands a TOC row into compact-parameter Analyses rows (and drives the mock shell). Layouts transcribed from public standard-display definitions; see the per-recipe source note and README.md. Placeholders resolved at expansion time: the TOC row supplies population, the arm grouping (group_by), pre-defined arm levels (groups) and optional extra where conditions. Numbering: each recipe carries a section_key (baseline / efficacy / safety_ae / safety_lab); ars_from_toc() assigns toc_no as <section prefix>.<sequence> using an ICH E3-style default section map, overridable (e.g. from a company CSR template via read_csr_map()).",
+  "recipes": [
+    {
+      "id": "dm_summary",
+      "title_default": "Summary of Demographic Data",
+      "source": "FDA ST&F Integrated Guide (fda-dm-t02); PHUSE Analyses & Displays: Demographics, Disposition and Medication",
+      "stub_label": "Characteristic",
+      "analyses": [
+        {
+          "name": "Number of subjects",
+          "method": "total_n",
+          "dataset": "ADSL",
+          "variable": "USUBJID"
+        },
+        {
+          "name": "Age (years)",
+          "method": "continuous_summary",
+          "dataset": "ADSL",
+          "variable": "AGE"
+        },
+        {
+          "name": "Age group, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADSL",
+          "variable": "USUBJID",
+          "group2": "AGEGR1",
+          "denominator": "auto"
+        },
+        {
+          "name": "Sex, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADSL",
+          "variable": "USUBJID",
+          "group2": "SEX",
+          "denominator": "auto"
+        },
+        {
+          "name": "Race, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADSL",
+          "variable": "USUBJID",
+          "group2": "RACE",
+          "denominator": "auto"
+        },
+        {
+          "name": "Ethnicity, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADSL",
+          "variable": "USUBJID",
+          "group2": "ETHNIC",
+          "denominator": "auto"
+        }
+      ],
+      "section_key": "baseline"
+    },
+    {
+      "id": "disposition",
+      "title_default": "Summary of Subject Disposition",
+      "source": "FDA ST&F Integrated Guide (fda-ds-t04); PHUSE Analyses & Displays: Demographics, Disposition and Medication",
+      "stub_label": "Disposition",
+      "analyses": [
+        {
+          "name": "Number of subjects",
+          "method": "total_n",
+          "dataset": "ADSL",
+          "variable": "USUBJID"
+        },
+        {
+          "name": "End of study status, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADSL",
+          "variable": "USUBJID",
+          "group2": "EOSSTT",
+          "denominator": "auto"
+        },
+        {
+          "name": "Reason for discontinuation, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADSL",
+          "variable": "USUBJID",
+          "group2": "DCSREAS",
+          "where": "EOSSTT NE COMPLETED",
+          "denominator": "auto"
+        }
+      ],
+      "section_key": "baseline"
+    },
+    {
+      "id": "exposure",
+      "title_default": "Summary of Study Drug Exposure",
+      "source": "FDA ST&F Integrated Guide (fda-ex-t05), simplified to ADSL duration/dose variables",
+      "stub_label": "Exposure",
+      "analyses": [
+        {
+          "name": "Number of subjects",
+          "method": "total_n",
+          "dataset": "ADSL",
+          "variable": "USUBJID"
+        },
+        {
+          "name": "Duration of treatment (days)",
+          "method": "continuous_summary",
+          "dataset": "ADSL",
+          "variable": "TRTDURD"
+        },
+        {
+          "name": "Cumulative dose",
+          "method": "continuous_summary",
+          "dataset": "ADSL",
+          "variable": "CUMDOSE"
+        }
+      ],
+      "section_key": "baseline"
+    },
+    {
+      "id": "ae_overview",
+      "title_default": "Overall Summary of Treatment-Emergent Adverse Events",
+      "source": "FDA ST&F Integrated Guide (fda-ae-t06); PHUSE Analyses & Displays: Adverse Events",
+      "stub_label": "Category",
+      "analyses": [
+        {
+          "name": "Number of subjects",
+          "method": "total_n",
+          "dataset": "ADSL",
+          "variable": "USUBJID"
+        },
+        {
+          "name": "Subjects with at least one TEAE, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADAE",
+          "variable": "USUBJID",
+          "where": "TRTEMFL EQ Y",
+          "denominator": "auto"
+        },
+        {
+          "name": "Subjects with at least one serious TEAE, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADAE",
+          "variable": "USUBJID",
+          "where": "TRTEMFL EQ Y; AESER EQ Y",
+          "denominator": "auto"
+        },
+        {
+          "name": "Subjects with at least one severe TEAE, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADAE",
+          "variable": "USUBJID",
+          "where": "TRTEMFL EQ Y; AESEV EQ SEVERE",
+          "denominator": "auto"
+        }
+      ],
+      "section_key": "safety_ae"
+    },
+    {
+      "id": "ae_soc",
+      "title_default": "Summary of Treatment-Emergent Adverse Events by System Organ Class",
+      "source": "FDA ST&F Integrated Guide (fda-ae-t12, flattened to SOC level; the nested SOC/PT display needs 3 simultaneous groupings, ydisctools #6)",
+      "stub_label": "System Organ Class",
+      "analyses": [
+        {
+          "name": "Number of subjects",
+          "method": "total_n",
+          "dataset": "ADSL",
+          "variable": "USUBJID"
+        },
+        {
+          "name": "Subjects with at least one TEAE, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADAE",
+          "variable": "USUBJID",
+          "where": "TRTEMFL EQ Y",
+          "denominator": "auto"
+        },
+        {
+          "name": "TEAE by System Organ Class, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADAE",
+          "variable": "USUBJID",
+          "group2": "ADAE.AEBODSYS",
+          "where": "TRTEMFL EQ Y",
+          "denominator": "auto"
+        }
+      ],
+      "section_key": "safety_ae"
+    },
+    {
+      "id": "ae_pt",
+      "title_default": "Summary of Treatment-Emergent Adverse Events by Preferred Term",
+      "source": "FDA ST&F Integrated Guide (fda-ae-t13, flat PT level); PHUSE Analyses & Displays: Adverse Events",
+      "stub_label": "Preferred Term",
+      "analyses": [
+        {
+          "name": "Number of subjects",
+          "method": "total_n",
+          "dataset": "ADSL",
+          "variable": "USUBJID"
+        },
+        {
+          "name": "Subjects with at least one TEAE, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADAE",
+          "variable": "USUBJID",
+          "where": "TRTEMFL EQ Y",
+          "denominator": "auto"
+        },
+        {
+          "name": "TEAE by Preferred Term, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADAE",
+          "variable": "USUBJID",
+          "group2": "ADAE.AEDECOD",
+          "where": "TRTEMFL EQ Y",
+          "denominator": "auto"
+        }
+      ],
+      "section_key": "safety_ae"
+    },
+    {
+      "id": "ae_severity",
+      "title_default": "Summary of Treatment-Emergent Adverse Events by Maximum Severity",
+      "source": "PHUSE Analyses & Displays: Adverse Events (severity summary)",
+      "stub_label": "Severity",
+      "analyses": [
+        {
+          "name": "Number of subjects",
+          "method": "total_n",
+          "dataset": "ADSL",
+          "variable": "USUBJID"
+        },
+        {
+          "name": "Subjects with at least one TEAE, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADAE",
+          "variable": "USUBJID",
+          "where": "TRTEMFL EQ Y",
+          "denominator": "auto"
+        },
+        {
+          "name": "TEAE by severity, n (%)",
+          "method": "categorical_summary",
+          "dataset": "ADAE",
+          "variable": "USUBJID",
+          "group2": "ADAE.AESEV",
+          "where": "TRTEMFL EQ Y",
+          "denominator": "auto"
+        }
+      ],
+      "section_key": "safety_ae"
+    }
+  ]
+}

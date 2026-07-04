@@ -13,6 +13,14 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* TOC hub (part 1 of the SAP -> TOC -> mock -> ARS chain, #18): a bundled
+  display-recipe catalog (`inst/ars-display-recipes/`, transcribed from the
+  FDA Standard Safety Tables & Figures Integrated Guide and PHUSE white
+  papers), `ars_toc_template()` (TOC workbook pre-filled with the standard
+  safety set), and `ars_from_toc()` (recipe expansion + custom passthrough +
+  rule-based `toc_no` auto-numbering with an ICH E3-style default section
+  map, overridable per sponsor) feeding straight into `build_ars()` /
+  `ars_generate_ard()` (#19).
 * Readable categorical ARDs: `build_ars()` now uses an improved
   `categorical_summary` method template (a ydisctools overlay over the
   vendored siera catalog) built on the modern cards
