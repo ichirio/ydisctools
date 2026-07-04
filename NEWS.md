@@ -3,6 +3,14 @@
 `ydisctools` is a Proof-of-Concept collection of small CDISC tools and is
 not versioned for release; this changelog tracks notable changes only.
 
+## Documentation
+
+* New article [The ARS chain](https://ichirio.github.io/ydisctools/articles/ars-chain.html):
+  a runnable walk-through of the whole toolchain -- recovering compact
+  parameters from an existing {cards} programme, expanding them to a
+  siera-ready ARS workbook, and running the generated ARD programmes into
+  one study-level ARD keyed by `OutputId` (#14).
+
 ## New features
 
 * Added `ars_generate_ard()`: generate the per-output ARD programmes from an

@@ -1,0 +1,221 @@
+---
+title: "The ARS chain: from an existing programme to a study-level ARD"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+options(width = 100)
+```
+
+The CDISC **Analysis Results Standard (ARS)** describes, as metadata, every
+analysis a reporting event needs -- populations, groupings, data subsets,
+statistical methods, and the displays they feed. Once that metadata exists,
+the pharmaverse package [siera](https://cran.r-project.org/package=siera)
+turns it into runnable [cards](https://insightsengineering.github.io/cards/)
+programmes that produce **Analysis Results Datasets (ARDs)**.
+
+The catch is authoring the ARS itself: the workbook `siera::readARS()`
+consumes needs nine interlinked sheets with heavily repeated information.
+ydisctools closes that gap with a small toolchain, and this article walks the
+**whole chain** on runnable code:
+
+```
+existing programme (cards / cardx)
+        |  ars_params_from_code()          ... recover a draft, review the notes
+        v
+compact parameter workbook  (1 row per analysis)
+        |  build_ars() + write_ars_xlsx()  ... expand to the full ARS metadata
+        v
+ARS workbook  (siera-ready)
+        |  ars_generate_ard()              ... siera::readARS() + run + combine
+        v
+one study-level ARD, keyed by OutputId
+```
+
+```{r setup, message = FALSE}
+library(ydisctools)
+```
+
+Everything below runs on the example set shipped with the package -- dummy
+ADaM data (30 subjects, three CDISC-pilot arms) and the artefacts of a
+Demographics and an Adverse Events display:
+
+```{r}
+ex <- system.file("ars-examples", package = "ydisctools")
+list.files(ex, recursive = TRUE)
+```
+
+## 1. The compact parameter workbook
+
+The chain's central object is a small workbook: one `Outputs` row per
+display, one `Analyses` row per analysis, and (optionally) a `Displays`
+sheet for titles, footnotes and page furniture. `ars_param_template()`
+writes a filled-in example you can copy per study:
+
+```{r}
+params_file <- file.path(tempdir(), "params.xlsx")
+ars_param_template(params_file, overwrite = TRUE)
+params <- read_ars_params(params_file)
+params$analyses[, c("output_id", "analysis_id", "method", "dataset",
+                    "variable", "group_by", "where", "denominator")]
+```
+
+Three conventions do most of the work:
+
+- **Conditions** use a mini syntax: `"SAFFL"` is sugar for
+  `ADSL.SAFFL EQ Y`, `"TRTEMFL EQ Y"` is a full condition, `";"` chains
+  conditions with AND, and `IN` values are pipe-separated
+  (`"SEX IN M|F"`).
+- **"n (%) of subjects per category"** keeps `variable = USUBJID` and puts
+  the category variable (AGEGR1, SEX, AEBODSYS, ...) in as the *second*
+  grouping -- the ARS idiom.
+- **`denominator = "auto"`** wires a percentage analysis to the `total_n`
+  analysis with the same population and first grouping in the same output.
+
+You can author this workbook by hand. But if a similar study already has
+programmes, you do not have to start from a blank sheet -- that is step 2.
+
+## 2. Recover parameters from an existing programme
+
+`ars_params_from_code()` statically analyses R programmes (nothing is
+executed) and drafts the parameter set from the {cards} / {cardx} calls it
+finds. Here is a compact "existing study programme" in the style of the
+[rtfreporter showcase](https://ichirio.github.io/rtfreporter/articles/showcase-dm.html):
+
+```{r}
+old_programme <- file.path(tempdir(), "t_dm_old_study.R")
+writeLines('
+library(cards); library(dplyr)
+arm_levels <- c("Placebo", "Xanomeline Low Dose", "Xanomeline High Dose")
+adsl <- pharmaverseadam::adsl |>
+  filter(TRT01A %in% arm_levels, SAFFL == "Y")
+
+dm_header <- rtf_header(rows = list(
+  c(l = "Acme Biopharma, Inc.", r = "Page {AUTO_PAGE} of {AUTO_TOTAL_PAGES}"),
+  c(c = "Table 14.1.1"),
+  c(c = "Summary of Demographic Data")))
+dm_footer <- rtf_footer(rows = list(
+  c(l = "Note: Percentages are based on the safety population."),
+  c(l = "Source: ADSL", r = "CONFIDENTIAL")))
+
+ard <- ard_stack(
+  data = adsl, .by = TRT01A,
+  ard_continuous(variables = AGE),
+  ard_categorical(variables = c(AGEGR1, SEX, RACE)),
+  .total_n = TRUE)
+', old_programme)
+
+rec <- ars_params_from_code(old_programme,
+                            output_id = "Out_dm",
+                            output_name = "Summary of Demographic Data")
+rec$analyses[, c("analysis_id", "method", "dataset", "variable",
+                 "population", "group_by", "groups", "denominator")]
+```
+
+The `filter()` pipeline was classified, not just copied: the `%in%` on the
+grouping variable became the pre-defined **group levels**, and the `SAFFL`
+flag became the **population**. The display furniture was captured too:
+
+```{r}
+rec$displays
+```
+
+Everything the static analysis could not decide is an explicit note --
+review these before moving on (they also land on a `Notes` sheet in the
+written workbook):
+
+```{r}
+rec$notes
+```
+
+Save the draft, edit what the notes flag, and it is a normal parameter
+workbook:
+
+```{r}
+draft_file <- file.path(tempdir(), "params_recovered.xlsx")
+write_ars_params(rec, draft_file, overwrite = TRUE)
+readxl::excel_sheets(draft_file)
+```
+
+This also works on siera-generated ARD programmes -- recovering the shipped
+`ARD_Out_dm.R` reproduces the parameter set it was built from:
+
+```{r}
+ars_params_from_code(file.path(ex, "ARD_Out_dm.R"),
+                     output_id = "Out_dm")$analyses[
+  , c("method", "dataset", "variable", "population", "group_by")]
+```
+
+## 3. Expand to the full ARS workbook
+
+`build_ars()` does the tedious part: de-duplicated analysis sets, groupings
+and data subsets with automatic IDs, numerator/denominator wiring, contents
+lists, method sheets (expanded from siera's own MIT-licensed method-template
+catalog, so nobody writes template code), and -- because our recovered
+parameters carry display metadata -- the ARS `Outputs` / `Displays` /
+`GlobalDisplaySections` sheets:
+
+```{r}
+ars <- build_ars(params_file)   # the template example from step 1
+names(ars)
+ars$AnalysisSets
+head(ars$Analyses[, c("id", "analysisSetId", "groupingId1", "groupingId2",
+                      "dataSubsetId", "method_id")])
+```
+
+`write_ars_xlsx()` writes it as a workbook `siera::readARS()` accepts
+directly (for the JSON ARS representation, convert the written workbook with
+`siera::ars_xlsx_to_json()`, available in siera > 0.5.6):
+
+```{r}
+ars_file <- file.path(tempdir(), "ARS_STUDY01.xlsx")
+write_ars_xlsx(ars, ars_file, overwrite = TRUE)
+```
+
+## 4. Generate, run, combine: one ARD for the study
+
+`ars_generate_ard()` finishes the chain. It hands the ARS to
+`siera::readARS()` (one generated programme per output, kept for
+inspection), runs each programme in an isolated environment against your
+ADaM folder, and binds the results. siera stamps `AnalysisId` / `MethodId` /
+`OutputId` onto every ARD row, so the combined frame is keyed by display out
+of the box:
+
+```{r, message = FALSE, warning = FALSE}
+ard <- ars_generate_ard(ars_file, adam_path = file.path(ex, "adam"))
+table(ard$OutputId)
+ard[ard$AnalysisId == "An_03" & ard$stat_name %in% c("n", "p"),
+    c("OutputId", "AnalysisId", "group1_level", "group2_level",
+      "stat_name", "stat")] |> head(8)
+```
+
+The generated programmes stay available for review and re-execution:
+
+```{r}
+basename(attr(ard, "scripts"))
+```
+
+And because `ars` can also be the sheet list itself, the whole chain is one
+pipe:
+
+```{r, eval = FALSE}
+ard <- read_ars_params("params.xlsx") |>
+  build_ars() |>
+  ars_generate_ard(adam_path = "path/to/adam")
+```
+
+## 5. Where this fits
+
+- **Upstream**, the parameter workbook is the study's analysis intent -- a
+  natural artefact to derive from the SAP (a planned extension, see
+  [ydisctools#6](https://github.com/ichirio/ydisctools/issues/6), which also
+  tracks 3+ simultaneous groupings for nested SOC/PT displays, currently
+  flattened with a note).
+- **Downstream**, the ARD is framework-neutral: summarise it with
+  `gtsummary::tbl_ard_summary()` and hand the result to
+  [rtfreporter](https://ichirio.github.io/rtfreporter/) for the final RTF,
+  or export it as CDISC Dataset-JSON via siera's
+  `output_format = "datasetjson"`.
+- The full worked artefact set (parameters, ARS, generated programmes, dummy
+  ADaM) ships in `system.file("ars-examples", package = "ydisctools")` -- see
+  its README.

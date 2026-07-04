@@ -64,12 +64,17 @@ home:
 
 navbar:
   structure:
-    left:  [reference, news]
+    left:  [reference, articles, news]
     right: [search, github]
   components:
     reference:
       text: Reference
       href: reference/index.html
+    articles:
+      text: Articles
+      menu:
+        - text: "The ARS chain: programme -> params -> ARS -> ARD"
+          href: articles/ars-chain.html
     news:
       text: Changelog
       href: news/index.html
@@ -85,6 +90,12 @@ footer:
   components:
     package: "[ydisctools](https://github.com/ichirio/ydisctools) (development version)"
     license: "[GPL (>= 3)](https://github.com/ichirio/ydisctools/blob/main/LICENSE.md)"
+
+articles:
+  - title: ARS metadata generation
+    navbar: ~
+    contents:
+      - articles/ars-chain
 
 reference:
   - title: SDTM / ADaM datasets
