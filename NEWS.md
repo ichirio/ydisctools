@@ -3,6 +3,22 @@
 `ydisctools` is a Proof-of-Concept collection of small CDISC tools and is
 not versioned for release; this changelog tracks notable changes only.
 
+## New features
+
+* `read_sap_toc()` gains a **prose route** and a `mode` argument
+  (`"auto"` / `"table"` / `"prose"`). When a SAP carries no planned-display
+  table, it now scans the *Statistical Methods / Analyses* section for display
+  declarations -- sentences whose subject names a clinical data domain and
+  that carry a display verb (e.g. "Demographic data will be summarized by
+  treatment group") -- classifies each via the display-recipe catalog, and
+  keeps the verbatim sentence in a new `source` column for review.
+  Statistics-detail lines ("95% CIs will be provided") are dropped, and the
+  scan is anchored to the methods subtree so out-of-scope prose is excluded.
+  This was designed from a cross-analysis of 19 real SAPs, which showed the
+  display list almost always lives in prose rather than a table (#29).
+  *Follow-up (not in this release):* a PDF route (via `pdftools`) with an
+  extraction-yield gate for scanned / font-obfuscated SAPs.
+
 ## Documentation
 
 * New article [From the SAP to the ARS](https://ichirio.github.io/ydisctools/articles/sap-to-ars.html):
