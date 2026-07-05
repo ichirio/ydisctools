@@ -38,8 +38,8 @@ You can install the development version of ydisctools from
 [GitHub](https://github.com/ichirio/ydisctools) with:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("ichirio/ydisctools")
+# install.packages("pak")
+pak::pak("ichirio/ydisctools")
 ```
 
 ## Documentation
