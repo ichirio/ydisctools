@@ -192,51 +192,98 @@ read_csr_map <- function(docx, keywords = NULL, anchor_keyword =
 #' Draft a TFL TOC from a SAP Word document
 #'
 #' Statically reads a SAP (\code{.docx}, e.g. based on the TransCelerate
-#' template) and drafts TOC workbook rows from it: tables that look like a
-#' planned-display list (a header row with number- and title-like columns)
-#' become TOC rows, display numbers are cleaned (\code{"Table 14.1.1"} ->
-#' \code{"14.1.1"}), and each title is keyword-matched against the bundled
-#' display-recipe catalog (unmatched displays stay \code{"custom"}).
+#' template) and drafts TOC workbook rows from it via two routes:
 #'
-#' This is a DRAFT generator: review the \code{notes}, fill in
-#' \code{population} / \code{group_by} (and \code{Analyses} rows for custom
-#' displays), then feed the result to [ars_from_toc()].  SAPs that carry no
-#' planned-display table yield an empty draft -- numbering conventions
-#' normally live in the TFL specification rather than the SAP, which is why
-#' the TOC workbook (not the SAP) is the chain's source of truth.
+#' \describe{
+#'   \item{\strong{table route}}{a table that looks like a planned-display list
+#'     (a header row with number- and title-like columns) becomes TOC rows;
+#'     display numbers are cleaned (\code{"Table 14.1.1"} -> \code{"14.1.1"}).}
+#'   \item{\strong{prose route}}{when no such table exists, the
+#'     \dQuote{Statistical Methods / Analyses} section is scanned for display
+#'     declarations -- sentences whose \emph{subject} names a clinical data
+#'     domain and that carry a display verb (\dQuote{Demographic data
+#'     \strong{will be summarized} by treatment group}).  Statistics-detail
+#'     lines (\dQuote{95\% CIs will be provided}) name no domain and are
+#'     dropped; the scan is anchored to that section's subtree so out-of-scope
+#'     prose does not leak in.  The verbatim sentence is kept in the
+#'     \code{source} column for review.}
+#' }
+#'
+#' Each title/sentence is keyword-matched against the bundled display-recipe
+#' catalog (unmatched displays stay \code{"custom"}).  Real SAPs rarely carry a
+#' planned-display table, so \code{"auto"} usually resolves to the prose route.
+#'
+#' This is a DRAFT generator: review the \code{notes} and each row's
+#' \code{source}, fill in \code{population} / \code{group_by} (and
+#' \code{Analyses} rows for custom displays), then feed the result to
+#' [ars_from_toc()].  Numbering conventions normally live in the TFL
+#' specification rather than the SAP, which is why the TOC workbook (not the
+#' SAP) remains the chain's source of truth.
 #'
 #' @param docx Path to the SAP (\code{.docx}).
+#' @param mode Which extraction route to use: \code{"auto"} (default; try the
+#'   table route, fall through to the prose route), \code{"table"} or
+#'   \code{"prose"}.
 #'
 #' @return A list with \code{toc} (draft TOC rows: \code{toc_no},
-#'   \code{output_id}, \code{title}, \code{display_type},
-#'   \code{section_key}, \code{population}, \code{group_by}, \code{groups},
-#'   \code{where}) and \code{notes}.
+#'   \code{output_id}, \code{title}, \code{display_type}, \code{section_key},
+#'   \code{population}, \code{group_by}, \code{groups}, \code{where}, and
+#'   \code{source} -- the SAP sentence a prose row came from, \code{NA} for
+#'   table rows) and \code{notes}.
 #'
 #' @seealso [ars_from_toc()], [read_csr_map()]
 #'
 #' @examples
 #' if (requireNamespace("officer", quietly = TRUE)) {
-#' # build a tiny SAP-like document with a planned-display table
-#' displays <- data.frame(
-#'   `Table No.` = c("14.1.1", "14.3.1.1"),
-#'   Title = c("Summary of Demographic Data",
-#'             "Overall Summary of Treatment-Emergent Adverse Events"),
-#'   Population = c("Safety", "Safety"),
-#'   check.names = FALSE
-#' )
+#' # a SAP whose display list lives in Statistical Methods prose (no table)
 #' doc <- officer::read_docx()
-#' doc <- officer::body_add_par(doc, "Planned displays", style = "heading 1")
-#' doc <- officer::body_add_table(doc, displays)
+#' doc <- officer::body_add_par(doc, "Statistical Methods", style = "heading 1")
+#' doc <- officer::body_add_par(doc,
+#'   "Demographic and baseline characteristics will be summarized by treatment group.")
+#' doc <- officer::body_add_par(doc,
+#'   "Treatment-emergent adverse events will be summarized by system organ class.")
 #' tmp <- file.path(tempdir(), "sap.docx")
 #' print(doc, target = tmp)
 #' read_sap_toc(tmp)$toc
 #' }
 #'
 #' @export
-read_sap_toc <- function(docx) {
+read_sap_toc <- function(docx, mode = c("auto", "table", "prose")) {
+  mode <- match.arg(mode)
   s <- .ars_docx_summary(docx)
   notes <- character(0)
+  toc <- NULL
+  cols <- c("toc_no", "output_id", "title", "display_type", "section_key",
+            "population", "group_by", "groups", "where", "source")
 
+  if (mode %in% c("auto", "table")) {
+    tbl <- .ars_sap_table_rows(s)
+    notes <- c(notes, tbl$notes)
+    if (!is.null(tbl$toc)) toc <- tbl$toc
+  }
+  if (is.null(toc) && mode %in% c("auto", "prose")) {
+    pr <- .ars_sap_prose_rows(s, basename(docx))
+    notes <- c(notes, pr$notes)
+    if (!is.null(pr$toc)) toc <- pr$toc
+  }
+
+  if (!is.null(toc)) {
+    toc <- .ars_ensure_cols(toc, cols)[, cols, drop = FALSE]
+    toc$output_id <- sprintf("Out_%02d", seq_len(nrow(toc)))
+    n_custom <- sum(toc$display_type == "custom")
+    notes <- c(notes,
+      "REVIEW: fill in `population` and `group_by` for every row (and check any extracted populations - free-text values like 'Safety' must become flag conditions such as 'SAFFL').",
+      if (n_custom > 0) paste0(
+        "REVIEW: ", n_custom, " display(s) did not match a recipe and are ",
+        "'custom' - author their Analyses rows before ars_from_toc()."))
+  }
+  list(toc = toc, notes = notes)
+}
+
+# -- table route: a planned-display table (number + title columns) ------------
+
+.ars_sap_table_rows <- function(s) {
+  notes <- character(0)
   cells <- s[s$content_type == "table cell" & !is.na(s$text), , drop = FALSE]
   # officer identifies the table via table_index (doc_index is per CELL)
   if (nrow(cells) > 0 && !"table_index" %in% names(cells)) {
@@ -281,6 +328,7 @@ read_sap_toc <- function(docx) {
           group_by = NA_character_,
           groups = NA_character_,
           where = NA_character_,
+          source = NA_character_,
           stringsAsFactors = FALSE
         )
       }
@@ -289,22 +337,140 @@ read_sap_toc <- function(docx) {
         "header: ", paste(header$text, collapse = " | "), "."))
     }
   }
-
   if (length(toc_rows) == 0) {
-    notes <- c(notes, paste0(
-      "REVIEW: no planned-display table found in '", basename(docx), "'. ",
-      "Numbering and display lists usually live in the TFL specification, ",
-      "not the SAP - start from ars_toc_template() instead."))
-    toc <- NULL
-  } else {
-    toc <- do.call(rbind, toc_rows)
-    toc$output_id <- sprintf("Out_%02d", seq_len(nrow(toc)))
-    n_custom <- sum(toc$display_type == "custom")
-    notes <- c(notes,
-      "REVIEW: fill in `population` and `group_by` for every row (and check the extracted populations - free-text values like 'Safety' must become flag conditions such as 'SAFFL').",
-      if (n_custom > 0) paste0(
-        "REVIEW: ", n_custom, " display(s) did not match a recipe and are ",
-        "'custom' - author their Analyses rows before ars_from_toc()."))
+    return(list(toc = NULL, notes = notes))
   }
+  list(toc = do.call(rbind, toc_rows), notes = notes)
+}
+
+# -- prose route: display declarations in Statistical-Methods prose -----------
+#
+#  Real SAPs seldom carry a planned-display table; the display list lives in
+#  the "Statistical Methods" prose as declarative sentences ("Demographic data
+#  will be summarized by treatment group.").  We (1) anchor the scan to that
+#  section's subtree, (2) keep only sentences whose SUBJECT names a clinical
+#  data domain and that carry a display verb -- the subject, not the verb,
+#  separates a display from a statistics-detail line ("95% CIs will be
+#  provided") -- and (3) classify each via .ars_guess_display_type().  A draft,
+#  never authoritative: the verbatim sentence rides along in `source`.
+
+# display-announcing verbs: passive future/modal + simple present
+.ARS_DISPLAY_VERB <- paste0(
+  "(?:will be|shall be|are|is)\\s+",
+  "(?:summari[sz]ed|presented|tabulated|listed|displayed|provided|",
+  "analy[sz]ed|reported|shown|plotted|graphed)")
+
+# subject must name a clinical data domain (broad gate; classification is left
+# to .ars_guess_display_type(), which maps the recognised ones to recipes)
+.ars_prose_domain_rx <- function() {
+  paste(c(
+    "demograph", "baseline characteristic", "disposition", "discontinuation",
+    "subject accountability", "extent of exposure", "\\bexposure\\b",
+    "treatment compliance", "adverse event", "\\bteaes?\\b",
+    "treatment[- ]emergent", "\\bdeaths?\\b", "medical histor",
+    "concomitant medication", "prior medication", "laborator", "haematolog",
+    "hematolog", "clinical chemistr", "urinalys", "vital sign",
+    "electrocardiogram", "\\becgs?\\b", "physical exam", "protocol deviation",
+    "pharmacokinetic", "immunogenicit", "\\befficacy\\b", "primary endpoint",
+    "secondary endpoint"
+  ), collapse = "|")
+}
+
+# paragraphs under the "Statistical Methods/Analyses" heading subtree (in doc
+# order), or all body paragraphs when no such anchor exists.
+.ars_sap_methods_paragraphs <- function(s) {
+  s <- s[order(s$doc_index), , drop = FALSE]
+  is_para <- s$content_type == "paragraph"
+  s <- s[is_para, , drop = FALSE]
+  style <- tolower(ifelse(is.na(s$style_name), "", s$style_name))
+  is_head <- grepl("^heading [0-9]+$", style)
+  level <- ifelse(is_head, suppressWarnings(as.integer(sub("^heading ", "",
+                                                           style))), NA_integer_)
+  txt <- ifelse(is.na(s$text), "", trimws(s$text))
+  anchor_rx <- paste0("statistical (methods?|analys[ei]s|consideration)",
+                      "|methods? of (statistical )?analys[ei]s",
+                      "|analysis methods")
+  anchor <- which(is_head & nzchar(txt) &
+                    grepl(anchor_rx, tolower(txt), perl = TRUE))
+  if (length(anchor) > 0) {
+    a <- anchor[1]
+    alv <- level[a]
+    after <- which(is_head & !is.na(level) & level <= alv &
+                     seq_along(level) > a)
+    end <- if (length(after) > 0) after[1] - 1L else length(txt)
+    idx <- seq.int(a + 1L, end)
+    idx <- idx[!is_head[idx] & nzchar(txt[idx])]
+    return(list(paragraphs = txt[idx], anchored = TRUE))
+  }
+  idx <- which(!is_head & nzchar(txt))
+  list(paragraphs = txt[idx], anchored = FALSE)
+}
+
+# split a paragraph block into sentences (draft-grade: on . ; before a capital)
+.ars_split_sentences <- function(paragraphs) {
+  txt <- gsub("\\s+", " ", paste(paragraphs, collapse = " "))
+  parts <- unlist(strsplit(txt, "(?<=[.;])\\s+(?=[A-Z(])", perl = TRUE))
+  trimws(parts[nzchar(trimws(parts))])
+}
+
+.ars_prose_title <- function(subject) {
+  t <- sub("^(the|a|an|all|any|each)\\s+", "", subject, ignore.case = TRUE)
+  t <- trimws(gsub("\\s+", " ", t))
+  if (nchar(t) > 120) t <- paste0(substr(t, 1, 117), "...")
+  if (nchar(t) > 0) t <- paste0(toupper(substr(t, 1, 1)), substr(t, 2, nchar(t)))
+  t
+}
+
+.ars_sap_prose_rows <- function(s, docname) {
+  notes <- character(0)
+  mp <- .ars_sap_methods_paragraphs(s)
+  if (!mp$anchored) {
+    notes <- c(notes, paste0(
+      "REVIEW: no 'Statistical Methods/Analyses' heading found in '", docname,
+      "'; prose was scanned across the whole document (expect more noise)."))
+  }
+  sents <- .ars_split_sentences(mp$paragraphs)
+  domrx <- .ars_prose_domain_rx()
+  rows <- list()
+  seen <- character(0)
+  for (sen in sents) {
+    m <- regexpr(.ARS_DISPLAY_VERB, sen, ignore.case = TRUE, perl = TRUE)
+    if (m < 0) next
+    subject <- trimws(substr(sen, 1, m - 1))
+    if (!nzchar(subject) || nchar(subject) > 200) next
+    # gate: the SUBJECT must name a data domain (rejects stats-detail lines)
+    if (!grepl(domrx, subject, ignore.case = TRUE, perl = TRUE)) next
+    # reject a subject LED by a statistic ("LS mean difference ... will be ..."):
+    # the display is the statistic, not the domain mentioned downstream
+    if (grepl(paste0("^(?:the|a|an)?\\s*(?:ls |least[- ]squares |geometric |",
+                     "arithmetic )?(?:mean|median|proportion|percentage|",
+                     "number|incidence|rate|standard deviation|correlation|",
+                     "hazard ratio|odds ratio|p[- ]?values?|",
+                     "confidence intervals?)\\b"),
+             subject, ignore.case = TRUE, perl = TRUE)) next
+    dtype <- .ars_guess_display_type(sen)
+    key <- paste(dtype, gsub("[^a-z]+", "", tolower(subject)))
+    if (key %in% seen) next
+    seen <- c(seen, key)
+    rows[[length(rows) + 1L]] <- data.frame(
+      toc_no = NA_character_, output_id = NA_character_,
+      title = .ars_prose_title(subject), display_type = dtype,
+      section_key = NA_character_, population = NA_character_,
+      group_by = NA_character_, groups = NA_character_, where = NA_character_,
+      source = sen, stringsAsFactors = FALSE)
+  }
+  if (length(rows) == 0) {
+    notes <- c(notes, paste0(
+      "REVIEW: no planned-display prose found in '", docname, "'. No sentence ",
+      "named a data domain with a display verb (e.g. '... will be summarized ",
+      "by treatment group'). If the display list lives in a TFL specification ",
+      "rather than the SAP, start from ars_toc_template() instead."))
+    return(list(toc = NULL, notes = notes))
+  }
+  toc <- do.call(rbind, rows)
+  notes <- c(notes, paste0(
+    "Drafted ", nrow(toc), " display row(s) from SAP prose",
+    if (mp$anchored) " (Statistical Methods section)" else "",
+    "; check each row's `source` sentence."))
   list(toc = toc, notes = notes)
 }

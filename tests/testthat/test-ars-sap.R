@@ -96,11 +96,85 @@ test_that("read_sap_toc drafts TOC rows from a planned-display table", {
   expect_true(any(grepl("1 display\\(s\\) did not match", r$notes)))
 })
 
-test_that("read_sap_toc reports when no display table exists", {
+test_that("read_sap_toc table mode reports when no display table exists", {
   f <- .docx_with(function(doc) {
     officer::body_add_par(doc, "Statistical Methods", style = "heading 1")
   })
-  r <- read_sap_toc(f)
+  r <- read_sap_toc(f, mode = "table")
   expect_null(r$toc)
-  expect_true(any(grepl("no planned-display table", r$notes)))
+})
+
+test_that("read_sap_toc drafts TOC rows from Statistical Methods prose", {
+  f <- .docx_with(function(doc) {
+    # out-of-scope section: this efficacy line must NOT be captured
+    doc <- officer::body_add_par(doc, "1 Introduction", style = "heading 1")
+    doc <- officer::body_add_par(
+      doc, "Efficacy endpoints will be analyzed in a later section.")
+    doc <- officer::body_add_par(doc, "3 Statistical Methods",
+                                 style = "heading 1")
+    doc <- officer::body_add_par(
+      doc, paste("Demographic and baseline characteristics will be summarized",
+                 "by treatment group."))
+    doc <- officer::body_add_par(
+      doc, paste("Treatment-emergent adverse events will be summarized by",
+                 "system organ class."))
+    doc <- officer::body_add_par(
+      doc, "Laboratory values will be presented by scheduled visit.")
+    # statistics-detail line: subject names no data domain -> dropped
+    doc <- officer::body_add_par(
+      doc, "The 95% confidence intervals will be provided for the estimate.")
+    # subtree ends at the next same-level heading; this line is excluded
+    doc <- officer::body_add_par(doc, "4 References", style = "heading 1")
+    officer::body_add_par(
+      doc, "Concomitant medications will be listed in the appendix.")
+  })
+  r <- read_sap_toc(f)
+  expect_equal(nrow(r$toc), 3)
+  expect_equal(r$toc$display_type, c("dm_summary", "ae_soc", "custom"))
+  # the verbatim SAP sentence rides along for review
+  expect_true(all(grepl("will be", r$toc$source)))
+  # anchoring + the domain gate kept out the intro, references and CI lines
+  expect_false(any(grepl("Efficacy endpoints|Concomitant|confidence",
+                         r$toc$source)))
+  expect_true(any(grepl("Drafted 3 display", r$notes)))
+})
+
+test_that("read_sap_toc prose route rejects a statistic-led subject", {
+  f <- .docx_with(function(doc) {
+    doc <- officer::body_add_par(doc, "Statistical Methods",
+                                 style = "heading 1")
+    # subject led by a statistic even though it mentions an endpoint downstream
+    doc <- officer::body_add_par(
+      doc, paste("The LS mean difference in the primary endpoint and the",
+                 "corresponding p-values will be provided."))
+    officer::body_add_par(
+      doc, "Subject disposition will be tabulated by treatment arm.")
+  })
+  r <- read_sap_toc(f, mode = "prose")
+  expect_equal(nrow(r$toc), 1)
+  expect_equal(r$toc$display_type, "disposition")
+})
+
+test_that("read_sap_toc auto falls through to prose when no table exists", {
+  f <- .docx_with(function(doc) {
+    doc <- officer::body_add_par(doc, "Statistical Methods",
+                                 style = "heading 1")
+    officer::body_add_par(
+      doc, "Subject disposition will be summarized by treatment group.")
+  })
+  r <- read_sap_toc(f)
+  expect_equal(nrow(r$toc), 1)
+  expect_equal(r$toc$output_id, "Out_01")
+  expect_false(is.na(r$toc$source))
+})
+
+test_that("read_sap_toc prose route notes an absent methods anchor", {
+  f <- .docx_with(function(doc) {
+    officer::body_add_par(
+      doc, "Demographic data will be summarized by treatment group.")
+  })
+  r <- read_sap_toc(f, mode = "prose")
+  # no heading at all -> whole-document scan, flagged in notes
+  expect_true(any(grepl("no 'Statistical Methods", r$notes)))
+  expect_equal(nrow(r$toc), 1)
 })
