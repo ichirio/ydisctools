@@ -34,6 +34,8 @@ Supported analysis calls: \code{ard_summary()} / \code{ard_continuous()},
 \code{ard_tabulate()} / \code{ard_categorical()} (including the
 siera-generated subject-count and big-N idioms), \code{ard_stack()}
 (\code{.by}, \code{.total_n}, \code{.by_stats}),
+\code{cardx::ard_categorical_ci()} (mapped to the \code{proportion_ci}
+method with its CI options recovered onto the \code{options} column),
 \code{ard_stack_hierarchical()} (including
 \code{over_variables = TRUE}; a nested hierarchy is flattened with a
 LIMITATION note), and the cardx tests

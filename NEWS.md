@@ -5,6 +5,33 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* **Response-rate confidence intervals** (#40): new catalog method
+  `proportion_ci` -- per-group proportion of each level of the analysis
+  variable with its CI, generated with `cardx::ard_categorical_ci()`. The
+  CI method, confidence level and an optional single response level ride a
+  new optional `Analyses` column **`options`**
+  (`"method=clopper-pearson; conf.level=0.9; value=Response"`); because
+  siera resolves template parameters only from its own computed value
+  sources, `build_ars()` bakes each distinct option set into its own
+  generated method entry (readable ids like
+  `Mth_proportion_ci_clopper_pearson_90_Response`), so several CI flavours
+  coexist in one study. `ars_params_from_code()` recovers
+  `ard_categorical_ci()` calls -- including from the generated code, so the
+  #39 loop guarantee holds for CIs too -- and `ars_params_from_ard()`
+  classifies `conf.low`/`conf.high` stat sets, recovering the confidence
+  level and CI method from the ARD's metadata rows.
+
+* Population/`where` bare-flag sugar can now be dataset-qualified:
+  `"ADRS.ITTFL"` keeps its dataset instead of defaulting to ADSL (#40).
+
+* `ars_params_from_code()` handles two more real-world shapes (#40):
+  a multi-variable `by = c(...)` tabulation keeps its faithful group list
+  with an explicit LIMITATION note (3+ simultaneous groupings, #6), and an
+  external `denominator = <dataset>` gets a REVIEW note (the compact format
+  wires percentages to a `total_n` analysis instead). purrr
+  `imap()`-wrapped analyses are scanned through; dynamic
+  `filter(!!parse_expr(cond))` subgroup conditions stay REVIEW notes.
+
 * **Human-maintainable generated code + round-trip loop guarantee** (#39).
   Generated programmes are ultimately finished and maintained by people, so:
   - the overlay `categorical_summary` method was **split**: flat

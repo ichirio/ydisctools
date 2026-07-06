@@ -139,7 +139,8 @@ ars_params_recover <- function(paths = NULL, ard = NULL,
       if (length(j) == 0) next
       j <- j[1]; c_used[j] <- TRUE
       src <- code_an[c_idx[j], ]
-      for (col in c("population", "where", "dataset", "groups", "name")) {
+      for (col in c("population", "where", "dataset", "groups", "name",
+                    "options")) {
         v <- src[[col]]
         if (!is.na(v) && nzchar(v)) merged[[col]][a_idx[k]] <- v
       }

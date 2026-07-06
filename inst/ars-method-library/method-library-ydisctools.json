@@ -109,6 +109,62 @@
         }
       ],
       "templateCode": "denom_dataset = df2_denomanaidhere |>\n  dplyr::select(denom_anagroupvarshere)\n\n# n (%) of subjects per group: tabulate a constant flag with the group as\n# `by`, so the percentage denominator is that group's big N\nin_data = df2_analysisidhere |>\n    dplyr::distinct(distinctlisthere) |>\n    dplyr::mutate(.flag_ = 'Y')\n\ndf3_analysisidhere <-\n  cards::ard_tabulate(\n    data = in_data\n    , by = 'denom_anagroupvarshere', variables = '.flag_',\n    denominator = denom_dataset\n  )\ndf3_analysisidhere <- df3_analysisidhere |>\n  dplyr::filter(stat_name %in% c('n', 'p')) |>\n  dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',\n                                               stat_name == 'p' ~ 'opid2here'))"
+    },
+    {
+      "id": "proportion_ci",
+      "name": "Proportion with confidence interval",
+      "label": "Proportion CI",
+      "description": "Per-group proportion of each level of the analysis variable with its confidence interval, via cardx::ard_categorical_ci() (issue #40; the cardx ARD context is 'proportion_ci'). The CI method, confidence level and an optional single response level ride the compact `options` column ('method=clopper-pearson; conf.level=0.9; value=Response'); build_ars() bakes each distinct option set into its own synthesized method entry, because siera resolves template parameters only from its own computed value sources. The template placeholders cimethodhere / conflevelhere / civaluearghere are resolved by build_ars() at build time; the conf.level and method rows are kept in the ARD (without an operation) for traceability. ydisctools overlay entry.",
+      "context": "R (siera)",
+      "status": "verified",
+      "verified_against": "cardx::ard_categorical_ci() estimate/conf.low/conf.high on distinct-subject response rates",
+      "operations": [
+        {
+          "order": 1,
+          "name": "n",
+          "label": "Responders",
+          "resultPattern": "xx"
+        },
+        {
+          "order": 2,
+          "name": "N",
+          "label": "Subjects",
+          "resultPattern": "xx"
+        },
+        {
+          "order": 3,
+          "name": "estimate",
+          "label": "Proportion",
+          "resultPattern": "x.xxx"
+        },
+        {
+          "order": 4,
+          "name": "conf.low",
+          "label": "CI lower bound",
+          "resultPattern": "x.xxx"
+        },
+        {
+          "order": 5,
+          "name": "conf.high",
+          "label": "CI upper bound",
+          "resultPattern": "x.xxx"
+        }
+      ],
+      "parameters": [
+        {
+          "name": "byvarshere",
+          "valueSource": "by_listc",
+          "label": "by vars",
+          "description": "Outer grouping variable(s), quoted and comma separated"
+        },
+        {
+          "name": "anavarhere",
+          "valueSource": "ana_var",
+          "label": "analysis variable",
+          "description": "The response category variable"
+        }
+      ],
+      "templateCode": "# proportion of each anavarhere level per group, with its CI\ndf3_analysisidhere <-\n  cardx::ard_categorical_ci(\n    data = df2_analysisidhere,\n    by = c(byvarshere),\n    variables = anavarhere,\n    method = 'cimethodhere',\n    conf.level = conflevelherecivaluearghere\n  ) |>\n  dplyr::filter(stat_name %in% c('n', 'N', 'estimate', 'conf.low',\n                                 'conf.high', 'conf.level', 'method')) |>\n  dplyr::mutate(operationid = dplyr::case_when(\n    stat_name == 'n'         ~ 'opid1here',\n    stat_name == 'N'         ~ 'opid2here',\n    stat_name == 'estimate'  ~ 'opid3here',\n    stat_name == 'conf.low'  ~ 'opid4here',\n    stat_name == 'conf.high' ~ 'opid5here',\n    TRUE                     ~ NA_character_))"
     }
   ]
 }
