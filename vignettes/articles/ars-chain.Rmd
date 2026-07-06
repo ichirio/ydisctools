@@ -20,8 +20,9 @@ ydisctools closes that gap with a small toolchain, and this article walks the
 **whole chain** on runnable code:
 
 ```
-existing programme (cards / cardx)
-        |  ars_params_from_code()          ... recover a draft, review the notes
+existing programme (cards / cardx)     existing ARD
+        |  ars_params_from_code()              |  ars_params_from_ard()
+        +----- ars_params_recover() ... merge both, review the notes ----+
         v
 compact parameter workbook  (1 row per analysis)
         |  build_ars() + write_ars_xlsx()  ... expand to the full ARS metadata
@@ -146,7 +147,68 @@ ars_params_from_code(file.path(ex, "ARD_Out_dm.R"),
   , c("method", "dataset", "variable", "population", "group_by")]
 ```
 
-## 3. Expand to the full ARS workbook
+## 3. No code at hand? Start from the ARD -- or use both
+
+Sometimes the programme is gone, was written in another language, or simply
+cannot be parsed -- but its **ARD survives**.  `ars_params_from_ard()`
+drafts the same parameter set from the ARD itself (a cards `ard_stack()`
+result, a siera-stamped combined ARD, or a flattened csv/xlsx export).
+Here it reads the ten-display study ARD bundled with the
+[SAP-to-tables pipeline](sap-to-ars.html):
+
+```{r}
+ard_file <- file.path(system.file("sap-pipeline", package = "ydisctools"),
+                      "05_ard", "ARD_STUDY01.csv")
+rec_ard <- ars_params_from_ard(ard_file)
+rec_ard$analyses[rec_ard$analyses$output_id == "Out_dm",
+                 c("name", "method", "variable", "group_by", "denominator")]
+```
+
+An ARD is authoritative about **which analyses ran**, but it carries no
+data provenance: population, subsets and dataset names come back blank with
+REVIEW notes.  The programme code is exactly the opposite -- it knows the
+provenance but may be blind to a variable list it cannot resolve.  The two
+sources are complementary, and `ars_params_recover()` merges them.
+Consider a programme whose variable lists live in a `source()`d setup file
+this analysis cannot see:
+
+```{r}
+src <- file.path(tempdir(), "t_dm_indirect.R")
+writeLines('
+library(cards); library(dplyr)
+source("study_setup.R")     # defines vars_cont / vars_cat -- unreadable here
+arm_levels <- c("Placebo", "Xanomeline Low Dose", "Xanomeline High Dose")
+adsl <- ADSL |> filter(TRT01A %in% arm_levels, SAFFL == "Y")
+ard <- adsl |>
+  ard_stack(ard_summary(variables = all_of(vars_cont)),
+            ard_tabulate(variables = all_of(vars_cat)),
+            .by = TRT01A, .total_n = TRUE)', src)
+```
+
+Alone, the static analysis would keep the unresolved symbols (with REVIEW
+notes).  Handed the ARD as well, the merge takes the analysis list from the
+ARD and the provenance from the code:
+
+```{r}
+ard_dm <- read.csv(ard_file, stringsAsFactors = FALSE)
+ard_dm <- ard_dm[ard_dm$OutputId == "Out_dm", ]
+
+rec <- ars_params_recover(src, ard_dm)
+rec$analyses[, c("name", "method", "variable", "dataset", "population")]
+rec$outputs$groups
+```
+
+Every real variable came from the ARD; `ADSL`, `SAFFL` and the pre-defined
+arm levels came from the code.  Disagreements between the two sources --
+analyses only in the code (conditional? superseded?) or only in the ARD --
+are reported as explicit notes, so the cross-check is itself part of the
+review:
+
+```{r}
+grep("no counterpart|not in the programme code", rec$notes, value = TRUE)
+```
+
+## 4. Expand to the full ARS workbook
 
 `build_ars()` does the tedious part: de-duplicated analysis sets, groupings
 and data subsets with automatic IDs, numerator/denominator wiring, contents
@@ -172,7 +234,7 @@ ars_file <- file.path(tempdir(), "ARS_STUDY01.xlsx")
 write_ars_xlsx(ars, ars_file, overwrite = TRUE)
 ```
 
-## 4. Generate, run, combine: one ARD for the study
+## 5. Generate, run, combine: one ARD for the study
 
 `ars_generate_ard()` finishes the chain. It hands the ARS to
 `siera::readARS()` (one generated programme per output, kept for
@@ -211,7 +273,7 @@ ard <- read_ars_params("params.xlsx") |>
   ars_generate_ard(adam_path = "path/to/adam")
 ```
 
-## 5. Where this fits
+## 6. Where this fits
 
 - **Upstream**, the parameter workbook is the study's analysis intent -- and
   it can be derived from the SAP itself: [From the SAP to the

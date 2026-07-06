@@ -134,6 +134,7 @@ reference:
       - read_ars_params
       - build_ars
       - write_ars_xlsx
+      - ars_params_recover
       - ars_params_from_code
       - ars_params_from_ard
       - write_ars_params

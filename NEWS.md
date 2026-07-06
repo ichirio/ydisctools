@@ -5,6 +5,18 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* New `ars_params_recover()`: the recommended front door of the
+  parameter-recovery family. With one source it delegates to
+  `ars_params_from_code()` / `ars_params_from_ard()`; with **both** it
+  merges the drafts for a more accurate result than either alone -- the ARD
+  is authoritative for *which* analyses exist, each is enriched with the
+  code's provenance (population / `where` / dataset / pre-defined groups /
+  display furniture) by signature matching, unmatched analyses inherit the
+  output's unanimous provenance with an ASSUMED note, and code-only /
+  ARD-only discrepancies become explicit review notes. *The ARS chain*
+  article gained a section walking the ARD route and the both-sources
+  merge (#35).
+
 * New `ars_params_from_ard()`: draft the compact parameter set from an
   existing **ARD** -- a cards `ard_stack()` result (optionally
   `unlist_ard_columns()`-flattened), a siera-generated combined ARD from
