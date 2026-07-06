@@ -81,5 +81,6 @@ rec$notes
 }
 \seealso{
 \code{\link{ars_params_from_code}} for recovery from the programme source,
+\code{\link{ars_params_recover}} to merge both sources,
 \code{\link{write_ars_params}}, \code{\link{build_ars}}
 }

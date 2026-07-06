@@ -66,6 +66,7 @@ params$analyses
 params$notes
 }
 \seealso{
+\code{\link{ars_params_recover}} to merge this with an ARD-based draft,
 \code{\link{write_ars_params}} to save the draft as a parameter workbook,
 \code{\link{build_ars}} to expand it into ARS metadata.
 }

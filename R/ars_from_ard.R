@@ -56,7 +56,8 @@
 #'   [write_ars_params()] and [build_ars()] accept it unchanged.
 #'
 #' @seealso [ars_params_from_code()] for recovery from the programme source,
-#'   [write_ars_params()], [build_ars()]
+#'   [ars_params_recover()] to merge both sources, [write_ars_params()],
+#'   [build_ars()]
 #'
 #' @examples
 #' # a minimal flattened ARD: per-arm N, Age summary, Sex n (%)
@@ -272,11 +273,13 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
       any(ft$ctx %in% c("summary", "continuous"))
     if (known) is_cont <- key == "continuous_summary"
 
-    if (identical(var, "..total_n..") || (known && key == "total_n")) {
+    is_cards_totn <- var %in% c("..total_n..", "..ard_total_n..") ||
+      any(ft$ctx == "total_n")
+    if (is_cards_totn || (known && key == "total_n")) {
       grp <- if (length(ft$grp_vars) > 0) {
         ft$grp_vars
-      } else if (identical(var, "..total_n..")) {
-        note(paste0("ASSUMED: a cards `..total_n..` row (overall N) was ",
+      } else if (is_cards_totn) {
+        note(paste0("ASSUMED: a cards `", var, "` row (overall N) was ",
                     "emitted as a per-group total_n analysis on '",
                     common_grp, "'."))
         common_grp
@@ -317,6 +320,14 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
     note(paste0("ASSUMED: n (%) tabulations were mapped to the ARS idiom ",
                 "(variable = USUBJID, the category variable as the second ",
                 "grouping, denominator = 'auto')."))
+    # cards .total_n = TRUE yields BOTH an ungrouped tabulation of the
+    # grouping variable and an `..ard_total_n..` row - keep one total_n
+    # per signature
+    an_df <- do.call(rbind, rows)
+    is_totn <- an_df$method == "total_n"
+    dup <- is_totn & duplicated(paste(an_df$method, an_df$variable,
+                                      an_df$group_by, sep = "\r"))
+    rows <- rows[!dup]
   }
 
   # observed levels of the common first grouping -> pre-defined groups

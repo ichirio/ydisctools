@@ -66,7 +66,8 @@
 #'   the first three in the compact parameter layout of
 #'   [ars_param_template()].
 #'
-#' @seealso [write_ars_params()] to save the draft as a parameter workbook,
+#' @seealso [ars_params_recover()] to merge this with an ARD-based draft,
+#'   [write_ars_params()] to save the draft as a parameter workbook,
 #'   [build_ars()] to expand it into ARS metadata.
 #'
 #' @examples
