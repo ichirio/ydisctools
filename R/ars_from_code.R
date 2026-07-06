@@ -33,6 +33,8 @@
 #' \code{ard_tabulate()} / \code{ard_categorical()} (including the
 #' siera-generated subject-count and big-N idioms), \code{ard_stack()}
 #' (\code{.by}, \code{.total_n}, \code{.by_stats}),
+#' \code{cardx::ard_categorical_ci()} (mapped to the \code{proportion_ci}
+#' method with its CI options recovered onto the \code{options} column),
 #' \code{ard_stack_hierarchical()} (including
 #' \code{over_variables = TRUE}; a nested hierarchy is flattened with a
 #' LIMITATION note), and the cardx tests
@@ -197,7 +199,7 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   if (length(rows) > 0) {
     sig <- vapply(rows, function(r) {
       paste(r$method, r$dataset, r$variable, r$group_by, r$where,
-            r$denominator, r$population, sep = "\r")
+            r$denominator, r$population, r$options, sep = "\r")
     }, character(1))
     rows <- rows[!duplicated(sig)]
   }
@@ -212,7 +214,7 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
         name = r$name, method = r$method, dataset = r$dataset,
         variable = r$variable, population = r$population,
         group_by = r$group_by, groups = r$groups, groups2 = "",
-        where = r$where, denominator = r$denominator,
+        where = r$where, denominator = r$denominator, options = r$options,
         stringsAsFactors = FALSE
       )
     }))
@@ -302,6 +304,9 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   }
   if (f %in% c("ard_tabulate", "ard_categorical")) {
     .apc_h_tabulate(e, st, ctx = NULL); return(invisible())
+  }
+  if (f == "ard_categorical_ci") {
+    .apc_h_categorical_ci(e, st); return(invisible())
   }
   if (f %in% names(.apc_cardx_map)) { .apc_h_cardx(e, st); return(invisible()) }
   if (f %in% c("rtf_header", "rtf_footer")) {
@@ -530,7 +535,7 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
 }
 
 .apc_emit <- function(st, method, variable, group_vars, info, name,
-                      denominator = "") {
+                      denominator = "", options = "") {
   info <- .apc_null_default(info, list(dataset = "UNKNOWN", conds = list()))
   sp <- .apc_split_conds(info$conds, group_vars, st)
   if (length(sp$population) == 0) {
@@ -544,7 +549,8 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
     group_by = paste(group_vars, collapse = ", "),
     groups = sp$groups,
     where = paste(unique(sp$where), collapse = "; "),
-    denominator = denominator
+    denominator = denominator,
+    options = options
   )
 }
 
@@ -598,6 +604,25 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
                    " (subject-count assumption)."))
     return(invisible())
   }
+  # snippet-3 realities (issue #40): several `by` variables exceed the
+  # compact format's 2 simultaneous groupings, and an external denominator
+  # dataset cannot be wired automatically
+  if (length(cx$by) >= 2) {
+    st$note(paste0("LIMITATION: ard_tabulate(by = c(",
+                   paste(cx$by, collapse = ", "), ")) plus the category ",
+                   "variable needs ", length(cx$by) + 1L, " simultaneous ",
+                   "groupings; the compact format supports 2 (ydisctools ",
+                   "#6). The full group_by was kept - split or simplify ",
+                   "the display before build_ars()."))
+  }
+  if (!is.null(den) && is.name(den) &&
+      is.null(st$ds[[as.character(den)]])) {
+    st$note(paste0("REVIEW: external `denominator = ", as.character(den),
+                   "` dataset - the compact format wires percentages to a ",
+                   "total_n analysis instead; denominator='auto' was ",
+                   "assumed, confirm the output has the matching total_n ",
+                   "analysis."))
+  }
   for (v in vars) {
     .apc_emit(st, "categorical_summary", "USUBJID", c(cx$by, v), cx$info,
               name = paste0(v, ", n (%)"), denominator = "auto")
@@ -605,6 +630,40 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
                    "n (%) (variable=USUBJID, ", v, " as 2nd grouping); a ",
                    "total_n analysis supplies the denominator."))
   }
+}
+
+# cardx::ard_categorical_ci(): per-group proportion of the response variable
+# with its confidence interval (issue #40).  method / conf.level / a single
+# `value = list(VAR = "level")` restriction are recovered onto the compact
+# `options` column, which build_ars() bakes into the generated call.
+.apc_h_categorical_ci <- function(e, st, ctx = NULL) {
+  cx <- .apc_ctx_of(e, st, ctx)
+  vars <- .apc_chr_vec(.apc_arg(e, "variables"), st)
+  opts <- character(0)
+  m <- .apc_arg(e, "method")
+  if (is.character(m) && length(m) == 1) {
+    opts <- c(opts, paste0("method=", m))
+  }
+  cl <- .apc_arg(e, "conf.level")
+  if (is.numeric(cl) && length(cl) == 1) {
+    opts <- c(opts, paste0("conf.level=", format(cl, trim = TRUE)))
+  }
+  val <- .apc_arg(e, "value")
+  if (is.call(val) && .apc_fname(val) == "list" && length(val) == 2 &&
+      is.character(val[[2]])) {
+    opts <- c(opts, paste0("value=", val[[2]]))
+  } else if (!is.null(val)) {
+    st$note(paste0("REVIEW: ard_categorical_ci(value=) could not be read ",
+                   "statically - set the `options` value= entry manually."))
+  }
+  options <- paste(opts, collapse = "; ")
+  for (v in vars) {
+    .apc_emit(st, "proportion_ci", v, cx$by, cx$info,
+              name = paste0(v, " proportion CI"), options = options)
+  }
+  st$note(paste0("MAPPED: ard_categorical_ci() -> catalog method ",
+                 "'proportion_ci'; CI options were recovered onto the ",
+                 "`options` column - review method / conf.level / value."))
 }
 
 # siera stamps pre-defined group memberships onto the ARD with

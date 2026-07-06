@@ -69,9 +69,13 @@
 #                               siera's xlsx reader splits on the pipe)
 .ars_parse_condition <- function(token, default_dataset) {
   token <- trimws(token)
-  if (grepl("^[A-Za-z][A-Za-z0-9_]*$", token)) {
-    return(list(dataset = default_dataset, variable = token,
-                comparator = "EQ", value = "Y"))
+  m0 <- regmatches(
+    token,
+    regexec("^(?:([A-Za-z][A-Za-z0-9_]*)\\.)?([A-Za-z][A-Za-z0-9_]*)$", token)
+  )[[1]]
+  if (length(m0) == 3) {   # bare flag, optionally dataset-qualified
+    return(list(dataset = if (nzchar(m0[2])) m0[2] else default_dataset,
+                variable = m0[3], comparator = "EQ", value = "Y"))
   }
   rx <- paste0(
     "^(?:([A-Za-z][A-Za-z0-9_]*)\\.)?",   # optional dataset prefix
@@ -157,6 +161,24 @@
              stringsAsFactors = FALSE, row.names = NULL)
 }
 
+# Parse an analysis `options` cell ("method=wilson; conf.level=0.9;
+# value=Response") into a named character vector.
+.ars_parse_options <- function(x) {
+  if (.ars_blank(x)) return(character(0))
+  tokens <- trimws(strsplit(x, ";", fixed = TRUE)[[1]])
+  tokens <- tokens[nzchar(tokens)]
+  m <- regmatches(tokens,
+                  regexec("^([A-Za-z][A-Za-z0-9._]*)\\s*=\\s*(.+?)\\s*$",
+                          tokens))
+  bad <- vapply(m, length, integer(1)) != 3
+  if (any(bad)) {
+    stop("Cannot parse `options` entry: '", tokens[bad][1],
+         "'. Expected 'key=value' pairs separated by ';'.", call. = FALSE)
+  }
+  stats::setNames(vapply(m, `[[`, character(1), 3),
+                  vapply(m, `[[`, character(1), 2))
+}
+
 # Split a pipe-separated group-levels spec into a character vector (NULL when
 # blank -> data-driven grouping).
 .ars_parse_groups <- function(x) {
@@ -207,10 +229,11 @@
 #'   \item{\code{Analyses}}{one row per analysis: \code{output_id},
 #'     \code{method} (a key of the bundled method catalog, e.g.
 #'     \code{"total_n"}, \code{"categorical_summary"},
-#'     \code{"continuous_summary"}), \code{dataset}, \code{variable}, and
+#'     \code{"continuous_summary"}, \code{"proportion_ci"}),
+#'     \code{dataset}, \code{variable}, and
 #'     optional \code{analysis_id}, \code{name}, \code{population},
 #'     \code{group_by}, \code{groups}, \code{groups2}, \code{where},
-#'     \code{denominator}.}
+#'     \code{denominator}, \code{options}.}
 #'   \item{\code{Displays}}{(optional) display furniture, one row per
 #'     subsection: \code{output_id}, \code{section_type} (\code{Header},
 #'     \code{Title}, \code{Footnote}, \code{Footer}, \code{Abbreviations},
@@ -221,11 +244,21 @@
 #' }
 #'
 #' Conditions (\code{population}, \code{where}) use a mini syntax: a bare flag
-#' name (\code{"SAFFL"} means \code{ADSL.SAFFL EQ Y}), or
+#' name (\code{"SAFFL"} means \code{ADSL.SAFFL EQ Y};
+#' \code{"ADRS.ITTFL"} keeps its dataset), or
 #' \code{"[DATASET.]VARIABLE COMPARATOR VALUE"} with comparators
 #' \code{EQ, NE, GT, GE, LT, LE, IN, NOTIN, CONTAINS}; chain several with
 #' \code{";"} (combined with AND); \code{IN}/\code{NOTIN} values are
 #' pipe-separated (\code{"SEX IN M|F"}).
+#' The \code{"proportion_ci"} method (per-group proportion of each level of
+#' the analysis variable with its confidence interval, generated with
+#' \code{cardx::ard_categorical_ci()}) takes per-analysis \code{options}:
+#' \code{"method=clopper-pearson; conf.level=0.9; value=Response"} -- the CI
+#' method (default \code{clopper-pearson}), the confidence level (default
+#' \code{0.95}) and an optional single response level.  [build_ars()] bakes
+#' each distinct option set into its own generated method entry, so several
+#' CI flavours can coexist in one study.
+#'
 #' \code{population} additionally accepts \code{"ALL"} -- no analysis-set
 #' filter at all, for data that already \emph{are} the intended analysis set
 #' (e.g. pre-filtered upstream).  \code{build_ars()} then emits no
@@ -443,7 +476,7 @@ build_ars <- function(params) {
                                c("output_id", "analysis_id", "name", "method",
                                  "dataset", "variable", "population",
                                  "group_by", "groups", "groups2", "where",
-                                 "denominator"))
+                                 "denominator", "options"))
 
   # Normalise blank cells ("" / whitespace) to NA so that defaults inherit the
   # same way whether the input came from a workbook or a hand-built data.frame.
@@ -746,6 +779,64 @@ build_ars <- function(params) {
     toupper(analyses$variable) == "USUBJID" &
     "categorical_summary_flat" %in% names(catalog)
   analyses$.method_key[flat_sel] <- "categorical_summary_flat"
+
+  # proportion_ci carries per-analysis options (CI method, confidence level,
+  # optional single response level).  siera resolves template parameters only
+  # from its own computed value sources, so each distinct option set is baked
+  # into its own synthesized method entry with a readable id (issue #40).
+  bad_opt <- !is.na(analyses$options) & analyses$method != "proportion_ci"
+  if (any(bad_opt)) {
+    i <- which(bad_opt)[1]
+    stop("`analyses` row ", i, " (", analyses$analysis_id[i],
+         "): `options` is only supported for method 'proportion_ci' (got '",
+         analyses$method[i], "').", call. = FALSE)
+  }
+  for (i in which(analyses$method == "proportion_ci")) {
+    opt <- .ars_parse_options(analyses$options[i])
+    extra <- setdiff(names(opt), c("method", "conf.level", "value"))
+    if (length(extra) > 0) {
+      stop("`analyses` row ", i, " (", analyses$analysis_id[i],
+           "): unknown `options` key(s) for proportion_ci: ",
+           paste(extra, collapse = ", "),
+           ". Supported: method, conf.level, value.", call. = FALSE)
+    }
+    ci_method <- if ("method" %in% names(opt)) opt[["method"]] else
+      "clopper-pearson"
+    conf <- suppressWarnings(as.numeric(
+      if ("conf.level" %in% names(opt)) opt[["conf.level"]] else "0.95"))
+    if (is.na(conf) || conf <= 0 || conf >= 1) {
+      stop("`analyses` row ", i, " (", analyses$analysis_id[i],
+           "): `options` conf.level must be a number in (0, 1).",
+           call. = FALSE)
+    }
+    value <- if ("value" %in% names(opt)) opt[["value"]] else NULL
+    key <- paste0("proportion_ci_",
+                  gsub("[^a-z0-9]+", "_", tolower(ci_method)), "_",
+                  round(conf * 100),
+                  if (!is.null(value)) {
+                    paste0("_", gsub("[^A-Za-z0-9]+", "_", value))
+                  })
+    if (is.null(catalog[[key]])) {
+      entry <- catalog[["proportion_ci"]]
+      tc <- .ars_chr(entry$templateCode)
+      tc <- gsub("civaluearghere",
+                 if (is.null(value)) "" else {
+                   paste0(",\n    value = list(anavarhere = '", value, "')")
+                 },
+                 tc, fixed = TRUE)
+      tc <- gsub("cimethodhere", ci_method, tc, fixed = TRUE)
+      tc <- gsub("conflevelhere", format(conf, trim = TRUE), tc, fixed = TRUE)
+      entry$templateCode <- tc
+      entry$id <- key
+      entry$name <- paste0(.ars_chr(entry$name), " (", ci_method, ", ",
+                           format(conf * 100, trim = TRUE), "%",
+                           if (!is.null(value)) paste0(", level '", value, "'"),
+                           ")")
+      catalog[[key]] <- entry
+    }
+    analyses$.method_key[i] <- key
+  }
+
   used_keys <- unique(analyses$.method_key)
   method_id_of <- paste0("Mth_", used_keys)
   names(method_id_of) <- used_keys

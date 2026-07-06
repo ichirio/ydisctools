@@ -23,6 +23,10 @@
 #'   \item `n` / `p` tabulations become \code{categorical_summary} analyses
 #'     in the ARS idiom (\code{variable = "USUBJID"}, the category variable
 #'     as the \emph{second} grouping, \code{denominator = "auto"});
+#'   \item proportion-CI stat sets (\code{conf.low} / \code{conf.high},
+#'     cardx context \code{proportion_ci}) become \code{proportion_ci}
+#'     analyses, with the confidence level (and CI method, when the ARD
+#'     kept those rows) recovered onto \code{options};
 #'   \item the subject-count idioms become \code{total_n}: cards'
 #'     \code{..total_n..} rows, an ungrouped tabulation of a variable that
 #'     other analyses use as their grouping (e.g. \code{.by_stats = TRUE}
@@ -193,6 +197,7 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
 # known catalog keys a siera-stamped MethodId can map back onto
 .apfa_method_keys <- c("total_n", "categorical_summary",
                        "categorical_summary_flat", "continuous_summary",
+                       "proportion_ci",
                        "risk_difference", "risk_difference_per_group",
                        "fishers_exact", "chisq", "anova")
 
@@ -216,6 +221,20 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
   split(a, factor(key, levels = unique(key)))
 }
 
+# map a cardx CI method label ("Clopper-Pearson Confidence Interval") back
+# to the ard_categorical_ci() method token; NA when unrecognised
+.apfa_ci_method_slug <- function(label) {
+  l <- tolower(label)
+  if (grepl("clopper", l)) return("clopper-pearson")
+  if (grepl("wilson", l)) return(if (grepl("continuity", l))
+    "wilson.correct" else "wilson")
+  if (grepl("wald", l)) return(if (grepl("continuity", l))
+    "wald.correct" else "wald")
+  if (grepl("agresti", l)) return("agresti-coull")
+  if (grepl("jeffreys", l)) return("jeffreys")
+  NA_character_
+}
+
 # grouping variables of one unit, in group1..groupN order
 .apfa_grp_vars <- function(d) {
   out <- character(0)
@@ -230,14 +249,16 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
   units <- .apfa_units(a)
 
   rows <- list()
-  emit <- function(name, method, variable, group_by, denominator = "") {
+  emit <- function(name, method, variable, group_by, denominator = "",
+                   options = "") {
     rows[[length(rows) + 1L]] <<- data.frame(
       output_id = output_id, analysis_id = "",
       name = name, method = method, dataset = "",
       variable = variable, population = "",
       group_by = paste(group_by, collapse = ", "),
       groups = "", groups2 = "", where = "",
-      denominator = denominator, stringsAsFactors = FALSE
+      denominator = denominator, options = options,
+      stringsAsFactors = FALSE
     )
   }
 
@@ -255,6 +276,23 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
       },
       method_id = if ("MethodId" %in% names(d)) {
         unique(d$MethodId[!is.na(d$MethodId)])[1]
+      } else {
+        NA_character_
+      },
+      # proportion-CI metadata rows, when the ARD kept them
+      conf_level = if ("stat" %in% names(d)) {
+        v <- d$stat[d$stat_name == "conf.level"]
+        v <- suppressWarnings(as.numeric(if (is.list(v)) unlist(v) else v))
+        v <- v[!is.na(v)]
+        if (length(v) > 0) v[1] else NA_real_
+      } else {
+        NA_real_
+      },
+      ci_method = if ("stat" %in% names(d)) {
+        v <- d$stat[d$stat_name == "method"]
+        v <- as.character(if (is.list(v)) unlist(v) else v)
+        v <- v[!is.na(v)]
+        if (length(v) > 0) v[1] else NA_character_
       } else {
         NA_character_
       }
@@ -295,6 +333,28 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
       # ydisctools flat pattern: subject count per group
       emit("Subjects, n (%)", "categorical_summary", "USUBJID",
            ft$grp_vars, denominator = "auto")
+      next
+    }
+    # proportion with CI (cardx::ard_categorical_ci / the ydisctools
+    # proportion_ci method, issue #40)
+    if (any(ft$stats %in% c("conf.low", "conf.high")) ||
+        any(ft$ctx == "proportion_ci") ||
+        (known && startsWith(key, "proportion_ci"))) {
+      opts <- character(0)
+      if (!is.na(ft$ci_method)) {
+        slug <- .apfa_ci_method_slug(ft$ci_method)
+        if (!is.na(slug)) opts <- c(opts, paste0("method=", slug))
+      }
+      if (!is.na(ft$conf_level)) {
+        opts <- c(opts, paste0("conf.level=",
+                               format(ft$conf_level, trim = TRUE)))
+      }
+      emit(paste0(var, " proportion CI"), "proportion_ci", var,
+           ft$grp_vars, options = paste(opts, collapse = "; "))
+      note(paste0("REVIEW: a proportion-CI analysis of '", var, "' was ",
+                  "recovered; check the `options` column (CI method / ",
+                  "conf.level / a value= level restriction cannot always ",
+                  "be read back from an ARD)."))
       next
     }
     if (is_cont) {

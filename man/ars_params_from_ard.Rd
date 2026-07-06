@@ -52,6 +52,10 @@ and each analysis is classified onto the bundled method catalog:
 \item \code{n} / \code{p} tabulations become \code{categorical_summary}
 analyses in the ARS idiom (\code{variable = "USUBJID"}, the category
 variable as the \emph{second} grouping, \code{denominator = "auto"});
+\item proportion-CI stat sets (\code{conf.low} / \code{conf.high}, cardx
+context \code{proportion_ci}) become \code{proportion_ci} analyses, with
+the confidence level (and CI method, when the ARD kept those rows)
+recovered onto \code{options};
 \item the subject-count idioms become \code{total_n}: cards'
 \code{..total_n..} rows, an ungrouped tabulation of a variable that other
 analyses use as their grouping (e.g. \code{.by_stats = TRUE} output), and

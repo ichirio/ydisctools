@@ -34,10 +34,10 @@ The workbook has three sheets:
   \item{\code{Analyses}}{one row per analysis: \code{output_id},
     \code{method} (a key of the bundled method catalog, e.g.
     \code{"total_n"}, \code{"categorical_summary"},
-    \code{"continuous_summary"}), \code{dataset}, \code{variable}, and
-    optional \code{analysis_id}, \code{name}, \code{population},
-    \code{group_by}, \code{groups}, \code{groups2}, \code{where},
-    \code{denominator}.}
+    \code{"continuous_summary"}, \code{"proportion_ci"}), \code{dataset},
+    \code{variable}, and optional \code{analysis_id}, \code{name},
+    \code{population}, \code{group_by}, \code{groups}, \code{groups2},
+    \code{where}, \code{denominator}, \code{options}.}
   \item{\code{Displays}}{(optional) display furniture, one row per
     subsection: \code{output_id}, \code{section_type} (\code{Header},
     \code{Title}, \code{Footnote}, \code{Footer}, \code{Abbreviations},
@@ -48,11 +48,21 @@ The workbook has three sheets:
 }
 
 Conditions (\code{population}, \code{where}) use a mini syntax: a bare flag
-name (\code{"SAFFL"} means \code{ADSL.SAFFL EQ Y}), or
+name (\code{"SAFFL"} means \code{ADSL.SAFFL EQ Y};
+\code{"ADRS.ITTFL"} keeps its dataset), or
 \code{"[DATASET.]VARIABLE COMPARATOR VALUE"} with comparators
 \code{EQ, NE, GT, GE, LT, LE, IN, NOTIN, CONTAINS}; chain several with
 \code{";"} (combined with AND); \code{IN}/\code{NOTIN} values are
 pipe-separated (\code{"SEX IN M|F"}).
+
+The \code{"proportion_ci"} method (per-group proportion of each level of
+the analysis variable with its confidence interval, generated with
+\code{cardx::ard_categorical_ci()}) takes per-analysis \code{options}:
+\code{"method=clopper-pearson; conf.level=0.9; value=Response"} -- the CI
+method (default \code{clopper-pearson}), the confidence level (default
+\code{0.95}) and an optional single response level.  \code{build_ars()}
+bakes each distinct option set into its own generated method entry, so
+several CI flavours can coexist in one study.
 
 \code{population} additionally accepts \code{"ALL"} -- no analysis-set
 filter at all, for data that already \emph{are} the intended analysis set
