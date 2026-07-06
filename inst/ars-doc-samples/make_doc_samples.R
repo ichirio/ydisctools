@@ -65,6 +65,10 @@ doc <- body_add_par(doc, "15.3.4 Laboratory Data", style = "heading 3")
 print(doc, target = "sample_csr_template.docx")
 
 # -- 2. Sample SAP --------------------------------------------------------------
+#
+#  A decent-scale SAP (ydisctools issue #31): full front sections plus a
+#  10-display planned-display appendix.  Everything in the appendix is
+#  runnable downstream against the STUDY01 dummy ADaM in inst/sap-pipeline.
 
 doc <- read_docx()
 doc <- p(doc, "STATISTICAL ANALYSIS PLAN (SAMPLE)")
@@ -72,46 +76,102 @@ doc <- p(doc, "Study STUDY01 - A Randomised Study of Xanomeline in Dementia")
 doc <- p(doc, paste(
   "Synthetic sample bundled with the ydisctools R package; outline informed",
   "by common industry SAP templates, all text original."))
+
 doc <- h1(doc, "1 Introduction")
 doc <- p(doc, paste(
-  "This statistical analysis plan describes the planned analyses for study",
-  "STUDY01, a randomised, placebo-controlled study with three arms:",
-  "Placebo, Xanomeline Low Dose and Xanomeline High Dose."))
-doc <- h1(doc, "2 Analysis Sets")
+  "This statistical analysis plan (SAP) describes the planned analyses for",
+  "study STUDY01, a randomised, double-blind, placebo-controlled study with",
+  "three arms: Placebo, Xanomeline Low Dose and Xanomeline High Dose.",
+  "It elaborates the statistical section of the protocol and fixes the",
+  "planned displays before database lock."))
+
+doc <- h1(doc, "2 Study Objectives and Endpoints")
+doc <- h2(doc, "2.1 Primary Objective and Endpoint")
+doc <- p(doc, paste(
+  "The primary objective is to evaluate the efficacy of Xanomeline compared",
+  "with placebo. The primary endpoint (ADEFF.PARAMCD = 'PRIMEP') is the",
+  "change from baseline to Week 24 in the cognition total score. A subject",
+  "with an improvement of at least 4 points is a responder",
+  "(ADEFF.CRIT1FL = 'Y')."))
+doc <- h2(doc, "2.2 Key Secondary Endpoint")
+doc <- p(doc, paste(
+  "The key secondary endpoint (ADEFF.PARAMCD = 'SECEP') is the change from",
+  "baseline to Week 24 in the clinician's global impression score, with a",
+  "responder defined as any improvement from baseline",
+  "(ADEFF.CRIT1FL = 'Y')."))
+
+doc <- h1(doc, "3 Study Design")
+doc <- p(doc, paste(
+  "Subjects are randomised 1:1:1 to Placebo, Xanomeline Low Dose or",
+  "Xanomeline High Dose (ADSL.TRT01A) and treated for 24 weeks. Visits are",
+  "scheduled every 4 weeks; safety is monitored throughout the treatment",
+  "and follow-up periods."))
+
+doc <- h1(doc, "4 Analysis Sets")
 doc <- p(doc, paste(
   "The Safety Analysis Set comprises all subjects who received at least one",
-  "dose of study drug (ADSL.SAFFL = 'Y'). The Intent-to-Treat Analysis Set",
-  "comprises all randomised subjects (ADSL.ITTFL = 'Y')."))
-doc <- h1(doc, "3 Statistical Methods")
-doc <- h2(doc, "3.1 Demographics and Baseline")
+  "dose of study drug (ADSL.SAFFL = 'Y'); it is the default population for",
+  "safety displays. The Intent-to-Treat (ITT) Analysis Set comprises all",
+  "randomised subjects (ADSL.ITTFL = 'Y'); it is the population for the",
+  "efficacy analyses."))
+
+doc <- h1(doc, "5 Statistical Methods")
+doc <- h2(doc, "5.1 General Considerations")
 doc <- p(doc, paste(
-  "Demographic and baseline characteristics, subject disposition and study",
-  "drug exposure will be summarised by treatment group on the Safety",
-  "Analysis Set using descriptive statistics."))
-doc <- h2(doc, "3.2 Efficacy")
+  "Continuous variables will be described with n, mean, standard deviation,",
+  "median, quartiles, minimum and maximum. Categorical variables will be",
+  "described with counts and percentages; percentages use the number of",
+  "subjects in the analysis set and treatment group as the denominator",
+  "unless stated otherwise. No inferential multiplicity adjustment is",
+  "planned for this sample document."))
+doc <- h2(doc, "5.2 Demographics, Disposition and Exposure")
 doc <- p(doc, paste(
-  "The primary endpoint will be analysed on the Intent-to-Treat Analysis",
-  "Set. Details are specified per protocol; the planned display is listed",
-  "in the appendix."))
-doc <- h2(doc, "3.3 Safety")
+  "Demographic and baseline characteristics will be summarised by treatment",
+  "group on the Safety Analysis Set. Subject disposition (end-of-study",
+  "status and reason for discontinuation) and study drug exposure (duration",
+  "of treatment and cumulative dose) will be summarised likewise."))
+doc <- h2(doc, "5.3 Efficacy Analyses")
 doc <- p(doc, paste(
-  "Treatment-emergent adverse events (TRTEMFL = 'Y') will be summarised by",
-  "treatment group: an overall summary, summaries by system organ class and",
-  "by maximum severity."))
-doc <- h1(doc, "4 Appendix: Planned Displays")
+  "The primary endpoint will be analysed on the ITT Analysis Set: the",
+  "Week 24 change from baseline will be summarised by treatment group, and",
+  "the proportion of responders will be presented with counts and",
+  "percentages. The key secondary endpoint will be analysed in the same",
+  "way. No interim analysis is planned."))
+doc <- h2(doc, "5.4 Safety Analyses")
+doc <- p(doc, paste(
+  "Treatment-emergent adverse events (ADAE.TRTEMFL = 'Y') will be",
+  "summarised by treatment group on the Safety Analysis Set: an overall",
+  "summary, summaries by system organ class, by preferred term and by",
+  "maximum severity, and a summary of serious adverse events",
+  "(ADAE.AESER = 'Y') by system organ class. Adverse events are coded with",
+  "MedDRA."))
+
+doc <- h1(doc, "6 Sample Size")
+doc <- p(doc, paste(
+  "The sample size is driven by the primary comparison of Xanomeline High",
+  "Dose with placebo; the planned enrolment provides adequate power under",
+  "the protocol assumptions. No re-estimation is planned."))
+
+doc <- h1(doc, "7 Changes from the Protocol-Planned Analyses")
+doc <- p(doc, "None.")
+
+doc <- h1(doc, "8 Appendix: Planned Displays")
 doc <- p(doc, paste(
   "Display numbers will be assigned per the Acme CSR template section",
   "structure at TFL specification time."))
 displays <- data.frame(
-  `Table No.` = rep("", 7),
+  `Table No.` = rep("", 10),
   Title = c("Summary of Demographic Data",
             "Summary of Subject Disposition",
             "Summary of Study Drug Exposure",
             "Overall Summary of Treatment-Emergent Adverse Events",
             "Summary of Treatment-Emergent Adverse Events by System Organ Class",
+            "Summary of Treatment-Emergent Adverse Events by Preferred Term",
             "Summary of Treatment-Emergent Adverse Events by Maximum Severity",
-            "Primary Efficacy Analysis"),
-  Population = c(rep("Safety", 6), "ITT"),
+            "Summary of Serious Treatment-Emergent Adverse Events by System Organ Class",
+            "Analysis of the Primary Efficacy Endpoint",
+            "Analysis of the Key Secondary Efficacy Endpoint"),
+  Population = c(rep("Safety", 8), "ITT", "ITT"),
   check.names = FALSE
 )
 doc <- body_add_table(doc, displays)

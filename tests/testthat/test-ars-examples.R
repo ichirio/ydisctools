@@ -65,14 +65,23 @@ test_that("the shipped ARD programmes run and match the shipped ADaM data", {
   ard2 <- run_ard_script("ARD_Out_ae.R")
   expect_setequal(unique(ard2$AnalysisId), sprintf("An_%02d", 8:12))
   # any-TEAE distinct-subject counts against an independent computation
-  # (single-grouping categorical: the arm lands in variable_level)
+  # (flat categorical: the arm lands in group1_level, the constant '.flag_'
+  # in variable, so the percentage denominator is per group)
   adae <- read.csv("adam/ADAE.csv", stringsAsFactors = FALSE)
   m <- merge(adae[adae$TRTEMFL == "Y", ],
              adsl[adsl$SAFFL == "Y", c("USUBJID", "TRT01A")], by = "USUBJID")
   truth_any <- vapply(split(m$USUBJID, m$TRT01A),
                       function(x) length(unique(x)), numeric(1))
   a09 <- ard2[ard2$AnalysisId == "An_09" & ard2$stat_name == "n", ]
+  expect_true(all(a09$variable == ".flag_"))
   got_any <- vapply(a09$stat, as.numeric, numeric(1))
-  names(got_any) <- a09$variable_level
+  names(got_any) <- a09$group1_level
   expect_equal(got_any[names(truth_any)], truth_any)
+  # per-group percentage denominators: p = n / that arm's big N
+  p09 <- ard2[ard2$AnalysisId == "An_09" & ard2$stat_name == "p", ]
+  got_p <- vapply(p09$stat, as.numeric, numeric(1))
+  names(got_p) <- p09$group1_level
+  expect_equal(got_p[names(truth_any)],
+               truth_any / truth_bign[names(truth_any)],
+               tolerance = 1e-8)
 })

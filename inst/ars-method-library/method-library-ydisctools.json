@@ -8,7 +8,7 @@
       "id": "categorical_summary",
       "name": "Summary of a categorical variable (n and %)",
       "label": "Categorical n (%)",
-      "description": "Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.",
+      "description": "Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). A flat analysis (no category variable, e.g. 'subjects with at least one TEAE') tabulates a constant flag with the group as `by=`, so the percentage denominator is the per-group big N rather than the overall N. ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.",
       "context": "R (siera)",
       "status": "verified",
       "verified_against": "identical n/p to siera's Mth01_CatVar_Summ_ByGrp dummy pattern on distinct-subject counts",
@@ -64,7 +64,7 @@
           "description": "strata = outer grouping(s), variables = category variable"
         }
       ],
-      "templateCode": "denom_dataset = df2_denomanaidhere |>\n  dplyr::select(denom_anagroupvarshere)\n\nin_data = df2_analysisidhere |>\n    dplyr::distinct(distinctlisthere)\n\ndataDriven = isdatadrivenhere\nif(dataDriven == TRUE){\ndf3_analysisidhere <-\n  cards::ard_tabulate(\n    data = in_data\n    stratavarshere,\n    denominator = denom_dataset\n  ) } else {\ndf3_analysisidhere <-\n cards::ard_tabulate(\n    data = in_data\n    byvarshere,\n    denominator = denom_dataset\n  ) }\ndf3_analysisidhere <- df3_analysisidhere |>\n  dplyr::filter(stat_name %in% c('n', 'p')) |>\n  dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',\n                                               stat_name == 'p' ~ 'opid2here'))"
+      "templateCode": "denom_dataset = df2_denomanaidhere |>\n  dplyr::select(denom_anagroupvarshere)\n\nin_data = df2_analysisidhere |>\n    dplyr::distinct(distinctlisthere)\n\ndataDriven = isdatadrivenhere\nif(ncol(in_data) <= 2){\n# flat analysis (no category variable): tabulate a constant flag with the\n# group as `by`, so the percentage denominator is the per-group big N\ndf3_analysisidhere <-\n  cards::ard_tabulate(\n    data = in_data |> dplyr::mutate(.flag_ = 'Y')\n    , by = 'denom_anagroupvarshere', variables = '.flag_',\n    denominator = denom_dataset\n  ) } else if(dataDriven == TRUE){\ndf3_analysisidhere <-\n  cards::ard_tabulate(\n    data = in_data\n    stratavarshere,\n    denominator = denom_dataset\n  ) } else {\ndf3_analysisidhere <-\n cards::ard_tabulate(\n    data = in_data\n    byvarshere,\n    denominator = denom_dataset\n  ) }\ndf3_analysisidhere <- df3_analysisidhere |>\n  dplyr::filter(stat_name %in% c('n', 'p')) |>\n  dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',\n                                               stat_name == 'p' ~ 'opid2here'))"
     }
   ]
 }

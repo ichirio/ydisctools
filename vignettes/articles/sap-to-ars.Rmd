@@ -1,5 +1,5 @@
 ---
-title: "From the SAP to the ARS: TOC, shells and ARD programmes"
+title: "From the SAP to the tables: TOC, shells, ARS and the table programme"
 ---
 
 ```{r, include = FALSE}
@@ -7,8 +7,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 options(width = 100)
 ```
 
-This article walks the **upstream half** of the ydisctools ARS toolchain on
-two bundled sample documents:
+This article walks the **whole ydisctools ARS toolchain** on a bundled
+synthetic study -- STUDY01, a decent-scale sample SAP with ten planned
+displays -- from the source Word documents down to the final RTF tables:
 
 ```
 company CSR template ----> read_csr_map()  ..... numbering section map
@@ -19,25 +20,43 @@ completed TOC workbook  ==== the hub, single source of truth ====
         |                        |
         v                        v
    ars_mock()               ars_from_toc() |> build_ars() |> write_ars_xlsx()
-   (shells)                      |
+   (mock shells)                 |
                                  v
-                    siera::readARS() -> ARD programmes
+                    siera::readARS() -> ARD programmes -> combined study ARD
+                                 |
+                                 v
+                    table programme  (format_stats() + pivot_stats_wider()
+                                 |    + rtfreporter)
+                                 v
+                          final tables (RTF)
 ```
 
-The downstream half -- running the generated programmes into one
-`OutputId`-keyed study ARD -- is covered by
-[The ARS chain](ars-chain.html); this article ends where that one begins.
+## 0. Every stage's output ships with the package
 
-## 0. The bundled sample documents
-
-Real SAP/CSR templates (TransCelerate's suite, SAPs on clinicaltrials.gov)
-cannot be redistributed, so ydisctools bundles two **original synthetic
-samples** (only the section layout is informed by the public ICH E3
-guideline; every sentence is our own -- see the folder README for the
-provenance note):
+You do not have to execute anything to inspect the chain: the installed
+package bundles the **artefact of every stage** in `inst/sap-pipeline/`,
+regenerated end-to-end by one script (`make_sap_pipeline.R`):
 
 ```{r setup, message = FALSE}
 library(ydisctools)
+pipe <- system.file("sap-pipeline", package = "ydisctools")
+list.files(pipe, recursive = TRUE)
+```
+
+`adam/` is the input (deterministic dummy ADaM for STUDY01 -- 60 subjects,
+three CDISC-pilot-flavoured arms), `01_toc` through `06_tfl` are the six
+stage outputs.  Open `06_tfl/TFL_STUDY01.rtf` in Word to see where this
+article ends up.  The rest of the article *re-runs* the same chain in
+`tempdir()` so you can watch each artefact being made; every section notes
+the bundled file it corresponds to.
+
+The two source Word documents live next door.  Real SAP/CSR templates
+(TransCelerate's suite, SAPs on clinicaltrials.gov) cannot be
+redistributed, so ydisctools bundles two **original synthetic samples**
+(only the section layout is informed by the public ICH E3 guideline; every
+sentence is our own -- see the folder README for the provenance note):
+
+```{r}
 samples <- system.file("ars-doc-samples", package = "ydisctools")
 list.files(samples)
 ```
@@ -65,29 +84,37 @@ ICH default leaks through.
 
 ## 2. Draft TOC from the SAP
 
-`read_sap_toc()` finds the planned-display table in the SAP and drafts TOC
-rows: titles are keyword-matched onto the bundled display recipes,
-everything undecidable becomes a review note:
+`read_sap_toc()` finds the planned-display table in the SAP appendix and
+drafts one TOC row per display: titles are keyword-matched onto the bundled
+display recipes, everything undecidable becomes a review note.  (SAPs whose
+display list lives in the Statistical Methods *prose* instead go through
+the prose route -- see `?read_sap_toc`.)
 
 ```{r}
 draft <- read_sap_toc(file.path(samples, "sample_sap.docx"))
-draft$toc[, c("toc_no", "output_id", "title", "display_type", "population")]
+draft$toc[, c("title", "display_type", "population")]
 draft$notes
 ```
 
+Ten displays: demographics, disposition and exposure; five adverse-event
+views -- note row 8, the **serious**-TEAE display, matched the same
+`ae_soc` recipe as row 5; and two `custom` efficacy displays the recipes
+cannot know about.
+
 ## 3. The review step (what the human -- or agent -- edits)
 
-This is the deliberately semi-automated phase. The draft needs four
-decisions that live in the SAP's *prose* (its Analysis Sets and design
-sections), and here they are applied as explicit edits so the chain can
-continue -- do the same in Excel if you prefer:
+This is the deliberately semi-automated phase.  The draft needs decisions
+that live in the SAP's *prose* (its Analysis Sets, endpoint and safety
+sections), applied here as explicit edits so the chain continues -- do the
+same in Excel if you prefer:
 
 ```{r}
 toc <- draft$toc
 
 # (a) meaningful output ids
-toc$output_id <- c("Out_dm", "Out_ds", "Out_ex", "Out_ae_ov",
-                   "Out_ae_soc", "Out_ae_sev", "Out_eff")
+toc$output_id <- c("Out_dm", "Out_ds", "Out_ex",
+                   "Out_ae_ov", "Out_ae_soc", "Out_ae_pt", "Out_ae_sev",
+                   "Out_ae_ser", "Out_eff_pri", "Out_eff_sec")
 
 # (b) populations: the SAP defines Safety = ADSL.SAFFL, ITT = ADSL.ITTFL
 toc$population <- ifelse(toc$population == "ITT", "ITTFL", "SAFFL")
@@ -96,41 +123,62 @@ toc$population <- ifelse(toc$population == "ITT", "ITTFL", "SAFFL")
 toc$group_by <- "TRT01A"
 toc$groups   <- "Placebo | Xanomeline Low Dose | Xanomeline High Dose"
 
-# (d) the efficacy display is 'custom': author its analyses by hand
-eff <- data.frame(
-  output_id   = "Out_eff",
-  analysis_id = "",
-  name        = c("Number of subjects", "Primary endpoint",
-                  "Responders, n (%)"),
-  method      = c("total_n", "continuous_summary", "categorical_summary"),
-  dataset     = c("ADSL", "ADEFF", "ADEFF"),
-  variable    = c("USUBJID", "AVAL", "USUBJID"),
-  population  = "", group_by = c("", "", "TRT01A, CRIT1FL"),
-  groups = "", groups2 = "",
-  where       = c("", "PARAMCD EQ PRIMEP", "PARAMCD EQ PRIMEP"),
-  denominator = c("", "", "auto"),
-  stringsAsFactors = FALSE
-)
+# (d) the serious-AE display is the ae_soc recipe narrowed to AESER = 'Y';
+#     the extra condition applies to every analysis EXCEPT the big-N
+#     denominator, which stays at analysis-set level
+toc$where[toc$output_id == "Out_ae_ser"] <- "AESER EQ Y"
+```
+
+The two custom efficacy displays need hand-authored analyses (the SAP's
+section 2 defines the endpoints as `ADEFF` parameters `PRIMEP` / `SECEP`
+with responder flag `CRIT1FL`):
+
+```{r}
+eff_analyses <- function(output_id, paramcd) {
+  data.frame(
+    output_id   = output_id,
+    analysis_id = "",
+    name        = c("Number of subjects",
+                    "Change from baseline at Week 24",
+                    "Responders, n (%)"),
+    method      = c("total_n", "continuous_summary", "categorical_summary"),
+    dataset     = c("ADSL", "ADEFF", "ADEFF"),
+    variable    = c("USUBJID", "AVAL", "USUBJID"),
+    population  = "",
+    group_by    = c("", "", "TRT01A, CRIT1FL"),
+    groups      = "", groups2 = "",
+    where       = c("", paste("PARAMCD EQ", paramcd),
+                    paste("PARAMCD EQ", paramcd)),
+    denominator = c("", "", "auto"),
+    stringsAsFactors = FALSE
+  )
+}
+eff <- rbind(eff_analyses("Out_eff_pri", "PRIMEP"),
+             eff_analyses("Out_eff_sec", "SECEP"))
 ```
 
 Write the completed TOC workbook -- the reviewed artefact every later phase
-consumes (and the natural thing to keep under version control):
+consumes, and the natural thing to keep under version control:
 
 ```{r}
 toc_file <- file.path(tempdir(), "TOC_STUDY01.xlsx")
 writexl::write_xlsx(
-  list(Study = data.frame(key = c("study_id", "study_title"),
-                          value = c("STUDY01", "Sample Study")),
+  list(Study = data.frame(
+         key = c("study_id", "study_title"),
+         value = c("STUDY01", "A Randomised Study of Xanomeline in Dementia")),
        TOC = toc, Analyses = eff),
   toc_file
 )
 ```
 
+*Bundled artefact:* `sap-pipeline/01_toc/TOC_STUDY01.xlsx` -- this same
+workbook, written by the pipeline script.
+
 ## 4. Mock shells
 
 Shells derive from the same TOC (and the same recipes) as the ARS, so they
-cannot drift apart. One sheet per display; the sponsor numbering from step 1
-lands in the title block:
+cannot drift apart.  One sheet per display; the sponsor numbering from
+step 1 lands in the title block:
 
 ```{r}
 mock_file <- file.path(tempdir(), "shells_STUDY01.xlsx")
@@ -139,14 +187,18 @@ head(as.data.frame(suppressMessages(
   readxl::read_excel(mock_file, sheet = "Out_dm", col_names = FALSE))), 10)
 ```
 
-(`format = "rtf"` renders the same shells through
+`format = "rtf"` renders the same shells through
 [rtfreporter](https://ichirio.github.io/rtfreporter/) instead -- one page
-per display, with the furniture the final tables will use.)
+per display, with the furniture the final tables will use.
+
+*Bundled artefacts:* `sap-pipeline/02_shells/shells_STUDY01.xlsx` and
+`.rtf` (all ten displays in both formats).
 
 ## 5. ARS metadata
 
-The same TOC + section map expand into the full ARS workbook. Note the
-auto-assigned numbers following the *company* convention:
+The same TOC + section map expand into the full ARS workbook.  Note the
+auto-assigned numbers following the *company* convention -- baseline
+displays under 15.1, efficacy under 15.2, adverse events under 15.3.1:
 
 ```{r}
 params <- ars_from_toc(toc_file, section_map = csr$section_map)
@@ -157,35 +209,85 @@ ars_file <- file.path(tempdir(), "ARS_STUDY01.xlsx")
 write_ars_xlsx(ars, ars_file, overwrite = TRUE)
 ```
 
-## 6. ARD programmes
+*Bundled artefact:* `sap-pipeline/03_ars/ARS_STUDY01.xlsx` (nine
+interlinked, siera-ready sheets).
 
-`siera::readARS()` turns the workbook into one runnable {cards} programme
-per display:
+## 6. ARD programmes -- and one combined study ARD
 
-```{r, message = FALSE}
-prog_dir <- file.path(tempdir(), "ard_programmes")
-dir.create(prog_dir, showWarnings = FALSE)
-siera::readARS(ars_file, output_path = prog_dir, adam_path = "adam")
-list.files(prog_dir)
-```
-
-And they run: here the demographics display executes against the dummy ADaM
-data shipped with the package (the other displays need ADaM variables the
-dummy data does not carry -- point `adam_path` at your study data):
+`ars_generate_ard()` hands the workbook to `siera::readARS()` (one
+generated {cards} programme per display, kept for inspection), runs each
+programme against the ADaM folder, and binds everything into one ARD keyed
+by `OutputId`.  The bundled dummy data carries every variable the ten
+displays need, so **the whole study runs**:
 
 ```{r, message = FALSE, warning = FALSE}
-ex <- system.file("ars-examples", package = "ydisctools")
-ard <- ars_generate_ard(ars_file, adam_path = file.path(ex, "adam"),
-                        spec_output = "Out_dm")
-ard[ard$stat_name %in% c("n", "p") & !is.na(ard$variable_level),
+prog_dir <- file.path(tempdir(), "ard_programmes")
+ard <- ars_generate_ard(ars_file, adam_path = file.path(pipe, "adam"),
+                        output_path = prog_dir)
+basename(attr(ard, "scripts"))
+table(ard$OutputId)
+```
+
+A taste of the result -- age-group counts from the demographics display:
+
+```{r}
+ard[ard$AnalysisId == "An_03" & ard$stat_name %in% c("n", "p"),
     c("OutputId", "group1_level", "variable", "variable_level",
       "stat_name", "stat")] |> head(6)
 ```
 
+*Bundled artefacts:* `sap-pipeline/04_programmes/ARD_Out_*.R` (the ten
+programmes; run them from the pipeline folder) and
+`sap-pipeline/05_ard/ARD_STUDY01.csv` (the combined ARD, flattened for
+inspection).
+
+## 7. The table programme
+
+The last leg is a **study table programme**: ARD numbers in, submission
+tables out.  Two small ydisctools helpers do the shaping --
+`format_stats()` collapses the statistic rows into display strings via a
+template table, `pivot_stats_wider()` spreads the arms into columns.
+Here is the whole pattern on the Age analysis:
+
+```{r, message = FALSE}
+age <- ard[ard$AnalysisId == "An_02", ]
+lbl <- c(N = "n", mean = "Mean (SD)", sd = "Mean (SD)", median = "Median",
+         p25 = "Q1, Q3", p75 = "Q1, Q3", min = "Min, Max", max = "Min, Max")
+long <- data.frame(arm   = age$group1_level,
+                   label = unname(lbl[age$stat_name]),
+                   stat  = age$stat_name,
+                   value = unlist(age$stat))
+long <- long[!is.na(long$label), ]
+
+specs <- data.frame(
+  label    = c("n", "Mean (SD)", "Median", "Q1, Q3", "Min, Max"),
+  template = c("{N:0}", "{mean:1} ({sd:2})", "{median:1}",
+               "{p25:1}, {p75:1}", "{min:0}, {max:0}"))
+
+format_stats(long, specs, stat_col = "stat", value_col = "value") |>
+  pivot_stats_wider(expand_cols = "arm")
+```
+
+The bundled table programme, `sap-pipeline/06_tfl/make_tfl.R`,
+generalises exactly this: three renderers (big-N header, continuous block,
+categorical block) driven by the TOC's analysis metadata, then
+[rtfreporter](https://ichirio.github.io/rtfreporter/) writes one landscape
+page per display:
+
+```{r, eval = FALSE}
+# from the pipeline folder (inst/sap-pipeline):
+#     Rscript 06_tfl/make_tfl.R
+# reads  01_toc/TOC_STUDY01.xlsx + 05_ard/ARD_STUDY01.csv
+# writes 06_tfl/TFL_STUDY01.rtf   -- all ten displays, one per page
+```
+
+*Bundled artefact:* `sap-pipeline/06_tfl/TFL_STUDY01.rtf` -- the finished
+document, next to the programme that made it.
+
 ## Where to next
 
-[The ARS chain](ars-chain.html) continues from exactly this point: running
-every generated programme and combining the results into one study-level
-ARD keyed by `OutputId`, plus recovering compact parameters from existing
-programmes (`ars_params_from_code()`) when you start from a past study
-instead of a SAP.
+[The ARS chain](ars-chain.html) looks at the middle of this pipeline in
+close-up -- the compact parameter workbook, `build_ars()`'s expansion
+rules, and recovering parameters from an *existing* programme with
+`ars_params_from_code()` when you start from a past study instead of a
+SAP.

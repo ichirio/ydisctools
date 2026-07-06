@@ -1,0 +1,443 @@
+"OutputId","AnalysisId","MethodId","group1","group1_level","variable","variable_level","stat_name","stat_label","stat"
+"Out_ae_ov","An_13","Mth_total_n",,,"TRT01A","Placebo","n","n",19
+"Out_ae_ov","An_13","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",19
+"Out_ae_ov","An_13","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",19
+"Out_ae_ov","An_14","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","n","n",16
+"Out_ae_ov","An_14","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","p","%",0.842105263157895
+"Out_ae_ov","An_14","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","n","n",19
+"Out_ae_ov","An_14","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","p","%",1
+"Out_ae_ov","An_14","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","n","n",18
+"Out_ae_ov","An_14","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","p","%",0.947368421052632
+"Out_ae_ov","An_15","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","n","n",3
+"Out_ae_ov","An_15","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","p","%",0.157894736842105
+"Out_ae_ov","An_15","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","n","n",2
+"Out_ae_ov","An_15","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","p","%",0.105263157894737
+"Out_ae_ov","An_15","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","n","n",5
+"Out_ae_ov","An_15","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","p","%",0.263157894736842
+"Out_ae_ov","An_16","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","n","n",5
+"Out_ae_ov","An_16","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","p","%",0.263157894736842
+"Out_ae_ov","An_16","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","n","n",5
+"Out_ae_ov","An_16","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","p","%",0.263157894736842
+"Out_ae_ov","An_16","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","n","n",5
+"Out_ae_ov","An_16","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","p","%",0.263157894736842
+"Out_ae_pt","An_20","Mth_total_n",,,"TRT01A","Placebo","n","n",19
+"Out_ae_pt","An_20","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",19
+"Out_ae_pt","An_20","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",19
+"Out_ae_pt","An_21","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","n","n",16
+"Out_ae_pt","An_21","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","p","%",0.842105263157895
+"Out_ae_pt","An_21","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","n","n",19
+"Out_ae_pt","An_21","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","p","%",1
+"Out_ae_pt","An_21","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","n","n",18
+"Out_ae_pt","An_21","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","p","%",0.947368421052632
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","ATRIAL FIBRILLATION","n","n",7
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","ATRIAL FIBRILLATION","p","%",0.368421052631579
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","DIARRHOEA","n","n",2
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","DIARRHOEA","p","%",0.105263157894737
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","DIZZINESS","n","n",3
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","DIZZINESS","p","%",0.157894736842105
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","HEADACHE","n","n",3
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","HEADACHE","p","%",0.157894736842105
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","NASOPHARYNGITIS","n","n",2
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","NASOPHARYNGITIS","p","%",0.105263157894737
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","NAUSEA","n","n",4
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","NAUSEA","p","%",0.210526315789474
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","PRURITUS","n","n",1
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","PRURITUS","p","%",0.0526315789473684
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","RASH","n","n",4
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","RASH","p","%",0.210526315789474
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","SOMNOLENCE","n","n",3
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","SOMNOLENCE","p","%",0.157894736842105
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","VOMITING","n","n",2
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Placebo","AEDECOD","VOMITING","p","%",0.105263157894737
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","ATRIAL FIBRILLATION","n","n",3
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","ATRIAL FIBRILLATION","p","%",0.157894736842105
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","DIARRHOEA","n","n",5
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","DIARRHOEA","p","%",0.263157894736842
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","DIZZINESS","n","n",4
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","DIZZINESS","p","%",0.210526315789474
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","HEADACHE","n","n",5
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","HEADACHE","p","%",0.263157894736842
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","NASOPHARYNGITIS","n","n",5
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","NASOPHARYNGITIS","p","%",0.263157894736842
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","NAUSEA","n","n",2
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","NAUSEA","p","%",0.105263157894737
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","PRURITUS","n","n",4
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","PRURITUS","p","%",0.210526315789474
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","RASH","n","n",3
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","RASH","p","%",0.157894736842105
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","SOMNOLENCE","n","n",9
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","SOMNOLENCE","p","%",0.473684210526316
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","VOMITING","n","n",5
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEDECOD","VOMITING","p","%",0.263157894736842
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","ATRIAL FIBRILLATION","n","n",5
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","ATRIAL FIBRILLATION","p","%",0.263157894736842
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","DIARRHOEA","n","n",4
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","DIARRHOEA","p","%",0.210526315789474
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","DIZZINESS","n","n",2
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","DIZZINESS","p","%",0.105263157894737
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","HEADACHE","n","n",1
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","HEADACHE","p","%",0.0526315789473684
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","NASOPHARYNGITIS","n","n",7
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","NASOPHARYNGITIS","p","%",0.368421052631579
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","NAUSEA","n","n",3
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","NAUSEA","p","%",0.157894736842105
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","PRURITUS","n","n",4
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","PRURITUS","p","%",0.210526315789474
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","RASH","n","n",4
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","RASH","p","%",0.210526315789474
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","SOMNOLENCE","n","n",6
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","SOMNOLENCE","p","%",0.315789473684211
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","VOMITING","n","n",6
+"Out_ae_pt","An_22","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEDECOD","VOMITING","p","%",0.315789473684211
+"Out_ae_ser","An_26","Mth_total_n",,,"TRT01A","Placebo","n","n",19
+"Out_ae_ser","An_26","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",19
+"Out_ae_ser","An_26","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",19
+"Out_ae_ser","An_27","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","n","n",3
+"Out_ae_ser","An_27","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","p","%",0.157894736842105
+"Out_ae_ser","An_27","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","n","n",2
+"Out_ae_ser","An_27","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","p","%",0.105263157894737
+"Out_ae_ser","An_27","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","n","n",5
+"Out_ae_ser","An_27","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","p","%",0.263157894736842
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","CARDIAC DISORDERS","n","n",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","CARDIAC DISORDERS","p","%",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","GASTROINTESTINAL DISORDERS","n","n",1
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","GASTROINTESTINAL DISORDERS","p","%",0.0526315789473684
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","INFECTIONS AND INFESTATIONS","n","n",1
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","INFECTIONS AND INFESTATIONS","p","%",0.0526315789473684
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","NERVOUS SYSTEM DISORDERS","n","n",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","NERVOUS SYSTEM DISORDERS","p","%",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","n","n",1
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","p","%",0.0526315789473684
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","CARDIAC DISORDERS","n","n",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","CARDIAC DISORDERS","p","%",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","GASTROINTESTINAL DISORDERS","n","n",1
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","GASTROINTESTINAL DISORDERS","p","%",0.0526315789473684
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","INFECTIONS AND INFESTATIONS","n","n",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","INFECTIONS AND INFESTATIONS","p","%",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","NERVOUS SYSTEM DISORDERS","n","n",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","NERVOUS SYSTEM DISORDERS","p","%",0
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","n","n",2
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","p","%",0.105263157894737
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","CARDIAC DISORDERS","n","n",1
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","CARDIAC DISORDERS","p","%",0.0526315789473684
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","GASTROINTESTINAL DISORDERS","n","n",1
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","GASTROINTESTINAL DISORDERS","p","%",0.0526315789473684
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","INFECTIONS AND INFESTATIONS","n","n",1
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","INFECTIONS AND INFESTATIONS","p","%",0.0526315789473684
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","NERVOUS SYSTEM DISORDERS","n","n",1
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","NERVOUS SYSTEM DISORDERS","p","%",0.0526315789473684
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","n","n",1
+"Out_ae_ser","An_28","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","p","%",0.0526315789473684
+"Out_ae_sev","An_23","Mth_total_n",,,"TRT01A","Placebo","n","n",19
+"Out_ae_sev","An_23","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",19
+"Out_ae_sev","An_23","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",19
+"Out_ae_sev","An_24","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","n","n",16
+"Out_ae_sev","An_24","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","p","%",0.842105263157895
+"Out_ae_sev","An_24","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","n","n",19
+"Out_ae_sev","An_24","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","p","%",1
+"Out_ae_sev","An_24","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","n","n",18
+"Out_ae_sev","An_24","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","p","%",0.947368421052632
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Placebo","AESEV","MILD","n","n",9
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Placebo","AESEV","MILD","p","%",0.473684210526316
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Placebo","AESEV","MODERATE","n","n",9
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Placebo","AESEV","MODERATE","p","%",0.473684210526316
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Placebo","AESEV","SEVERE","n","n",5
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Placebo","AESEV","SEVERE","p","%",0.263157894736842
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AESEV","MILD","n","n",16
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AESEV","MILD","p","%",0.842105263157895
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AESEV","MODERATE","n","n",10
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AESEV","MODERATE","p","%",0.526315789473684
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AESEV","SEVERE","n","n",5
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AESEV","SEVERE","p","%",0.263157894736842
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AESEV","MILD","n","n",12
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AESEV","MILD","p","%",0.631578947368421
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AESEV","MODERATE","n","n",14
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AESEV","MODERATE","p","%",0.736842105263158
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AESEV","SEVERE","n","n",5
+"Out_ae_sev","An_25","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AESEV","SEVERE","p","%",0.263157894736842
+"Out_ae_soc","An_17","Mth_total_n",,,"TRT01A","Placebo","n","n",19
+"Out_ae_soc","An_17","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",19
+"Out_ae_soc","An_17","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",19
+"Out_ae_soc","An_18","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","n","n",16
+"Out_ae_soc","An_18","Mth_categorical_summary","TRT01A","Placebo",".flag_","Y","p","%",0.842105263157895
+"Out_ae_soc","An_18","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","n","n",19
+"Out_ae_soc","An_18","Mth_categorical_summary","TRT01A","Xanomeline High Dose",".flag_","Y","p","%",1
+"Out_ae_soc","An_18","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","n","n",18
+"Out_ae_soc","An_18","Mth_categorical_summary","TRT01A","Xanomeline Low Dose",".flag_","Y","p","%",0.947368421052632
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","CARDIAC DISORDERS","n","n",7
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","CARDIAC DISORDERS","p","%",0.368421052631579
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","GASTROINTESTINAL DISORDERS","n","n",8
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","GASTROINTESTINAL DISORDERS","p","%",0.421052631578947
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","INFECTIONS AND INFESTATIONS","n","n",2
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","INFECTIONS AND INFESTATIONS","p","%",0.105263157894737
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","NERVOUS SYSTEM DISORDERS","n","n",6
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","NERVOUS SYSTEM DISORDERS","p","%",0.315789473684211
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","n","n",5
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Placebo","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","p","%",0.263157894736842
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","CARDIAC DISORDERS","n","n",3
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","CARDIAC DISORDERS","p","%",0.157894736842105
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","GASTROINTESTINAL DISORDERS","n","n",11
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","GASTROINTESTINAL DISORDERS","p","%",0.578947368421053
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","INFECTIONS AND INFESTATIONS","n","n",5
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","INFECTIONS AND INFESTATIONS","p","%",0.263157894736842
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","NERVOUS SYSTEM DISORDERS","n","n",14
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","NERVOUS SYSTEM DISORDERS","p","%",0.736842105263158
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","n","n",6
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","p","%",0.315789473684211
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","CARDIAC DISORDERS","n","n",5
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","CARDIAC DISORDERS","p","%",0.263157894736842
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","GASTROINTESTINAL DISORDERS","n","n",10
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","GASTROINTESTINAL DISORDERS","p","%",0.526315789473684
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","INFECTIONS AND INFESTATIONS","n","n",7
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","INFECTIONS AND INFESTATIONS","p","%",0.368421052631579
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","NERVOUS SYSTEM DISORDERS","n","n",6
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","NERVOUS SYSTEM DISORDERS","p","%",0.315789473684211
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","n","n",8
+"Out_ae_soc","An_19","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AEBODSYS","SKIN AND SUBCUTANEOUS TISSUE DISORDERS","p","%",0.421052631578947
+"Out_dm","An_01","Mth_total_n",,,"TRT01A","Placebo","n","n",19
+"Out_dm","An_01","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",19
+"Out_dm","An_01","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",19
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Placebo","AGE",,"N","N",19
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Placebo","AGE",,"mean","Mean",70.1578947368421
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Placebo","AGE",,"sd","SD",11.6726801544591
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Placebo","AGE",,"median","Median",74
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Placebo","AGE",,"p25","Q1",58
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Placebo","AGE",,"p75","Q3",80
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Placebo","AGE",,"min","Min",52
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Placebo","AGE",,"max","Max",86
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AGE",,"N","N",19
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AGE",,"mean","Mean",72.6315789473684
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AGE",,"sd","SD",10.7093444467685
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AGE",,"median","Median",76
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AGE",,"p25","Q1",64
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AGE",,"p75","Q3",83
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AGE",,"min","Min",55
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AGE",,"max","Max",87
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AGE",,"N","N",19
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AGE",,"mean","Mean",70.2105263157895
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AGE",,"sd","SD",11.1732763889182
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AGE",,"median","Median",71
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AGE",,"p25","Q1",58
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AGE",,"p75","Q3",78
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AGE",,"min","Min",54
+"Out_dm","An_02","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AGE",,"max","Max",88
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Placebo","AGEGR1","<65","n","n",6
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Placebo","AGEGR1","<65","p","%",0.315789473684211
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Placebo","AGEGR1",">80","n","n",3
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Placebo","AGEGR1",">80","p","%",0.157894736842105
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Placebo","AGEGR1","65-80","n","n",10
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Placebo","AGEGR1","65-80","p","%",0.526315789473684
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AGEGR1","<65","n","n",7
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AGEGR1","<65","p","%",0.368421052631579
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AGEGR1",">80","n","n",6
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AGEGR1",">80","p","%",0.315789473684211
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AGEGR1","65-80","n","n",6
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline High Dose","AGEGR1","65-80","p","%",0.315789473684211
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AGEGR1","<65","n","n",6
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AGEGR1","<65","p","%",0.315789473684211
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AGEGR1",">80","n","n",4
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AGEGR1",">80","p","%",0.210526315789474
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AGEGR1","65-80","n","n",9
+"Out_dm","An_03","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","AGEGR1","65-80","p","%",0.473684210526316
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Placebo","SEX","F","n","n",6
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Placebo","SEX","F","p","%",0.315789473684211
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Placebo","SEX","M","n","n",13
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Placebo","SEX","M","p","%",0.684210526315789
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Xanomeline High Dose","SEX","F","n","n",13
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Xanomeline High Dose","SEX","F","p","%",0.684210526315789
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Xanomeline High Dose","SEX","M","n","n",6
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Xanomeline High Dose","SEX","M","p","%",0.315789473684211
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","SEX","F","n","n",11
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","SEX","F","p","%",0.578947368421053
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","SEX","M","n","n",8
+"Out_dm","An_04","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","SEX","M","p","%",0.421052631578947
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Placebo","RACE","ASIAN","n","n",0
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Placebo","RACE","ASIAN","p","%",0
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Placebo","RACE","BLACK OR AFRICAN AMERICAN","n","n",8
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Placebo","RACE","BLACK OR AFRICAN AMERICAN","p","%",0.421052631578947
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Placebo","RACE","WHITE","n","n",11
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Placebo","RACE","WHITE","p","%",0.578947368421053
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline High Dose","RACE","ASIAN","n","n",0
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline High Dose","RACE","ASIAN","p","%",0
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline High Dose","RACE","BLACK OR AFRICAN AMERICAN","n","n",6
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline High Dose","RACE","BLACK OR AFRICAN AMERICAN","p","%",0.315789473684211
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline High Dose","RACE","WHITE","n","n",13
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline High Dose","RACE","WHITE","p","%",0.684210526315789
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","RACE","ASIAN","n","n",1
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","RACE","ASIAN","p","%",0.0526315789473684
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","RACE","BLACK OR AFRICAN AMERICAN","n","n",5
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","RACE","BLACK OR AFRICAN AMERICAN","p","%",0.263157894736842
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","RACE","WHITE","n","n",13
+"Out_dm","An_05","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","RACE","WHITE","p","%",0.684210526315789
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Placebo","ETHNIC","HISPANIC OR LATINO","n","n",4
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Placebo","ETHNIC","HISPANIC OR LATINO","p","%",0.210526315789474
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Placebo","ETHNIC","NOT HISPANIC OR LATINO","n","n",15
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Placebo","ETHNIC","NOT HISPANIC OR LATINO","p","%",0.789473684210526
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Xanomeline High Dose","ETHNIC","HISPANIC OR LATINO","n","n",2
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Xanomeline High Dose","ETHNIC","HISPANIC OR LATINO","p","%",0.105263157894737
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Xanomeline High Dose","ETHNIC","NOT HISPANIC OR LATINO","n","n",17
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Xanomeline High Dose","ETHNIC","NOT HISPANIC OR LATINO","p","%",0.894736842105263
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","ETHNIC","HISPANIC OR LATINO","n","n",3
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","ETHNIC","HISPANIC OR LATINO","p","%",0.157894736842105
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","ETHNIC","NOT HISPANIC OR LATINO","n","n",16
+"Out_dm","An_06","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","ETHNIC","NOT HISPANIC OR LATINO","p","%",0.842105263157895
+"Out_ds","An_07","Mth_total_n",,,"TRT01A","Placebo","n","n",19
+"Out_ds","An_07","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",19
+"Out_ds","An_07","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",19
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Placebo","EOSSTT","COMPLETED","n","n",19
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Placebo","EOSSTT","COMPLETED","p","%",1
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Placebo","EOSSTT","DISCONTINUED","n","n",0
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Placebo","EOSSTT","DISCONTINUED","p","%",0
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Xanomeline High Dose","EOSSTT","COMPLETED","n","n",15
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Xanomeline High Dose","EOSSTT","COMPLETED","p","%",0.789473684210526
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Xanomeline High Dose","EOSSTT","DISCONTINUED","n","n",4
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Xanomeline High Dose","EOSSTT","DISCONTINUED","p","%",0.210526315789474
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","EOSSTT","COMPLETED","n","n",13
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","EOSSTT","COMPLETED","p","%",0.684210526315789
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","EOSSTT","DISCONTINUED","n","n",6
+"Out_ds","An_08","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","EOSSTT","DISCONTINUED","p","%",0.315789473684211
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline High Dose","DCSREAS","ADVERSE EVENT","n","n",2
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline High Dose","DCSREAS","ADVERSE EVENT","p","%",0.105263157894737
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline High Dose","DCSREAS","LACK OF EFFICACY","n","n",1
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline High Dose","DCSREAS","LACK OF EFFICACY","p","%",0.0526315789473684
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline High Dose","DCSREAS","LOST TO FOLLOW-UP","n","n",1
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline High Dose","DCSREAS","LOST TO FOLLOW-UP","p","%",0.0526315789473684
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline High Dose","DCSREAS","WITHDRAWAL BY SUBJECT","n","n",0
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline High Dose","DCSREAS","WITHDRAWAL BY SUBJECT","p","%",0
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","DCSREAS","ADVERSE EVENT","n","n",0
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","DCSREAS","ADVERSE EVENT","p","%",0
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","DCSREAS","LACK OF EFFICACY","n","n",5
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","DCSREAS","LACK OF EFFICACY","p","%",0.263157894736842
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","DCSREAS","LOST TO FOLLOW-UP","n","n",0
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","DCSREAS","LOST TO FOLLOW-UP","p","%",0
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","DCSREAS","WITHDRAWAL BY SUBJECT","n","n",1
+"Out_ds","An_09","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","DCSREAS","WITHDRAWAL BY SUBJECT","p","%",0.0526315789473684
+"Out_eff_pri","An_29","Mth_total_n",,,"TRT01A","Placebo","n","n",20
+"Out_eff_pri","An_29","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",20
+"Out_eff_pri","An_29","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",20
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"N","N",20
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"mean","Mean",0.84
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"sd","SD",2.73234042727591
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"median","Median",0.95
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"p25","Q1",-1.1
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"p75","Q3",2.65
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"min","Min",-3.8
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"max","Max",5.8
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"N","N",20
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"mean","Mean",4.57
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"sd","SD",2.39475303638249
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"median","Median",4.15
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"p25","Q1",2.85
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"p75","Q3",6.65
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"min","Min",-1.4
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"max","Max",8.2
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"N","N",20
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"mean","Mean",1.955
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"sd","SD",2.17847725668521
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"median","Median",1.85
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"p25","Q1",0.4
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"p75","Q3",3.9
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"min","Min",-2.7
+"Out_eff_pri","An_30","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"max","Max",4.9
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Placebo","CRIT1FL","N","n","n",18
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Placebo","CRIT1FL","N","p","%",0.9
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Placebo","CRIT1FL","Y","n","n",2
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Placebo","CRIT1FL","Y","p","%",0.1
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Xanomeline High Dose","CRIT1FL","N","n","n",8
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Xanomeline High Dose","CRIT1FL","N","p","%",0.4
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Xanomeline High Dose","CRIT1FL","Y","n","n",12
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Xanomeline High Dose","CRIT1FL","Y","p","%",0.6
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","CRIT1FL","N","n","n",15
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","CRIT1FL","N","p","%",0.75
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","CRIT1FL","Y","n","n",5
+"Out_eff_pri","An_31","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","CRIT1FL","Y","p","%",0.25
+"Out_eff_sec","An_32","Mth_total_n",,,"TRT01A","Placebo","n","n",20
+"Out_eff_sec","An_32","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",20
+"Out_eff_sec","An_32","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",20
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"N","N",20
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"mean","Mean",0.23
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"sd","SD",1.65118777025255
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"median","Median",0.05
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"p25","Q1",-0.75
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"p75","Q3",1.65
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"min","Min",-3.6
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Placebo","AVAL",,"max","Max",3
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"N","N",20
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"mean","Mean",1.755
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"sd","SD",1.23009413418135
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"median","Median",1.5
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"p25","Q1",0.9
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"p75","Q3",2.5
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"min","Min",-0.3
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline High Dose","AVAL",,"max","Max",4.5
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"N","N",20
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"mean","Mean",0.785
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"sd","SD",1.01787963304529
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"median","Median",0.9
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"p25","Q1",0.1
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"p75","Q3",1.75
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"min","Min",-1
+"Out_eff_sec","An_33","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","AVAL",,"max","Max",2.2
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Placebo","CRIT1FL","N","n","n",10
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Placebo","CRIT1FL","N","p","%",0.5
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Placebo","CRIT1FL","Y","n","n",10
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Placebo","CRIT1FL","Y","p","%",0.5
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Xanomeline High Dose","CRIT1FL","N","n","n",1
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Xanomeline High Dose","CRIT1FL","N","p","%",0.05
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Xanomeline High Dose","CRIT1FL","Y","n","n",19
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Xanomeline High Dose","CRIT1FL","Y","p","%",0.95
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","CRIT1FL","N","n","n",5
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","CRIT1FL","N","p","%",0.25
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","CRIT1FL","Y","n","n",15
+"Out_eff_sec","An_34","Mth_categorical_summary","TRT01A","Xanomeline Low Dose","CRIT1FL","Y","p","%",0.75
+"Out_ex","An_10","Mth_total_n",,,"TRT01A","Placebo","n","n",19
+"Out_ex","An_10","Mth_total_n",,,"TRT01A","Xanomeline High Dose","n","n",19
+"Out_ex","An_10","Mth_total_n",,,"TRT01A","Xanomeline Low Dose","n","n",19
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Placebo","TRTDURD",,"N","N",19
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Placebo","TRTDURD",,"mean","Mean",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Placebo","TRTDURD",,"sd","SD",0
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Placebo","TRTDURD",,"median","Median",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Placebo","TRTDURD",,"p25","Q1",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Placebo","TRTDURD",,"p75","Q3",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Placebo","TRTDURD",,"min","Min",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Placebo","TRTDURD",,"max","Max",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline High Dose","TRTDURD",,"N","N",19
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline High Dose","TRTDURD",,"mean","Mean",145.105263157895
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline High Dose","TRTDURD",,"sd","SD",47.9327013598141
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline High Dose","TRTDURD",,"median","Median",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline High Dose","TRTDURD",,"p25","Q1",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline High Dose","TRTDURD",,"p75","Q3",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline High Dose","TRTDURD",,"min","Min",32
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline High Dose","TRTDURD",,"max","Max",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","TRTDURD",,"N","N",19
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","TRTDURD",,"mean","Mean",140.263157894737
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","TRTDURD",,"sd","SD",46.3990446564284
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","TRTDURD",,"median","Median",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","TRTDURD",,"p25","Q1",127
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","TRTDURD",,"p75","Q3",168
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","TRTDURD",,"min","Min",49
+"Out_ex","An_11","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","TRTDURD",,"max","Max",168
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Placebo","CUMDOSE",,"N","N",19
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Placebo","CUMDOSE",,"mean","Mean",0
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Placebo","CUMDOSE",,"sd","SD",0
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Placebo","CUMDOSE",,"median","Median",0
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Placebo","CUMDOSE",,"p25","Q1",0
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Placebo","CUMDOSE",,"p75","Q3",0
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Placebo","CUMDOSE",,"min","Min",0
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Placebo","CUMDOSE",,"max","Max",0
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline High Dose","CUMDOSE",,"N","N",19
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline High Dose","CUMDOSE",,"mean","Mean",11753.5263157895
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline High Dose","CUMDOSE",,"sd","SD",3882.54881014494
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline High Dose","CUMDOSE",,"median","Median",13608
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline High Dose","CUMDOSE",,"p25","Q1",13608
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline High Dose","CUMDOSE",,"p75","Q3",13608
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline High Dose","CUMDOSE",,"min","Min",2592
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline High Dose","CUMDOSE",,"max","Max",13608
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","CUMDOSE",,"N","N",19
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","CUMDOSE",,"mean","Mean",7574.21052631579
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","CUMDOSE",,"sd","SD",2505.54841144714
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","CUMDOSE",,"median","Median",9072
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","CUMDOSE",,"p25","Q1",6858
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","CUMDOSE",,"p75","Q3",9072
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","CUMDOSE",,"min","Min",2646
+"Out_ex","An_12","Mth_continuous_summary","TRT01A","Xanomeline Low Dose","CUMDOSE",,"max","Max",9072

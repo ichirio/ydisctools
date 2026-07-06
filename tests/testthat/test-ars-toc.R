@@ -149,3 +149,24 @@ test_that("a TOC-driven ARS runs end-to-end through siera", {
   names(got) <- n01$variable_level
   expect_equal(got[names(truth)], truth)
 })
+
+test_that("a TOC-level `where` narrows every analysis except total_n", {
+  toc <- data.frame(
+    toc_no = NA_character_,
+    output_id = "Out_ae_ser",
+    title = "Summary of Serious TEAE by System Organ Class",
+    display_type = "ae_soc",
+    section_key = NA_character_,
+    population = "SAFFL", group_by = "TRT01A", groups = NA_character_,
+    where = "AESER EQ Y",
+    stringsAsFactors = FALSE
+  )
+  p <- ars_from_toc(list(toc = toc))
+  an <- p$analyses
+  # big N stays at analysis-set level ...
+  expect_false(grepl("AESER", an$where[an$method == "total_n"]) %in% TRUE)
+  # ... while the event analyses gain the extra condition (AND-chained)
+  others <- an[an$method != "total_n", ]
+  expect_true(all(grepl("AESER EQ Y", others$where, fixed = TRUE)))
+  expect_true(all(grepl("TRTEMFL EQ Y;", others$where, fixed = TRUE)))
+})
