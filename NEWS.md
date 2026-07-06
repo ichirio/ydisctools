@@ -5,6 +5,33 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* New `ars_params_from_ard()`: draft the compact parameter set from an
+  existing **ARD** -- a cards `ard_stack()` result (optionally
+  `unlist_ard_columns()`-flattened), a siera-generated combined ARD from
+  `ars_generate_ard()`, or a csv/xlsx export of either -- for when the
+  producing programme is unavailable or unreadable. Analyses are grouped by
+  `AnalysisId` (siera) or grouping/variable combination (cards) and
+  classified onto the method catalog (continuous stats ->
+  `continuous_summary`, n/p tabulations -> the ARS `categorical_summary`
+  idiom, `..total_n..` / `.by_stats` / `.flag_` idioms -> `total_n`).
+  Population, `where` and dataset names do not live in an ARD and are
+  surfaced as REVIEW notes (#32).
+
+## Bug fixes
+
+* `ars_params_from_code()` now resolves the variable-list indirections real
+  programmes use (#32): character vectors assigned earlier in the file and
+  referenced via `all_of(vars)` / `any_of(vars)` (or directly), names
+  injected with `!!sym(col)` / `syms()` / `.data[[col]]`, and magrittr
+  pipes (`df %>% ard_stack(...)`) are collapsed so the piped data feeds the
+  dataset / population detection (previously such calls yielded a single
+  bogus `all_of(vars_cont)` "variable" and `dataset = UNKNOWN`).
+  `ard_stack(.by_stats = TRUE)` is now recognised as a per-group subject
+  count (`total_n`). Unresolvable wrappers keep the symbol and emit a
+  REVIEW note.
+
+## New features
+
 * New bundled artefact set `inst/sap-pipeline/`: the **output of every
   stage** of the SAP -> TOC -> shells -> ARS -> ARD programmes -> tables
   chain for the ten-display sample study STUDY01, regenerated end-to-end by
