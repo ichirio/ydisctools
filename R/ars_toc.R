@@ -154,7 +154,9 @@ ars_toc_template <- function(path, overwrite = FALSE) {
 #' SAP -> TOC -> mock -> ARS chain: one row per planned display.  Rows with a
 #' catalogued \code{display_type} are expanded through the bundled display
 #' recipes (the TOC row supplies the study specifics: population, arm
-#' grouping, pre-defined arm levels, extra \code{where} conditions); rows
+#' grouping, pre-defined arm levels, extra \code{where} conditions -- the
+#' extra conditions narrow every analysis of the display except
+#' \code{total_n} big-N denominators, which stay at analysis-set level); rows
 #' with \code{display_type = "custom"} take their hand-authored analyses from
 #' the workbook's \code{Analyses} sheet.  Missing \code{toc_no} values are
 #' auto-numbered from the section map (see [ars_toc_template()]'s Numbering
@@ -305,8 +307,12 @@ ars_from_toc <- function(toc, section_map = NULL) {
     recipe <- catalog[[tt$display_type[i]]]
     ana <- lapply(recipe$analyses, function(a) {
       grp2 <- if (!is.null(a$group2)) paste0(", ", a$group2) else ""
+      # The TOC row's `where` narrows the display's data subset; big-N
+      # denominators stay at analysis-set level, so total_n is exempt.
       wh <- c(if (!is.null(a$where)) a$where,
-              if (!is.na(tt$where[i])) tt$where[i])
+              if (!is.na(tt$where[i]) && !identical(a$method, "total_n")) {
+                tt$where[i]
+              })
       data.frame(
         output_id = oid, analysis_id = NA_character_,
         name = a$name, method = a$method, dataset = a$dataset,

@@ -31,11 +31,12 @@ test_that("the sample SAP drafts the expected TOC rows", {
   skip_if(identical(d, ""), "ars-doc-samples folder not installed")
 
   r <- read_sap_toc(file.path(d, "sample_sap.docx"))
-  expect_equal(nrow(r$toc), 7)
+  expect_equal(nrow(r$toc), 10)
   expect_true(all(is.na(r$toc$toc_no)))          # numbers left to the chain
   expect_equal(r$toc$display_type,
                c("dm_summary", "disposition", "exposure", "ae_overview",
-                 "ae_soc", "ae_severity", "custom"))
+                 "ae_soc", "ae_pt", "ae_severity", "ae_soc",
+                 "custom", "custom"))
   expect_equal(unique(r$toc$population), c("Safety", "ITT"))
 })
 
@@ -55,7 +56,7 @@ test_that("the reviewed sample TOC numbers with the company map end-to-end", {
   p <- ars_from_toc(list(toc = toc), section_map = m$section_map)
   expect_equal(p$toc$toc_no,
                c("15.1.1", "15.1.2", "15.1.3",
-                 "15.3.1.1", "15.3.1.2", "15.3.1.3"))
+                 "15.3.1.1", "15.3.1.2", "15.3.1.3", "15.3.1.4", "15.3.1.5"))
   ars <- build_ars(p)
   expect_true("Table 15.1.1" %in% ars$Displays$displaySection_subSection_text)
 })

@@ -5,6 +5,39 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* New bundled artefact set `inst/sap-pipeline/`: the **output of every
+  stage** of the SAP -> TOC -> shells -> ARS -> ARD programmes -> tables
+  chain for the ten-display sample study STUDY01, regenerated end-to-end by
+  one seeded script (`make_sap_pipeline.R`). Ships deterministic dummy ADaM
+  (ADSL / ADAE / ADEFF), the reviewed TOC workbook, xlsx + rtf mock shells,
+  the ARS workbook, the ten siera-generated ARD programmes, the combined
+  study ARD (csv) and a generic **table programme**
+  (`06_tfl/make_tfl.R`, built on `format_stats()` +
+  `pivot_stats_wider()` + rtfreporter) with its final RTF output -- so the
+  whole chain can be inspected without executing anything (#31).
+
+* The sample SAP (`inst/ars-doc-samples/sample_sap.docx`) grew to a
+  decent-scale document: objectives/endpoints, design, analysis-set,
+  methods and sample-size sections plus a **ten-display** planned-display
+  appendix (was seven) -- adding the by-preferred-term and serious-AE views
+  and a second (key secondary) efficacy display (#31).
+
+## Bug fixes
+
+* The overlay `categorical_summary` method template now computes **per-group
+  percentage denominators for flat analyses** (no category variable, e.g.
+  "subjects with at least one TEAE"): it tabulates a constant flag with the
+  group as `by=`, so p = n / that arm's big N instead of n / overall N.
+  Flat ARD rows now carry `variable = ".flag_"` and the group in
+  `group1_level`, consistent with grouped rows (#31).
+
+* `ars_from_toc()`: a TOC row's extra `where` condition no longer narrows
+  the display's `total_n` analysis -- big-N denominators stay at
+  analysis-set level (it still narrows every other analysis), which makes
+  serious-AE-style displays (`where = "AESER EQ Y"`) work end-to-end (#31).
+
+## New features
+
 * `read_sap_toc()` gains a **prose route** and a `mode` argument
   (`"auto"` / `"table"` / `"prose"`). When a SAP carries no planned-display
   table, it now scans the *Statistical Methods / Analyses* section for display
@@ -21,13 +54,15 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## Documentation
 
-* New article [From the SAP to the ARS](https://ichirio.github.io/ydisctools/articles/sap-to-ars.html):
-  walks the upstream chain on two bundled ORIGINAL synthetic sample documents
-  (`inst/ars-doc-samples/`: a company-style CSR template whose displays live
-  under section 15, and a SAP whose planned-display appendix leaves the
-  numbers blank) - CSR numbering map, SAP TOC draft, the materialised review
-  step, mock shells, ARS build and ARD-programme generation, handing over to
-  the ARS-chain article (#25).
+* The SAP article was extended through the final tables and retitled
+  [From the SAP to the tables](https://ichirio.github.io/ydisctools/articles/sap-to-ars.html):
+  it now walks the ten-display STUDY01 chain end-to-end -- CSR numbering
+  map, SAP TOC draft, the materialised review step (including the serious-AE
+  `where` narrowing and two custom efficacy displays), mock shells, ARS
+  build, running ALL generated ARD programmes against the bundled dummy
+  ADaM, and the `format_stats()` / `pivot_stats_wider()` table-programme
+  pattern -- with every stage pointing at its installed artefact in
+  `inst/sap-pipeline/` (#31; original upstream-half article #25).
 
 * New article [The ARS chain](https://ichirio.github.io/ydisctools/articles/ars-chain.html):
   a runnable walk-through of the whole toolchain -- recovering compact

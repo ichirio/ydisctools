@@ -73,7 +73,7 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: "From the SAP to the ARS: TOC, shells and ARD programmes"
+        - text: "From the SAP to the tables: TOC, shells, ARS and the table programme"
           href: articles/sap-to-ars.html
         - text: "The ARS chain: programme -> params -> ARS -> ARD"
           href: articles/ars-chain.html

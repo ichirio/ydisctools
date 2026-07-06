@@ -28,7 +28,9 @@ The TOC workbook (see \code{\link{ars_toc_template}}) is the hub of the
 SAP -> TOC -> mock -> ARS chain: one row per planned display.  Rows with a
 catalogued \code{display_type} are expanded through the bundled display
 recipes (the TOC row supplies the study specifics: population, arm grouping,
-pre-defined arm levels, extra \code{where} conditions); rows with
+pre-defined arm levels, extra \code{where} conditions -- the extra
+conditions narrow every analysis of the display except \code{total_n}
+big-N denominators, which stay at analysis-set level); rows with
 \code{display_type = "custom"} take their hand-authored analyses from the
 workbook's \code{Analyses} sheet.  Missing \code{toc_no} values are
 auto-numbered from the section map (see \code{\link{ars_toc_template}}'s

@@ -490,6 +490,14 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   vars <- .apc_chr_vec(.apc_arg(e, "variables"), st)
   den <- .apc_arg(e, "denominator")
 
+  # ydisctools flat-analysis idiom: a constant '.flag_' tabulated with the
+  # group as `by` (per-group percentage denominators).  In generated code
+  # this branch coexists with the by/strata branches, whose
+  # `variables = <group var>` call carries the same analysis -- skip this
+  # one so the de-duplication step sees a single emission.
+  if (identical(vars, ".flag_")) {
+    return(invisible())
+  }
   # siera-generated subject-count idiom: distinct subjects + variables='dummy'
   if (identical(vars, "dummy")) {
     .apc_emit(st, "categorical_summary", "USUBJID", cx$by, cx$info,

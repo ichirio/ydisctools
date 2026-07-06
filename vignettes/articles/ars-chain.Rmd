@@ -213,16 +213,22 @@ ard <- read_ars_params("params.xlsx") |>
 
 ## 5. Where this fits
 
-- **Upstream**, the parameter workbook is the study's analysis intent -- a
-  natural artefact to derive from the SAP (a planned extension, see
-  [ydisctools#6](https://github.com/ichirio/ydisctools/issues/6), which also
-  tracks 3+ simultaneous groupings for nested SOC/PT displays, currently
-  flattened with a note).
-- **Downstream**, the ARD is framework-neutral: summarise it with
-  `gtsummary::tbl_ard_summary()` and hand the result to
-  [rtfreporter](https://ichirio.github.io/rtfreporter/) for the final RTF,
-  or export it as CDISC Dataset-JSON via siera's
-  `output_format = "datasetjson"`.
-- The full worked artefact set (parameters, ARS, generated programmes, dummy
-  ADaM) ships in `system.file("ars-examples", package = "ydisctools")` -- see
-  its README.
+- **Upstream**, the parameter workbook is the study's analysis intent -- and
+  it can be derived from the SAP itself: [From the SAP to the
+  tables](sap-to-ars.html) walks that full chain (SAP -> TOC -> shells ->
+  ARS -> ARD -> tables) on a bundled ten-display sample study.
+  (3+ simultaneous groupings for nested SOC/PT displays are still tracked in
+  [ydisctools#6](https://github.com/ichirio/ydisctools/issues/6), currently
+  flattened with a note.)
+- **Downstream**, the ARD is framework-neutral: shape it with ydisctools'
+  `format_stats()` / `pivot_stats_wider()` (the bundled
+  `sap-pipeline/06_tfl/make_tfl.R` table programme shows the pattern) or
+  `gtsummary::tbl_ard_summary()`, and hand the result to
+  [rtfreporter](https://ichirio.github.io/rtfreporter/) for the final RTF --
+  or export CDISC Dataset-JSON via siera's `output_format = "datasetjson"`.
+- The full worked artefact set of THIS article (parameters, ARS, generated
+  programmes, dummy ADaM) ships in
+  `system.file("ars-examples", package = "ydisctools")`; the SAP article's
+  ten-display study, with every stage artefact through the final RTF, ships
+  in `system.file("sap-pipeline", package = "ydisctools")` -- see their
+  READMEs.

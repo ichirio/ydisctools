@@ -1,15 +1,17 @@
 # Synthetic sample SAP / CSR template
 
-Two Word documents used by the *From the SAP to the ARS* article and the
-test suite to demonstrate the SAP -> TOC -> shell -> ARS chain:
+Two Word documents used by the *From the SAP to the tables* article and the
+test suite to demonstrate the SAP -> TOC -> shell -> ARS -> tables chain:
 
 | File | What it plays | Demo twist |
 |------|---------------|------------|
 | `sample_csr_template.docx` | a company CSR template | its display section is **15** (not ICH E3's 14), so `read_csr_map()` visibly drives sponsor-specific numbering |
-| `sample_sap.docx` | a study SAP | the planned-display appendix table leaves the numbers **blank**, so `ars_from_toc()` demonstrates rule-based auto-numbering |
+| `sample_sap.docx` | a decent-scale study SAP (STUDY01): objectives/endpoints, design, analysis sets, methods and sample-size sections plus a **ten-display** planned-display appendix | the appendix table leaves the numbers **blank**, so `ars_from_toc()` demonstrates rule-based auto-numbering; two efficacy displays are deliberately un-recipe-able (`custom`) and the serious-AE display exercises the TOC `where` column |
 
 Regenerate with `Rscript make_doc_samples.R` from this folder (needs
-{officer}).
+{officer}).  The artefacts of every downstream stage -- reviewed TOC, mock
+shells, ARS workbook, generated ARD programmes, combined ARD and the final
+RTF tables -- ship in `../sap-pipeline` (see its README).
 
 ## Provenance and licence
 

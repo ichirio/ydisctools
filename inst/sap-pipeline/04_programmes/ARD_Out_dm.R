@@ -1,7 +1,7 @@
 
 # Programme:    Generate code to produce ARD for Out_dm
 # Output:       Summary of Demographic Data
-# Date created: 2026-07-05 23:20:54
+# Date created: 2026-07-05 23:19:55
 
   # load libraries ----
     library(dplyr)
@@ -122,7 +122,7 @@ df3_An_02 <- df3_An_02 |>
 
 
 # Analysis An_03----
-#Age group 1, n (%)
+#Age group, n (%)
 #Apply Data Subset ---
 df2_An_03 <- df_pop
 
@@ -196,7 +196,7 @@ df3_An_03 <- df3_An_03 |>
 
 
 # Analysis An_04----
-#Age group 2, n (%)
+#Sex, n (%)
 #Apply Data Subset ---
 df2_An_04 <- df_pop
 
@@ -212,7 +212,7 @@ if(nrow(df2_An_04) != 0) {
   dplyr::select(TRT01A)
 
 in_data = df2_An_04 |>
-    dplyr::distinct(TRT01A, AGEGR2, USUBJID)
+    dplyr::distinct(TRT01A, SEX, USUBJID)
 
 dataDriven = TRUE
 if(ncol(in_data) <= 2){
@@ -227,13 +227,13 @@ df3_An_04 <-
 df3_An_04 <-
   cards::ard_tabulate(
     data = in_data
-    , strata = 'TRT01A' , variables = 'AGEGR2',
+    , strata = 'TRT01A' , variables = 'SEX',
     denominator = denom_dataset
   ) } else {
 df3_An_04 <-
  cards::ard_tabulate(
     data = in_data
-    , by = 'TRT01A' , variables = 'AGEGR2',
+    , by = 'TRT01A' , variables = 'SEX',
     denominator = denom_dataset
   ) }
 df3_An_04 <- df3_An_04 |>
@@ -270,7 +270,7 @@ df3_An_04 <- df3_An_04 |>
 
 
 # Analysis An_05----
-#Sex, n (%)
+#Race, n (%)
 #Apply Data Subset ---
 df2_An_05 <- df_pop
 
@@ -286,7 +286,7 @@ if(nrow(df2_An_05) != 0) {
   dplyr::select(TRT01A)
 
 in_data = df2_An_05 |>
-    dplyr::distinct(TRT01A, SEX, USUBJID)
+    dplyr::distinct(TRT01A, RACE, USUBJID)
 
 dataDriven = TRUE
 if(ncol(in_data) <= 2){
@@ -301,13 +301,13 @@ df3_An_05 <-
 df3_An_05 <-
   cards::ard_tabulate(
     data = in_data
-    , strata = 'TRT01A' , variables = 'SEX',
+    , strata = 'TRT01A' , variables = 'RACE',
     denominator = denom_dataset
   ) } else {
 df3_An_05 <-
  cards::ard_tabulate(
     data = in_data
-    , by = 'TRT01A' , variables = 'SEX',
+    , by = 'TRT01A' , variables = 'RACE',
     denominator = denom_dataset
   ) }
 df3_An_05 <- df3_An_05 |>
@@ -344,7 +344,7 @@ df3_An_05 <- df3_An_05 |>
 
 
 # Analysis An_06----
-#Race, n (%)
+#Ethnicity, n (%)
 #Apply Data Subset ---
 df2_An_06 <- df_pop
 
@@ -360,7 +360,7 @@ if(nrow(df2_An_06) != 0) {
   dplyr::select(TRT01A)
 
 in_data = df2_An_06 |>
-    dplyr::distinct(TRT01A, RACE, USUBJID)
+    dplyr::distinct(TRT01A, ETHNIC, USUBJID)
 
 dataDriven = TRUE
 if(ncol(in_data) <= 2){
@@ -375,13 +375,13 @@ df3_An_06 <-
 df3_An_06 <-
   cards::ard_tabulate(
     data = in_data
-    , strata = 'TRT01A' , variables = 'RACE',
+    , strata = 'TRT01A' , variables = 'ETHNIC',
     denominator = denom_dataset
   ) } else {
 df3_An_06 <-
  cards::ard_tabulate(
     data = in_data
-    , by = 'TRT01A' , variables = 'RACE',
+    , by = 'TRT01A' , variables = 'ETHNIC',
     denominator = denom_dataset
   ) }
 df3_An_06 <- df3_An_06 |>
@@ -417,85 +417,10 @@ df3_An_06 <- df3_An_06 |>
   ))
 
 
-# Analysis An_07----
-#Ethnicity, n (%)
-#Apply Data Subset ---
-df2_An_07 <- df_pop
-
-#Apply Method --- 
-#Apply Method --- 
-
-# Method ID:              Mth_categorical_summary
-# Method name:            Summary of a categorical variable (n and %)
-# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). A flat analysis (no category variable, e.g. 'subjects with at least one TEAE') tabulates a constant flag with the group as `by=`, so the percentage denominator is the per-group big N rather than the overall N. ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
-
-if(nrow(df2_An_07) != 0) {
-                              denom_dataset = df2_An_01 |>
-  dplyr::select(TRT01A)
-
-in_data = df2_An_07 |>
-    dplyr::distinct(TRT01A, ETHNIC, USUBJID)
-
-dataDriven = TRUE
-if(ncol(in_data) <= 2){
-# flat analysis (no category variable): tabulate a constant flag with the
-# group as `by`, so the percentage denominator is the per-group big N
-df3_An_07 <-
-  cards::ard_tabulate(
-    data = in_data |> dplyr::mutate(.flag_ = 'Y')
-    , by = 'TRT01A', variables = '.flag_',
-    denominator = denom_dataset
-  ) } else if(dataDriven == TRUE){
-df3_An_07 <-
-  cards::ard_tabulate(
-    data = in_data
-    , strata = 'TRT01A' , variables = 'ETHNIC',
-    denominator = denom_dataset
-  ) } else {
-df3_An_07 <-
- cards::ard_tabulate(
-    data = in_data
-    , by = 'TRT01A' , variables = 'ETHNIC',
-    denominator = denom_dataset
-  ) }
-df3_An_07 <- df3_An_07 |>
-  dplyr::filter(stat_name %in% c('n', 'p')) |>
-  dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',
-                                               stat_name == 'p' ~ 'opid2here'))}
-if(nrow(df2_An_07) != 0){
-df3_An_07 <- df3_An_07 |>
-        dplyr::mutate(AnalysisId = 'An_07',
-               MethodId = 'Mth_categorical_summary',
-               OutputId = 'Out_dm')
-} else {
-    df3_An_07 = data.frame(AnalysisId = 'An_07',
-               MethodId = 'Mth_categorical_summary',
-               OutputId = 'Out_dm')
-}
-    if(nrow(df2_An_07) != 0){
-df3_An_07 <- df3_An_07 |>
-  dplyr::mutate(
-      group1_groupingId = 'AnlsGrp_01_TRT01A',
-      group1_groupId = dplyr::case_when(
-        as.character(group1_level) == 'Placebo' ~ 'AnlsGrp_01_TRT01A_01',
-        as.character(group1_level) == 'Xanomeline Low Dose' ~ 'AnlsGrp_01_TRT01A_02',
-        as.character(group1_level) == 'Xanomeline High Dose' ~ 'AnlsGrp_01_TRT01A_03',
-        TRUE ~ NA_character_
-      )
-  )
-}
-df3_An_07 <- df3_An_07 |>
-  dplyr::mutate(dplyr::across(
-    dplyr::matches('_level$'),
-    ~ vapply(.x, function(v) if (is.null(v)) NA_character_ else as.character(v), character(1L))
-  ))
-
-
 # combine analyses to create ARD ----
 ARD <- dplyr::bind_rows(df3_An_01, 
 df3_An_02, 
 df3_An_03, 
 df3_An_04, 
 df3_An_05, 
-df3_An_06, 
-df3_An_07) 
+df3_An_06) 
