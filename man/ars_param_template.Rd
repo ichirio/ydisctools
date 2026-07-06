@@ -54,6 +54,15 @@ name (\code{"SAFFL"} means \code{ADSL.SAFFL EQ Y}), or
 \code{";"} (combined with AND); \code{IN}/\code{NOTIN} values are
 pipe-separated (\code{"SEX IN M|F"}).
 
+\code{population} additionally accepts \code{"ALL"} -- no analysis-set
+filter at all, for data that already \emph{are} the intended analysis set
+(e.g. pre-filtered upstream).  \code{build_ars()} then emits no
+\code{AnalysisSets} row and a blank \code{analysisSetId}, and
+\code{siera::readARS()} uses the analysis dataset unfiltered (its
+documented fallback; the generation warns "using the analysis dataset
+without filtering").  An \code{"ALL"} output must keep all its analyses on
+one dataset.
+
 Note the ARS idiom for "n (\%) of subjects per category": the analysis
 variable stays \code{USUBJID} and the category variable (\code{AGEGR1},
 \code{SEX}, \code{AEBODSYS}, ...) enters as the \emph{second} grouping in

@@ -162,7 +162,8 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
   }
   note(paste0("REVIEW: an ARD carries no population or subset conditions - ",
               "`population` and `where` are blank; set them from the ",
-              "source programme or the SAP."))
+              "source programme or the SAP (use population = 'ALL' when ",
+              "the analysed data were already the intended analysis set)."))
 
   outputs <- data.frame(
     output_id  = names(ard_of),
@@ -328,6 +329,11 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
     dup <- is_totn & duplicated(paste(an_df$method, an_df$variable,
                                       an_df$group_by, sep = "\r"))
     rows <- rows[!dup]
+    # denominators first: cards lists .total_n / .by_stats counts LAST, but
+    # siera generates programmes in row order and the percentage analyses
+    # read the denominator's data frame - it must already exist (issue #37)
+    is_totn <- is_totn[!dup]
+    rows <- c(rows[is_totn], rows[!is_totn])
   }
 
   # observed levels of the common first grouping -> pre-defined groups

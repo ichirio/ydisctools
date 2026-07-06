@@ -210,7 +210,7 @@ test_that("build_ars validates its inputs", {
   expect_error(build_ars(p), "at most 2")
 
   p <- base; p$outputs$population <- NA; p$analyses$population <- NA
-  expect_error(build_ars(p), "`population` and `group_by` are required")
+  expect_error(build_ars(p), "`population` is required")
 
   p <- base; p$analyses$population[] <- "SAFFL; ITTFL"
   expect_error(build_ars(p), "single condition")

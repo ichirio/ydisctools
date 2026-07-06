@@ -5,6 +5,31 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* `build_ars()` accepts **`population = "ALL"`** -- no analysis-set filter,
+  for data that already *are* the intended analysis set (e.g. pre-filtered
+  upstream, the usual shape of a recovered single-programme draft). No
+  `AnalysisSets` row is emitted and `analysisSetId` stays blank;
+  `siera::readARS()` then uses the analysis dataset unfiltered (its
+  documented fallback, with a generation-time warning). An `"ALL"` output
+  must keep all its analyses on one dataset (siera's no-filter fallback
+  cannot do the cross-dataset merge). Mock shells label it "All Subjects"
+  (#37).
+
+## Bug fixes
+
+* `build_ars()` now rejects a percentage analysis whose `total_n`
+  denominator is listed **after** it, with a hint to reorder -- siera
+  generates programmes in row order, so the late denominator produced
+  `object 'df2_An_NN' not found` at run time. `ars_params_from_ard()`
+  correspondingly emits `total_n` analyses first (cards ARDs list
+  `.total_n` / `.by_stats` counts last) (#37).
+
+* The `build_ars()` required-fields error now names only the column(s)
+  actually missing (it always claimed both `population` and `group_by`)
+  and points at `population = "ALL"` for pre-filtered data (#37).
+
+## New features
+
 * New `ars_params_recover()`: the recommended front door of the
   parameter-recovery family. With one source it delegates to
   `ars_params_from_code()` / `ars_params_from_ard()`; with **both** it
