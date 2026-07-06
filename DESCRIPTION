@@ -1,7 +1,7 @@
 Package: ydisctools
 Type: Package
 Title: Your CDISC Related Tools
-Version: 0.0.246
+Version: 0.0.247
 Author: Yoichi Masui
 Maintainer: Yoichi Masui <masui.yoichi@gmail.com>
 Description: A collection of small, focused tools for CDISC programming
@@ -26,6 +26,7 @@ Suggests:
     siera,
     cards,
     cardx,
+    broom,
     withr,
     openxlsx,
     rtfreporter,
