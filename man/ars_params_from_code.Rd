@@ -49,8 +49,11 @@ Variable lists are resolved through the indirections real programmes use
 \pkg{magrittr} pipes (\code{df \%>\% ard_stack(...)}) are collapsed so the
 piped data keeps feeding the dataset / population detection.  A wrapper
 whose symbol has no literal assignment in the file keeps the symbol name
-and is flagged with a REVIEW note.  When only the ARD itself is available,
-see \code{\link{ars_params_from_ard}}.
+and is flagged with a REVIEW note.  On siera-generated programmes the
+pre-defined group levels are recovered from the groupId-stamping
+\code{case_when()} blocks (the only place generated code carries them), so
+a code -> params -> ARS -> code loop keeps \code{groups} too.  When only
+the ARD itself is available, see \code{\link{ars_params_from_ard}}.
 
 The result is a DRAFT: review the \code{notes} element (and the
 \code{Notes} sheet written by \code{\link{write_ars_params}}) before

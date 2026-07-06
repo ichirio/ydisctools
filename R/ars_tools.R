@@ -736,7 +736,17 @@ build_ars <- function(params) {
   }
 
   # --- Methods (expanded from the vendored siera catalog) --------------------
-  used_keys <- unique(analyses$method)
+  # Resolve the catalog key per analysis: a flat subject-count categorical
+  # (single grouping, variable USUBJID) is generated from the dedicated
+  # branch-free flat template so the emitted programme stays readable --
+  # the compact parameter format keeps saying "categorical_summary".
+  analyses$.method_key <- analyses$method
+  flat_sel <- analyses$method == "categorical_summary" &
+    vapply(ana_grp_ids, length, integer(1)) == 1L &
+    toupper(analyses$variable) == "USUBJID" &
+    "categorical_summary_flat" %in% names(catalog)
+  analyses$.method_key[flat_sel] <- "categorical_summary_flat"
+  used_keys <- unique(analyses$.method_key)
   method_id_of <- paste0("Mth_", used_keys)
   names(method_id_of) <- used_keys
   context <- attr(catalog, "context")
@@ -804,7 +814,7 @@ build_ars <- function(params) {
   }, character(1))
   den_of <- rep(NA_character_, nrow(analyses))
   for (i in seq_len(nrow(analyses))) {
-    if (!needs_denom[[analyses$method[i]]]) next
+    if (!needs_denom[[analyses$.method_key[i]]]) next
     den <- analyses$denominator[i]
     if (.ars_blank(den) || identical(trimws(den), "auto")) {
       cand <- which(
@@ -880,7 +890,7 @@ build_ars <- function(params) {
   Analyses$dataSubsetId <- ana_ds_id
   Analyses$dataset <- analyses$dataset
   Analyses$variable <- analyses$variable
-  Analyses$method_id <- unname(method_id_of[analyses$method])
+  Analyses$method_id <- unname(method_id_of[analyses$.method_key])
   has_den <- !is.na(den_of)
   Analyses$referencedAnalysisOperations_referencedOperationId1 <- ifelse(
     has_den, paste0(Analyses$method_id, "_pct_num"), NA_character_

@@ -1,7 +1,7 @@
 
 # Programme:    Generate code to produce ARD for Out_ae_sev
 # Output:       Summary of Treatment-Emergent Adverse Events by Maximum Severity
-# Date created: 2026-07-05 23:19:55
+# Date created: 2026-07-06 11:46:23
 
   # load libraries ----
     library(dplyr)
@@ -83,39 +83,26 @@ df2_An_24 <- df_pop |>
 #Apply Method --- 
 #Apply Method --- 
 
-# Method ID:              Mth_categorical_summary
-# Method name:            Summary of a categorical variable (n and %)
-# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). A flat analysis (no category variable, e.g. 'subjects with at least one TEAE') tabulates a constant flag with the group as `by=`, so the percentage denominator is the per-group big N rather than the overall N. ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
+# Method ID:              Mth_categorical_summary_flat
+# Method name:            Subject count per group (n and %)
+# Method description:     Distinct-subject n and percentage per group for a flat analysis (no category variable, e.g. 'subjects with at least one TEAE'), with a referenced denominator analysis. Tabulates a constant '.flag_' with the group as `by=`, so the percentage denominator is that group's big N. Selected automatically by build_ars() when a categorical_summary analysis has a single grouping and variable = USUBJID; the compact parameter format keeps the categorical_summary key. ydisctools overlay entry.
 
 if(nrow(df2_An_24) != 0) {
                               denom_dataset = df2_An_23 |>
   dplyr::select(TRT01A)
 
+# n (%) of subjects per group: tabulate a constant flag with the group as
+# `by`, so the percentage denominator is that group's big N
 in_data = df2_An_24 |>
-    dplyr::distinct(TRT01A, USUBJID)
+    dplyr::distinct(TRT01A, USUBJID) |>
+    dplyr::mutate(.flag_ = 'Y')
 
-dataDriven = FALSE
-if(ncol(in_data) <= 2){
-# flat analysis (no category variable): tabulate a constant flag with the
-# group as `by`, so the percentage denominator is the per-group big N
 df3_An_24 <-
   cards::ard_tabulate(
-    data = in_data |> dplyr::mutate(.flag_ = 'Y')
+    data = in_data
     , by = 'TRT01A', variables = '.flag_',
     denominator = denom_dataset
-  ) } else if(dataDriven == TRUE){
-df3_An_24 <-
-  cards::ard_tabulate(
-    data = in_data
-    , variables = 'TRT01A',
-    denominator = denom_dataset
-  ) } else {
-df3_An_24 <-
- cards::ard_tabulate(
-    data = in_data
-    , variables = 'TRT01A',
-    denominator = denom_dataset
-  ) }
+  )
 df3_An_24 <- df3_An_24 |>
   dplyr::filter(stat_name %in% c('n', 'p')) |>
   dplyr::mutate(operationid = dplyr::case_when(stat_name == 'n' ~ 'opid1here',
@@ -123,14 +110,26 @@ df3_An_24 <- df3_An_24 |>
 if(nrow(df2_An_24) != 0){
 df3_An_24 <- df3_An_24 |>
         dplyr::mutate(AnalysisId = 'An_24',
-               MethodId = 'Mth_categorical_summary',
+               MethodId = 'Mth_categorical_summary_flat',
                OutputId = 'Out_ae_sev')
 } else {
     df3_An_24 = data.frame(AnalysisId = 'An_24',
-               MethodId = 'Mth_categorical_summary',
+               MethodId = 'Mth_categorical_summary_flat',
                OutputId = 'Out_ae_sev')
 }
-    df3_An_24 <- df3_An_24 |>
+    if(nrow(df2_An_24) != 0){
+df3_An_24 <- df3_An_24 |>
+  dplyr::mutate(
+      group1_groupingId = 'AnlsGrp_01_TRT01A',
+      group1_groupId = dplyr::case_when(
+        as.character(group1_level) == 'Placebo' ~ 'AnlsGrp_01_TRT01A_01',
+        as.character(group1_level) == 'Xanomeline Low Dose' ~ 'AnlsGrp_01_TRT01A_02',
+        as.character(group1_level) == 'Xanomeline High Dose' ~ 'AnlsGrp_01_TRT01A_03',
+        TRUE ~ NA_character_
+      )
+  )
+}
+df3_An_24 <- df3_An_24 |>
   dplyr::mutate(dplyr::across(
     dplyr::matches('_level$'),
     ~ vapply(.x, function(v) if (is.null(v)) NA_character_ else as.character(v), character(1L))
@@ -147,7 +146,7 @@ df2_An_25 <- df_pop |>
 
 # Method ID:              Mth_categorical_summary
 # Method name:            Summary of a categorical variable (n and %)
-# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). A flat analysis (no category variable, e.g. 'subjects with at least one TEAE') tabulates a constant flag with the group as `by=`, so the percentage denominator is the per-group big N rather than the overall N. ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
+# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). Flat analyses (no category variable) are generated from the dedicated categorical_summary_flat template instead. ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
 
 if(nrow(df2_An_25) != 0) {
                               denom_dataset = df2_An_23 |>
@@ -156,16 +155,9 @@ if(nrow(df2_An_25) != 0) {
 in_data = df2_An_25 |>
     dplyr::distinct(TRT01A, AESEV, USUBJID)
 
+# strata= when the innermost grouping is data-driven, by= when pre-defined
 dataDriven = TRUE
-if(ncol(in_data) <= 2){
-# flat analysis (no category variable): tabulate a constant flag with the
-# group as `by`, so the percentage denominator is the per-group big N
-df3_An_25 <-
-  cards::ard_tabulate(
-    data = in_data |> dplyr::mutate(.flag_ = 'Y')
-    , by = 'TRT01A', variables = '.flag_',
-    denominator = denom_dataset
-  ) } else if(dataDriven == TRUE){
+if(dataDriven == TRUE){
 df3_An_25 <-
   cards::ard_tabulate(
     data = in_data

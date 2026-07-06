@@ -191,7 +191,8 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
                       "var", "iqr", "geo_mean", "cv")
 
 # known catalog keys a siera-stamped MethodId can map back onto
-.apfa_method_keys <- c("total_n", "categorical_summary", "continuous_summary",
+.apfa_method_keys <- c("total_n", "categorical_summary",
+                       "categorical_summary_flat", "continuous_summary",
                        "risk_difference", "risk_difference_per_group",
                        "fishers_exact", "chisq", "anova")
 
