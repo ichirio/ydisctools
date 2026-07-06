@@ -130,6 +130,7 @@ test_that("proportion_ci runs end to end and the loop converges (#40)", {
   skip_if_not_installed("siera")
   skip_if_not_installed("cards")
   skip_if_not_installed("cardx")
+  skip_if_not_installed("broom")   # cardx::ard_categorical_ci() needs it
   skip_on_cran()
 
   set.seed(40)
