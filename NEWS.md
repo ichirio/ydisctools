@@ -5,6 +5,24 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## New features
 
+* **Human-maintainable generated code + round-trip loop guarantee** (#39).
+  Generated programmes are ultimately finished and maintained by people, so:
+  - the overlay `categorical_summary` method was **split**: flat
+    subject-count analyses (no category variable) now come from a dedicated
+    `categorical_summary_flat` template -- a single clean cards call with an
+    explanatory comment -- and grouped analyses lost the dead flat branch.
+    Every generated analysis now contains only its own live code.
+    `build_ars()` picks the flat template automatically; the compact
+    parameter format is unchanged.
+  - `ars_params_from_code()` recovers the **pre-defined group levels** from
+    the generated groupId-stamping `case_when()` blocks (the only place
+    generated code carries them), so `groups` survives the loop.
+  - new `test-ars-roundtrip.R` locks the loop in: *human code -> params ->
+    ARS -> generated code -> params -> ...* converges in one step, is
+    idempotent afterwards (params and rebuilt ARS identical sheet-by-sheet),
+    and both generated ARDs match the ARD produced by executing the
+    original human-style programme directly.
+
 * `build_ars()` accepts **`population = "ALL"`** -- no analysis-set filter,
   for data that already *are* the intended analysis set (e.g. pre-filtered
   upstream, the usual shape of a recovered single-programme draft). No

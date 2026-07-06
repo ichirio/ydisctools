@@ -1,7 +1,7 @@
 
 # Programme:    Generate code to produce ARD for Out_ds
 # Output:       Summary of Subject Disposition
-# Date created: 2026-07-05 23:19:55
+# Date created: 2026-07-06 11:46:22
 
   # load libraries ----
     library(dplyr)
@@ -75,7 +75,7 @@ df2_An_08 <- df_pop
 
 # Method ID:              Mth_categorical_summary
 # Method name:            Summary of a categorical variable (n and %)
-# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). A flat analysis (no category variable, e.g. 'subjects with at least one TEAE') tabulates a constant flag with the group as `by=`, so the percentage denominator is the per-group big N rather than the overall N. ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
+# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). Flat analyses (no category variable) are generated from the dedicated categorical_summary_flat template instead. ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
 
 if(nrow(df2_An_08) != 0) {
                               denom_dataset = df2_An_07 |>
@@ -84,16 +84,9 @@ if(nrow(df2_An_08) != 0) {
 in_data = df2_An_08 |>
     dplyr::distinct(TRT01A, EOSSTT, USUBJID)
 
+# strata= when the innermost grouping is data-driven, by= when pre-defined
 dataDriven = TRUE
-if(ncol(in_data) <= 2){
-# flat analysis (no category variable): tabulate a constant flag with the
-# group as `by`, so the percentage denominator is the per-group big N
-df3_An_08 <-
-  cards::ard_tabulate(
-    data = in_data |> dplyr::mutate(.flag_ = 'Y')
-    , by = 'TRT01A', variables = '.flag_',
-    denominator = denom_dataset
-  ) } else if(dataDriven == TRUE){
+if(dataDriven == TRUE){
 df3_An_08 <-
   cards::ard_tabulate(
     data = in_data
@@ -149,7 +142,7 @@ df2_An_09 <- df_pop |>
 
 # Method ID:              Mth_categorical_summary
 # Method name:            Summary of a categorical variable (n and %)
-# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). A flat analysis (no category variable, e.g. 'subjects with at least one TEAE') tabulates a constant flag with the group as `by=`, so the percentage denominator is the per-group big N rather than the overall N. ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
+# Method description:     Distinct-subject n and percentage per category and group, with a referenced denominator analysis. Modern cards pattern: the category variable is passed as `variables=` (so it lands in the ARD's variable / variable_level columns) and the outer grouping(s) as `by=` (`strata=` when the innermost grouping is data-driven). Flat analyses (no category variable) are generated from the dedicated categorical_summary_flat template instead. ydisctools overlay entry; replaces the siera catalog's distinct+dummy template.
 
 if(nrow(df2_An_09) != 0) {
                               denom_dataset = df2_An_07 |>
@@ -158,16 +151,9 @@ if(nrow(df2_An_09) != 0) {
 in_data = df2_An_09 |>
     dplyr::distinct(TRT01A, DCSREAS, USUBJID)
 
+# strata= when the innermost grouping is data-driven, by= when pre-defined
 dataDriven = TRUE
-if(ncol(in_data) <= 2){
-# flat analysis (no category variable): tabulate a constant flag with the
-# group as `by`, so the percentage denominator is the per-group big N
-df3_An_09 <-
-  cards::ard_tabulate(
-    data = in_data |> dplyr::mutate(.flag_ = 'Y')
-    , by = 'TRT01A', variables = '.flag_',
-    denominator = denom_dataset
-  ) } else if(dataDriven == TRUE){
+if(dataDriven == TRUE){
 df3_An_09 <-
   cards::ard_tabulate(
     data = in_data

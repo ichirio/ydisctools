@@ -48,8 +48,11 @@
 #' \pkg{magrittr} pipes (\code{df \%>\% ard_stack(...)}) are collapsed so the
 #' piped data keeps feeding the dataset / population detection.  A wrapper
 #' whose symbol has no literal assignment in the file keeps the symbol name
-#' and is flagged with a REVIEW note.  When only the ARD itself is available,
-#' see [ars_params_from_ard()].
+#' and is flagged with a REVIEW note.  On siera-generated programmes the
+#' pre-defined group levels are recovered from the groupId-stamping
+#' \code{case_when()} blocks (the only place generated code carries them),
+#' so a code -> params -> ARS -> code loop keeps \code{groups} too.  When
+#' only the ARD itself is available, see [ars_params_from_ard()].
 #'
 #' The result is a DRAFT: review the \code{notes} element (and the
 #' \code{Notes} sheet written by [write_ars_params()]) before building an ARS
@@ -183,6 +186,7 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   st$disp <- list()                     # display subsection rows
   st$ds <- list()                       # symbol -> list(dataset, conds, sym)
   st$values <- list()                   # symbol -> character vector constants
+  st$group_levels <- list()             # grouping var -> pre-defined levels
   st$note <- function(msg) st$notes <- c(st$notes, msg)
 
   for (e in exprs) .apc_scan(e, st)
@@ -212,6 +216,27 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
         stringsAsFactors = FALSE
       )
     }))
+    # siera-generated programmes carry the pre-defined group levels only in
+    # the groupId-stamping case_when blocks; fill `groups` from them so a
+    # code -> params -> ARS -> code loop does not lose the levels
+    if (length(st$group_levels) > 0) {
+      filled <- FALSE
+      for (i in seq_len(nrow(analyses))) {
+        if (nzchar(analyses$groups[i])) next
+        g1 <- trimws(strsplit(analyses$group_by[i], ",", fixed = TRUE)[[1]][1])
+        g1 <- sub("^.*\\.", "", g1)
+        lv <- st$group_levels[[g1]]
+        if (!is.null(lv)) {
+          analyses$groups[i] <- paste(lv, collapse = " | ")
+          filled <- TRUE
+        }
+      }
+      if (filled) {
+        st$note(paste0("ASSUMED: pre-defined group levels were recovered ",
+                       "from the generated groupId stamping (case_when) - ",
+                       "verify them against the planned groups."))
+      }
+    }
   } else {
     st$note(paste0("No convertible cards/cardx calls found in ",
                    basename(path), "."))
@@ -286,6 +311,10 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   if (f %in% c("rtf_titles", "rtf_footnotes", "rtf_tables")) {
     .apc_h_text_args(e, st)
     # fall through: rtf_tables(...) may still hold parseable inner calls
+  }
+  if (f == "case_when") {
+    .apc_h_groupid_casewhen(e, st)
+    # fall through: harmless, and keeps any nested calls visible
   }
   if (grepl("^ard_", f)) {
     st$note(paste0("Unsupported ARD function skipped: ", f, "()"))
@@ -540,11 +569,17 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   den <- .apc_arg(e, "denominator")
 
   # ydisctools flat-analysis idiom: a constant '.flag_' tabulated with the
-  # group as `by` (per-group percentage denominators).  In generated code
-  # this branch coexists with the by/strata branches, whose
-  # `variables = <group var>` call carries the same analysis -- skip this
-  # one so the de-duplication step sees a single emission.
+  # group as `by` (per-group percentage denominators).  Since the dedicated
+  # categorical_summary_flat template (issue #39) this call IS the whole
+  # analysis, so it is emitted.  (In 0.0.242-0.0.244 combined-template code
+  # the same call sat as a dead branch inside every grouped analysis; for a
+  # FLAT old analysis the sibling branch emission de-duplicates against
+  # this one, for a grouped old analysis this adds one spurious subject-
+  # count row - review the draft as usual.)
   if (identical(vars, ".flag_")) {
+    .apc_emit(st, "categorical_summary", "USUBJID", cx$by, cx$info,
+              name = "Subjects, n (%)",
+              denominator = if (!is.null(den)) "auto" else "")
     return(invisible())
   }
   # siera-generated subject-count idiom: distinct subjects + variables='dummy'
@@ -570,6 +605,30 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
                    "n (%) (variable=USUBJID, ", v, " as 2nd grouping); a ",
                    "total_n analysis supplies the denominator."))
   }
+}
+
+# siera stamps pre-defined group memberships onto the ARD with
+#   group1_groupId = dplyr::case_when(
+#     as.character(group1_level) == 'Placebo' ~ 'AnlsGrp_01_TRT01A_01', ...)
+# -- the only place the generated programme carries the planned group
+# levels.  Collect them per grouping variable (parsed from the group id).
+.apc_h_groupid_casewhen <- function(e, st) {
+  for (i in seq_along(e)[-1]) {
+    part <- e[[i]]
+    if (!(is.call(part) && .apc_fname(part) == "~" && length(part) == 3)) next
+    lhs <- part[[2]]; rhs <- part[[3]]
+    if (!is.character(rhs) || length(rhs) != 1) next
+    m <- regmatches(rhs, regexec("^AnlsGrp_[0-9]+_(.+)_[0-9]+$", rhs))[[1]]
+    if (length(m) != 2) next
+    if (!(is.call(lhs) && .apc_fname(lhs) == "==" && length(lhs) == 3 &&
+          is.character(lhs[[3]]))) next
+    var <- m[2]
+    lvl <- lhs[[3]]
+    if (!lvl %in% st$group_levels[[var]]) {
+      st$group_levels[[var]] <- c(st$group_levels[[var]], lvl)
+    }
+  }
+  invisible()
 }
 
 .apc_h_stack <- function(e, st) {
