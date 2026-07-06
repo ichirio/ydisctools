@@ -135,6 +135,7 @@ reference:
       - build_ars
       - write_ars_xlsx
       - ars_params_from_code
+      - ars_params_from_ard
       - write_ars_params
       - ars_toc_template
       - ars_from_toc

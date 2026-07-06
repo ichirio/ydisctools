@@ -33,12 +33,24 @@ file becomes one output (display).
 Supported analysis calls: \code{ard_summary()} / \code{ard_continuous()},
 \code{ard_tabulate()} / \code{ard_categorical()} (including the
 siera-generated subject-count and big-N idioms), \code{ard_stack()}
-(\code{.by}, \code{.total_n}), \code{ard_stack_hierarchical()} (including
+(\code{.by}, \code{.total_n}, \code{.by_stats}),
+\code{ard_stack_hierarchical()} (including
 \code{over_variables = TRUE}; a nested hierarchy is flattened with a
 LIMITATION note), and the cardx tests
 \code{ard_stats_fisher_test/chisq_test/aov/anova/oneway_test/prop_test()}
 (mapped onto the bundled method catalog).  Anything else is skipped with a
 note.
+
+Variable lists are resolved through the indirections real programmes use
+(issue #32): a character vector assigned earlier in the file
+(\code{vars <- c("AGE", ...)}) referenced directly or via
+\code{all_of(vars)} / \code{any_of(vars)}, single names injected with
+\code{!!sym(col)} / \code{syms()} or \code{.data[[col]]}, and
+\pkg{magrittr} pipes (\code{df \%>\% ard_stack(...)}) are collapsed so the
+piped data keeps feeding the dataset / population detection.  A wrapper
+whose symbol has no literal assignment in the file keeps the symbol name
+and is flagged with a REVIEW note.  When only the ARD itself is available,
+see \code{\link{ars_params_from_ard}}.
 
 The result is a DRAFT: review the \code{notes} element (and the
 \code{Notes} sheet written by \code{\link{write_ars_params}}) before

@@ -32,12 +32,24 @@
 #' Supported analysis calls: \code{ard_summary()} / \code{ard_continuous()},
 #' \code{ard_tabulate()} / \code{ard_categorical()} (including the
 #' siera-generated subject-count and big-N idioms), \code{ard_stack()}
-#' (\code{.by}, \code{.total_n}), \code{ard_stack_hierarchical()} (including
+#' (\code{.by}, \code{.total_n}, \code{.by_stats}),
+#' \code{ard_stack_hierarchical()} (including
 #' \code{over_variables = TRUE}; a nested hierarchy is flattened with a
 #' LIMITATION note), and the cardx tests
 #' \code{ard_stats_fisher_test/chisq_test/aov/anova/oneway_test/prop_test()}
 #' (mapped onto the bundled method catalog).  Anything else is skipped with a
 #' note.
+#'
+#' Variable lists are resolved through the indirections real programmes use
+#' (issue #32): a character vector assigned earlier in the file
+#' (\code{vars <- c("AGE", ...)}) referenced directly or via
+#' \code{all_of(vars)} / \code{any_of(vars)}, single names injected with
+#' \code{!!sym(col)} / \code{syms()} or \code{.data[[col]]}, and
+#' \pkg{magrittr} pipes (\code{df \%>\% ard_stack(...)}) are collapsed so the
+#' piped data keeps feeding the dataset / population detection.  A wrapper
+#' whose symbol has no literal assignment in the file keeps the symbol name
+#' and is flagged with a REVIEW note.  When only the ARD itself is available,
+#' see [ars_params_from_ard()].
 #'
 #' The result is a DRAFT: review the \code{notes} element (and the
 #' \code{Notes} sheet written by [write_ars_params()]) before building an ARS
@@ -250,6 +262,13 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
     .apc_scan(rhs, st)
     return(invisible())
   }
+  # collapse magrittr pipes so `df %>% ard_stack(...)` dispatches with `df`
+  # as the data argument, like the native |> (which the parser collapses)
+  if (f == "%>%" && length(e) == 3 && is.call(e[[3]])) {
+    collapsed <- as.call(append(as.list(e[[3]]), list(e[[2]]), after = 1))
+    .apc_scan(collapsed, st)
+    return(invisible())
+  }
   if (f == "ard_stack") { .apc_h_stack(e, st); return(invisible()) }
   if (f == "ard_stack_hierarchical") { .apc_h_stack_hier(e, st); return(invisible()) }
   if (f %in% c("ard_summary", "ard_continuous")) {
@@ -309,7 +328,11 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   NULL
 }
 
-# character values of an expression: "x", c("a","b"), symbol, c(SYM1, SYM2)
+# character values of an expression: "x", c("a","b"), symbol, c(SYM1, SYM2),
+# plus the tidyselect / rlang indirections real programmes use for variable
+# lists (issue #32): all_of(vars) / any_of(vars), sym(col) / syms(cols),
+# !!x / !!!x (parsed as nested unary `!`), and .data[[col]].  Symbols are
+# resolved against the file's literal assignments (st$values).
 .apc_chr_vec <- function(e, st = NULL) {
   if (is.null(e)) return(character(0))
   if (is.character(e)) return(e)
@@ -318,8 +341,33 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
     if (!is.null(st) && !is.null(st$values[[v]])) return(st$values[[v]])
     return(v)
   }
-  if (is.call(e) && .apc_fname(e) == "c") {
-    return(unlist(lapply(as.list(e)[-1], .apc_chr_vec, st = st)))
+  if (is.call(e)) {
+    f <- .apc_fname(e)
+    if (f == "c") {
+      return(unlist(lapply(as.list(e)[-1], .apc_chr_vec, st = st)))
+    }
+    if (f == "!" && length(e) == 2) {          # !!x / !!!x injection
+      return(.apc_chr_vec(e[[2]], st))
+    }
+    if (f %in% c("all_of", "any_of", "sym", "syms") && length(e) == 2) {
+      inner <- e[[2]]
+      if (is.name(inner) &&
+          (is.null(st) || is.null(st$values[[as.character(inner)]]))) {
+        if (!is.null(st)) {
+          st$note(paste0(
+            "REVIEW: ", f, "(", as.character(inner), ") could not be ",
+            "resolved - no literal character assignment to `",
+            as.character(inner), "` was found in this file; the symbol ",
+            "name was kept, fix the variable / grouping values manually."))
+        }
+        return(as.character(inner))
+      }
+      return(.apc_chr_vec(inner, st))
+    }
+    if (f == "[[" && length(e) == 3 && is.name(e[[2]]) &&
+        as.character(e[[2]]) == ".data") {     # .data[[col]]
+      return(.apc_chr_vec(e[[3]], st))
+    }
   }
   paste(deparse(e), collapse = " ")
 }
@@ -530,6 +578,14 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   total_n <- .apc_arg(e, ".total_n")
   if (!is.null(total_n) && identical(deparse(total_n), "TRUE")) {
     .apc_emit(st, "total_n", "USUBJID", by, info, name = "Number of subjects")
+  }
+  # .by_stats = TRUE tabulates the .by variable itself = the per-group
+  # subject count (deduplicated against .total_n when both are present)
+  by_stats <- .apc_arg(e, ".by_stats")
+  if (!is.null(by_stats) && identical(deparse(by_stats), "TRUE")) {
+    .apc_emit(st, "total_n", "USUBJID", by, info, name = "Number of subjects")
+    st$note(paste0("ASSUMED: ard_stack(.by_stats = TRUE) emitted as a ",
+                   "total_n analysis (subject count per group)."))
   }
   nm <- names(e); if (is.null(nm)) nm <- rep("", length(e))
   for (i in seq_along(e)[-1]) {

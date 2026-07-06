@@ -238,3 +238,59 @@ test_that("recovered parameters build an ARS that siera runs end-to-end", {
   names(got) <- n01$variable_level
   expect_equal(got[names(truth)], truth)
 })
+
+# -- issue #32: variable-name lists and rlang/tidyselect indirections ---------
+
+test_that("all_of()/!!sym() variable lists and %>% pipes resolve (#32)", {
+  src <- .write_src('
+    library(cards); library(dplyr)
+    col_cat_var <- "TR01AG1"
+    vars_cont <- c("AGE", "HTBL", "WTBL", "AIBWBL")
+    vars_cat  <- c("AGEGR1", "AGEGR2", "AGEGR3", "SEX",
+                   "ETHNIC", "ARACE", "ASRACE")
+    df <- adsl %>% filter(SAFFL == "Y")
+    ard <- df %>%
+      ard_stack(
+        ard_summary(
+          variables = all_of(vars_cont),
+          statistic = everything() ~
+            continuous_summary_fns(c("N", "mean", "sd",
+                                     "median", "min", "max"))
+        ),
+        ard_tabulate(
+          variables = all_of(vars_cat),
+          statistic = everything() ~ c("n", "p")
+        ),
+        .by = !!sym(col_cat_var),
+        .by_stats = TRUE
+      ) %>%
+      unlist_ard_columns()')
+  rec <- ars_params_from_code(src, output_id = "Out_dm")
+  an <- rec$analyses
+
+  # every listed variable is recovered individually
+  cont <- an[an$method == "continuous_summary", ]
+  expect_equal(cont$variable, c("AGE", "HTBL", "WTBL", "AIBWBL"))
+  cat_ <- an[an$method == "categorical_summary", ]
+  expect_equal(cat_$group_by,
+               paste0("TR01AG1, ", c("AGEGR1", "AGEGR2", "AGEGR3", "SEX",
+                                     "ETHNIC", "ARACE", "ASRACE")))
+  # !!sym(col_cat_var) resolved to the grouping variable everywhere
+  expect_true(all(grepl("^TR01AG1", an$group_by)))
+  # the %>% pipe kept the data flowing: dataset + population recovered
+  expect_true(all(an$dataset == "ADSL"))
+  expect_true(all(an$population == "SAFFL"))
+  # .by_stats = TRUE emitted the per-group subject count
+  expect_equal(sum(an$method == "total_n"), 1)
+})
+
+test_that("an unresolvable all_of() symbol keeps the name with a note", {
+  src <- .write_src('
+    library(cards)
+    ard_summary(data = adsl, variables = all_of(vars_elsewhere),
+                by = "TRT01A")')
+  rec <- ars_params_from_code(src)
+  expect_equal(rec$analyses$variable, "vars_elsewhere")
+  expect_true(any(grepl("all_of(vars_elsewhere) could not be resolved",
+                        rec$notes, fixed = TRUE)))
+})
