@@ -114,6 +114,9 @@
 
 # Friendly population names for common ADaM flags.
 .ars_population_name <- function(expr, cond) {
+  if (identical(toupper(trimws(as.character(expr))), "ALL")) {
+    return("All Subjects")
+  }
   flags <- c(SAFFL = "Safety Population",
              ITTFL = "Intent-to-Treat Population",
              FASFL = "Full Analysis Set",
@@ -223,6 +226,15 @@
 #' \code{EQ, NE, GT, GE, LT, LE, IN, NOTIN, CONTAINS}; chain several with
 #' \code{";"} (combined with AND); \code{IN}/\code{NOTIN} values are
 #' pipe-separated (\code{"SEX IN M|F"}).
+#' \code{population} additionally accepts \code{"ALL"} -- no analysis-set
+#' filter at all, for data that already \emph{are} the intended analysis set
+#' (e.g. pre-filtered upstream).  \code{build_ars()} then emits no
+#' \code{AnalysisSets} row and a blank \code{analysisSetId}, and
+#' \code{siera::readARS()} uses the analysis dataset unfiltered (its
+#' documented fallback; the generation warns "using the analysis dataset
+#' without filtering").  An \code{"ALL"} output must keep all its analyses
+#' on one dataset.
+#'
 #'
 #' @param path File path of the workbook to write (\code{.xlsx}).
 #' @param overwrite Logical; overwrite an existing file? Default \code{FALSE}.
@@ -510,47 +522,81 @@ build_ars <- function(params) {
   }
 
   for (i in seq_len(nrow(analyses))) {
-    if (.ars_blank(analyses$population[i]) || .ars_blank(analyses$group_by[i])) {
-      stop("`analyses` row ", i, " (", analyses$analysis_id[i],
-           "): `population` and `group_by` are required (set them on the ",
-           "analysis row or as defaults on the output row).", call. = FALSE)
+    miss <- c(if (.ars_blank(analyses$population[i])) "population",
+              if (.ars_blank(analyses$group_by[i])) "group_by")
+    if (length(miss) > 0) {
+      stop("`analyses` row ", i, " (", analyses$analysis_id[i], "): `",
+           paste(miss, collapse = "` and `"), "` ",
+           if (length(miss) > 1) "are" else "is",
+           " required (set on the analysis row or as a default on the ",
+           "output row",
+           if ("population" %in% miss) {
+             paste0("; use population = \"ALL\" when the data are already ",
+                    "the intended analysis set and no filter applies")
+           },
+           ").", call. = FALSE)
     }
   }
 
   # --- Analysis sets (deduplicated single-condition populations) -----------
-  pop_conds <- lapply(analyses$population, function(p) {
-    cond <- .ars_parse_condition_chain(p, default_dataset = "ADSL")
+  # population = "ALL" means "no analysis-set filter": siera's generated code
+  # then uses the analysis dataset unfiltered (its documented fallback for a
+  # blank analysisSetId, with a run-time warning).
+  is_all <- toupper(trimws(analyses$population)) == "ALL"
+  pop_conds <- vector("list", nrow(analyses))
+  pop_sig <- character(nrow(analyses))
+  for (i in which(!is_all)) {
+    cond <- .ars_parse_condition_chain(analyses$population[i],
+                                       default_dataset = "ADSL")
     if (nrow(cond) > 1) {
       stop("`population` must be a single condition (siera applies one ",
-           "analysis-set condition): '", p, "'.", call. = FALSE)
+           "analysis-set condition): '", analyses$population[i], "'.",
+           call. = FALSE)
     }
-    cond
-  })
-  pop_sig <- vapply(pop_conds, function(c) {
-    paste(c$dataset, c$variable, c$comparator, c$value, sep = "\r")
-  }, character(1))
-  pop_unique <- !duplicated(pop_sig)
-  pop_ids <- sprintf("AnalysisSet_%02d", match(pop_sig, unique(pop_sig)))
+    pop_conds[[i]] <- cond
+    pop_sig[i] <- paste(cond$dataset, cond$variable, cond$comparator,
+                        cond$value, sep = "\r")
+  }
+  pop_ids <- rep("", nrow(analyses))
+  nz <- which(!is_all)
+  if (length(nz) > 0) {
+    pop_ids[nz] <- sprintf("AnalysisSet_%02d",
+                           match(pop_sig[nz], unique(pop_sig[nz])))
+  }
   analyses$.anset_id <- pop_ids
 
   # One population per output (siera builds df_pop once per output, from the
   # first analysis).
   for (oid in outputs$output_id) {
-    sets <- unique(analyses$.anset_id[analyses$output_id == oid])
+    sel <- analyses$output_id == oid
+    sets <- unique(analyses$.anset_id[sel])
     if (length(sets) > 1) {
       stop("Output '", oid, "' mixes different populations; siera applies ",
            "one analysis set per output.", call. = FALSE)
     }
+    # siera's no-filter fallback sets df_pop to the FIRST analysis's dataset,
+    # without the cross-dataset USUBJID merge the filtered path performs
+    if (any(is_all[sel])) {
+      ds <- unique(analyses$dataset[sel])
+      if (length(ds) > 1) {
+        stop("Output '", oid, "': population = \"ALL\" (no analysis-set ",
+             "filter) requires every analysis of the output to use the ",
+             "same dataset, but it uses: ", paste(ds, collapse = ", "),
+             ". Give the output a population condition, or split it per ",
+             "dataset.", call. = FALSE)
+      }
+    }
   }
 
-  u <- which(pop_unique)
+  u <- nz[!duplicated(pop_sig[nz])]
   AnalysisSets <- data.frame(
     id = pop_ids[u],
-    name = unname(mapply(.ars_population_name, analyses$population[u],
-                         pop_conds[u])),
-    description = NA_character_,
-    level = 1L, order = 1L,
-    compoundExpression_logicalOperator = NA_character_,
+    name = vapply(u, function(k) {
+      .ars_population_name(analyses$population[k], pop_conds[[k]])
+    }, character(1)),
+    description = rep(NA_character_, length(u)),
+    level = rep(1L, length(u)), order = rep(1L, length(u)),
+    compoundExpression_logicalOperator = rep(NA_character_, length(u)),
     condition_dataset    = vapply(pop_conds[u], `[[`, character(1), "dataset"),
     condition_variable   = vapply(pop_conds[u], `[[`, character(1), "variable"),
     condition_comparator = vapply(pop_conds[u], `[[`, character(1), "comparator"),
@@ -783,6 +829,19 @@ build_ars <- function(params) {
              call. = FALSE)
       }
       den_of[i] <- den
+    }
+    # siera's generated programme computes each analysis in row order and a
+    # percentage analysis reads its denominator's data frame (df2_<id>), so
+    # a denominator listed AFTER its referent fails at run time with
+    # "object 'df2_<id>' not found".
+    if (match(den_of[i], analyses$analysis_id) > i) {
+      stop("`analyses` row ", i, " (", analyses$analysis_id[i],
+           "): its denominator analysis '", den_of[i], "' comes AFTER it. ",
+           "siera generates the programme in row order, so the total_n ",
+           "denominator must be listed before the analyses that reference ",
+           "it - move it up (cards ARDs list .total_n/.by_stats counts ",
+           "last; ars_params_from_ard() already reorders them).",
+           call. = FALSE)
     }
   }
 
