@@ -35,12 +35,17 @@
 #' (\code{.by}, \code{.total_n}, \code{.by_stats}),
 #' \code{cardx::ard_categorical_ci()} (mapped to the \code{proportion_ci}
 #' method with its CI options recovered onto the \code{options} column),
-#' \code{ard_stack_hierarchical()} (including
-#' \code{over_variables = TRUE}; a nested hierarchy is flattened with a
-#' LIMITATION note), and the cardx tests
+#' \code{ard_stack_hierarchical()} (\code{over_variables = TRUE} adds the
+#' any-event analysis on top of the per-level ones; a nested hierarchy is
+#' flattened with a LIMITATION note), and the cardx tests
 #' \code{ard_stats_fisher_test/chisq_test/aov/anova/oneway_test/prop_test()}
-#' (mapped onto the bundled method catalog).  Anything else is skipped with a
-#' note.
+#' -- both the \code{variables =} and the formula (\code{AGE ~ ARM}) call
+#' forms -- mapped onto the bundled method catalog: \code{chisq} rides the
+#' category-as-second-grouping idiom its template tests; for
+#' \code{fishers_exact} / \code{risk_difference} (subject-flag idiom) a
+#' plain \code{variables = <column>} call gets a REVIEW note spelling out
+#' the manual \code{variable} / \code{where} completion.  Anything else is
+#' skipped with a note.
 #'
 #' Variable lists are resolved through the indirections real programmes use
 #' (issue #32): a character vector assigned earlier in the file
@@ -806,10 +811,12 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   over <- .apc_arg(e, "over_variables")
 
   if (!is.null(over) && identical(deparse(over), "TRUE")) {
+    # over_variables ADDS the any-event row on top of the hierarchy -
+    # the per-level analyses and the denominator still follow (issue #48;
+    # an early return here used to swallow them)
     .apc_emit(st, "categorical_summary", "USUBJID", by, info,
               name = "Subjects with at least one event, n (%)",
               denominator = "auto")
-    return(invisible())
   }
   if (length(vars) >= 2) {
     st$note(paste0("LIMITATION: ard_stack_hierarchical(",
@@ -851,9 +858,57 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   method <- .apc_cardx_map[[f]]
   cx <- .apc_ctx_of(e, st, NULL)
   vars <- .apc_chr_vec(.apc_arg(e, "variables"), st)
+  by <- cx$by
+  if (length(vars) == 0) {
+    # the official examples also use the FORMULA flavour:
+    # ard_stats_aov(AGE ~ ARM, data = ADSL) (issue #48)
+    args <- as.list(e)[-1]
+    nm <- names(args)
+    if (is.null(nm)) nm <- rep("", length(args))
+    for (k in seq_along(args)) {
+      a <- args[[k]]
+      if (nzchar(nm[k])) next
+      if (is.call(a) && is.name(a[[1]]) &&
+          identical(as.character(a[[1]]), "~") && length(a) == 3) {
+        vars <- all.vars(a[[2]])
+        if (length(by) == 0) by <- all.vars(a[[3]])
+        data_e <- .apc_arg(e, "data")
+        if (!is.null(data_e)) {
+          info <- .apc_data_info(data_e, st)
+          if (!is.null(info)) cx$info <- info
+        }
+        break
+      }
+    }
+  }
+  if (length(vars) == 0) {
+    st$note(paste0("REVIEW: ", f, "() found but neither `variables=` nor ",
+                   "a formula could be read - add the analysis manually."))
+    return(invisible())
+  }
   for (v in vars) {
-    .apc_emit(st, method, v, cx$by, cx$info,
-              name = paste0(v, " (", method, ")"))
+    if (method == "chisq") {
+      # the catalog chisq template tests grouping1 x grouping2, so the
+      # analysed variable rides as the SECOND grouping (issue #48)
+      .apc_emit(st, method, "USUBJID", c(by, v), cx$info,
+                name = paste0(v, " (", method, ")"))
+    } else if (method %in% c("fishers_exact", "risk_difference")) {
+      # these catalog methods use the subject-flag idiom (variable = the
+      # subject ID, `where` = the responder/event condition); a plain
+      # `variables = <column>` call cannot be generated faithfully
+      .apc_emit(st, method, v, by, cx$info,
+                name = paste0(v, " (", method, ")"))
+      st$note(paste0("REVIEW: ", f, "(variables = ", v, ") maps onto the ",
+                     "'", method, "' catalog method, which compares the ",
+                     "SUBJECTS meeting `where` between the first two ",
+                     "groups (subject-flag idiom). To generate the same ",
+                     "test, set the analysis `variable` to the subject ID ",
+                     "(USUBJID) and `where` to the responder condition ",
+                     "(e.g. \"", v, " EQ <level>\")."))
+    } else {
+      .apc_emit(st, method, v, by, cx$info,
+                name = paste0(v, " (", method, ")"))
+    }
   }
   st$note(paste0("MAPPED: ", f, "() -> catalog method '", method,
                  "' - review that the operations match the intent."))
