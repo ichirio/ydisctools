@@ -83,3 +83,17 @@ test_that("single-source calls delegate to the matching extractor", {
   expect_error(ars_params_recover(), "Supply")
   expect_error(ars_params_recover(c(src, src), ard), "one programme per")
 })
+
+test_that("a fully disjoint code/ARD pairing errors, not drafts (#46)", {
+  # the dm programme from .recover_src() vs an AE-shaped ARD: nothing can
+  # match - this is the mismatched-`ard`-object mistake, say so loudly
+  ae_ard <- data.frame(
+    group1 = "TRT01A", group1_level = rep(c("Placebo", "Active"), 2),
+    variable = "AEBODSYS",
+    variable_level = rep(c("Cardiac", "Gastro"), each = 2),
+    context = "hierarchical", stat_name = "n", stat = c(3, 4, 2, 5)
+  )
+  expect_error(ars_params_recover(.recover_src(), ae_ard,
+                                  output_id = "Out_dm"),
+               "DIFFERENT displays")
+})

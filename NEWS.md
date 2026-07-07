@@ -62,6 +62,29 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## Bug fixes
 
+* Hierarchical ARDs (`cards::ard_stack_hierarchical()`) no longer leak the
+  cards sentinel `..ard_hierarchical_overall..` into `group_by`, which made
+  `build_ars()` fail with "Cannot parse group_by entry" (#46).
+  `ars_params_from_ard()` now maps the `over_variables` rows to *Subjects
+  with at least one event, n (%)* (the same shape `ars_params_from_code()`
+  emits), drops hierarchy parents from deeper levels' groupings (flat
+  per-level analyses + LIMITATION note), skips unrecognised `..x..`
+  sentinels with a REVIEW note, and notes any faithful 3+-grouping analyses
+  that `build_ars()` will reject (the 2-grouping cap is ydisctools #6). A
+  standard one-`by` hierarchical AE ARD now recovers and builds with no
+  manual edit.
+
+* `ars_params_recover()` now stops with a diagnosis when the programme and
+  the ARD describe fully disjoint analyses (not one (method, variable,
+  groupings) signature in common) instead of silently drafting a
+  meaningless merge -- the #46 report was a demographics programme paired
+  with an adverse-events ARD (a stale `ard` object). The error says so and
+  points at single-source recovery for intentional pairings.
+
+* `write_ars_params()`'s write-time guard now also flags `group_by` values
+  `build_ars()` cannot use (unparseable entries, 3+ simultaneous
+  groupings), not just blank `population` / `group_by` (#46).
+
 * The parameter-recovery functions no longer draft workbooks their own
   `build_ars()` deterministically rejects (#44, the root cause behind the
   #37 report resurfacing). #37 taught `build_ars()` to *accept*

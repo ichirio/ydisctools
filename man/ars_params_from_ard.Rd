@@ -59,7 +59,15 @@ recovered onto \code{options};
 \item the subject-count idioms become \code{total_n}: cards'
 \code{..total_n..} rows, an ungrouped tabulation of a variable that other
 analyses use as their grouping (e.g. \code{.by_stats = TRUE} output), and
-the ydisctools \code{.flag_} pattern maps to a flat per-group count.
+the ydisctools \code{.flag_} pattern maps to a flat per-group count;
+\item \code{ard_stack_hierarchical()} ARDs are flattened the same way
+\code{\link{ars_params_from_code}} flattens the call: the
+\code{over_variables} rows become \emph{Subjects with at least one event,
+n (\%)}, deeper levels drop their hierarchy parents from the groupings
+(LIMITATION note), and cards sentinel markers
+(\code{..ard_hierarchical_overall..} etc.) never leak into
+\code{variable} / \code{group_by} (issue #46) -- an unrecognised sentinel
+is skipped with a REVIEW note.
 }
 
 An ARD carries no data provenance, so \code{dataset} (unless supplied)

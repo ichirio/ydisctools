@@ -55,6 +55,13 @@ ARD's observed ones.
 Outputs are paired positionally (\code{paths[i]} with the i-th
 \code{OutputId} group of the ARD), so supply one programme per ARD output;
 \code{output_id} overrides the IDs of both sides.
+
+When both sources recovered analyses for an output but \strong{not one
+pair} agrees on the (method, variable, groupings) signature, the merge
+stops with an error: the programme and the ARD describe different
+displays, which usually means a mismatched pairing (e.g. a stale
+\code{ard} object left over from another display).  If the pairing is
+intentional, recover each source on its own instead.
 }
 \examples{
 # a programme whose variable list cannot be resolved from this file ...

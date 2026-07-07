@@ -136,10 +136,11 @@ ars_params_from_code <- function(paths, output_id = NULL, output_name = NULL) {
 #' review notes on an extra \code{Notes} sheet.  The file can be edited and
 #' read back with [read_ars_params()], then expanded with [build_ars()].
 #'
-#' When the draft is missing a value [build_ars()] requires -- a
+#' When the draft carries a value [build_ars()] will reject -- a
 #' \code{population} or \code{group_by} with neither an analysis-row value
-#' nor an output-row default -- the file is still written (it is a draft),
-#' but a warning lists the gaps immediately instead of leaving them to
+#' nor an output-row default, an unparseable \code{group_by} entry, or 3+
+#' simultaneous groupings -- the file is still written (it is a draft),
+#' but a warning lists the problems immediately instead of leaving them to
 #' surface as a later \code{build_ars()} error.
 #'
 #' @param params Named list with \code{outputs} and \code{analyses} data
@@ -194,6 +195,29 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
               "output-row default). Fill the blanks in before build_ars() ",
               "- use population = \"ALL\" when the data are already the ",
               "intended analysis set (see the Notes sheet).", call. = FALSE)
+    }
+    # ... and `group_by` values build_ars() cannot use: an unparseable
+    # entry (e.g. a cards sentinel that leaked through) or 3+ simultaneous
+    # groupings (the compact format caps at 2)
+    gb_bad <- character(0)
+    for (i in seq_len(nrow(an))) {
+      gb <- if (blank(an$group_by[i])) out$group_by[idx[i]] else
+        an$group_by[i]
+      if (blank(gb)) next   # already reported above
+      parsed <- tryCatch(.ars_parse_group_by(gb), error = function(e) NULL)
+      if (is.null(parsed)) {
+        gb_bad <- c(gb_bad, paste0("'", gb, "' (unparseable entry)"))
+      } else if (nrow(parsed) > 2) {
+        gb_bad <- c(gb_bad, paste0("'", gb, "' (", nrow(parsed),
+                                   " groupings; at most 2 are supported)"))
+      }
+    }
+    if (length(gb_bad) > 0) {
+      warning("this draft will not build as-is: `group_by` value(s) ",
+              "build_ars() cannot use: ",
+              paste(unique(gb_bad), collapse = "; "),
+              ". Fix them before build_ars() (see the Notes sheet).",
+              call. = FALSE)
     }
   }
   sheets <- list()

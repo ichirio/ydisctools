@@ -45,6 +45,13 @@
 #' \code{OutputId} group of the ARD), so supply one programme per ARD
 #' output; \code{output_id} overrides the IDs of both sides.
 #'
+#' When both sources recovered analyses for an output but \strong{not one
+#' pair} agrees on the (method, variable, groupings) signature, the merge
+#' stops with an error: the programme and the ARD describe different
+#' displays, which usually means a mismatched pairing (e.g. a stale
+#' \code{ard} object left over from another display).  If the pairing is
+#' intentional, recover each source on its own instead.
+#'
 #' @param paths Optional character vector of R source files, as in
 #'   [ars_params_from_code()].
 #' @param ard Optional ARD data frame or flattened \code{.csv} /
@@ -134,16 +141,35 @@ ars_params_recover <- function(paths = NULL, ard = NULL,
     c_sig <- sig(code_an[c_idx, , drop = FALSE])
     c_used <- rep(FALSE, length(c_idx))
 
+    n_match <- 0L
     for (k in seq_along(a_idx)) {
       j <- which(c_sig == a_sig[k] & !c_used)
       if (length(j) == 0) next
       j <- j[1]; c_used[j] <- TRUE
+      n_match <- n_match + 1L
       src <- code_an[c_idx[j], ]
       for (col in c("population", "where", "dataset", "groups", "name",
                     "options")) {
         v <- src[[col]]
         if (!is.na(v) && nzchar(v)) merged[[col]][a_idx[k]] <- v
       }
+    }
+
+    # both sources recovered analyses but NOT ONE pair agrees on
+    # (method, variable, groupings): they describe different displays.
+    # Merging disjoint sources cannot give a meaningful draft - the usual
+    # cause is a mismatched pairing (issue #46: a demographics programme
+    # merged with an adverse-events ARD left in the session's `ard`).
+    if (n_match == 0L) {
+      stop("None of the ", length(c_idx), " analyses recovered from the ",
+           "programme match any of the ", length(a_idx), " analyses in the ",
+           "ARD of output '", oid, "' (no pair agrees on method + variable ",
+           "+ groupings). The programme and the ARD appear to describe ",
+           "DIFFERENT displays; the usual cause is a mismatched pairing - ",
+           "e.g. a stale `ard` object left over from another display. ",
+           "Check that `ard` is the ARD this programme produced, or ",
+           "recover each source on its own with ars_params_from_code() / ",
+           "ars_params_from_ard().", call. = FALSE)
     }
 
     # ARD-only analyses inherit the output's unanimous code-side provenance
