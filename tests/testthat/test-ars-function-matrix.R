@@ -355,7 +355,13 @@ test_that("matrix: aov / oneway_test formula interface is recovered (#48)", {
   expect_equal(an$variable[an$method == "anova"], "AGE")
   expect_equal(an$group_by[an$method == "anova"], "ARM")
   expect_equal(an$dataset[an$method == "anova"], "ADSL")
-  # ... and the chain reproduces the p-value
+  # ... and the chain reproduces the p-value. The generated `anova`
+  # template runs cardx::ard_stats_aov(), which pulls in broom.helpers +
+  # parameters (cardx Suggests, not in this package's CI dependency set);
+  # skip the execution leg when they are absent, the recovery assertions
+  # above are the point of the #48 formula fix.
+  skip_if_not_installed("broom.helpers")
+  skip_if_not_installed("parameters")
   ch <- .fm_chain(src, adam, output_id = "Out_aov", via = "code")
   .fm_check_var(ch, "AGE", min_common = 9)
 })
