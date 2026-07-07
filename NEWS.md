@@ -62,6 +62,27 @@ not versioned for release; this changelog tracks notable changes only.
 
 ## Bug fixes
 
+* The parameter-recovery functions no longer draft workbooks their own
+  `build_ars()` deterministically rejects (#44, the root cause behind the
+  #37 report resurfacing). #37 taught `build_ars()` to *accept*
+  `population = "ALL"` but the recovery routes still emitted a blank, so a
+  recovered draft could not build whenever the analysis data were filtered
+  upstream (no `*FL` filter in the code -- the most common real-world
+  shape). Now the two knowledge states are encoded differently instead of
+  both becoming a blank: `ars_params_from_code()` emits `"ALL"` (ASSUMED
+  note) when the data pipeline was fully resolved and carries no
+  analysis-set filter, and keeps blank + REVIEW only when the population is
+  genuinely unknowable (unresolved data context / unconvertible condition);
+  `ars_params_from_ard()` sets `"ALL"` on the output row (an ARD is
+  computed from the analysed data as-is, so that is the faithful recovery);
+  in `ars_params_recover()` a unanimous code-side flag (e.g. `SAFFL`) still
+  beats the assumed `"ALL"`, and the ARD side's `dataset UNKNOWN` alarm is
+  dropped when the code side resolved every dataset. As a safety net for
+  the remaining unknowable cases, `write_ars_params()` now warns at *write*
+  time when a draft is missing a `population` / `group_by` that
+  `build_ars()` will require, instead of deferring the failure to the build
+  step.
+
 * `build_ars()` now rejects a percentage analysis whose `total_n`
   denominator is listed **after** it, with a hint to reorder -- siera
   generates programmes in row order, so the late denominator produced

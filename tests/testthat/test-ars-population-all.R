@@ -121,3 +121,82 @@ test_that("issue-37 end to end: recovered ALL draft generates a running ARD", {
   expect_equal(got[names(truth)], c(truth)[names(truth)],
                ignore_attr = TRUE)
 })
+
+# --- issue #44: the recovery routes must emit "ALL" themselves -------------
+# (#37 taught build_ars() to ACCEPT "ALL" but left the recovery functions
+# emitting a blank, so their own drafts still could not build when the data
+# were pre-filtered upstream - the most common real-world shape)
+
+# the reported pattern: data pre-filtered upstream, no *FL filter in the code
+.prefiltered_src <- function(envir = parent.frame()) {
+  f <- withr::local_tempfile(fileext = ".R", .local_envir = envir)
+  writeLines('
+    library(cards); library(dplyr)
+    df <- DF
+    ard <- df %>%
+      ard_stack(
+        ard_summary(variables = AGE),
+        ard_tabulate(variables = c(AGEGR1, SEX)),
+        .by = TR01AG1, .total_n = TRUE)', f)
+  f
+}
+
+test_that("a resolved pipeline without a filter recovers population 'ALL' (#44)", {
+  rec <- ars_params_from_code(.prefiltered_src(), output_id = "out_dm")
+  expect_true(all(rec$analyses$population == "ALL"))
+  expect_true(any(grepl("no analysis-set filter in the code", rec$notes)))
+  # the draft builds with NO manual edit - the pipeline promised by the docs
+  tmp <- withr::local_tempfile(fileext = ".xlsx")
+  expect_no_warning(write_ars_params(rec, tmp, overwrite = TRUE))
+  ars <- build_ars(tmp)
+  expect_equal(nrow(ars$AnalysisSets), 0)
+})
+
+test_that("the issue-44 recover -> write -> build pipeline needs no edit", {
+  skip_if_not_installed("cards")
+  set.seed(44)
+  DF <- data.frame(
+    USUBJID = sprintf("S%02d", 1:30),
+    TR01AG1 = rep(c("Placebo", "Low", "High"), each = 10),
+    AGE = sample(50:80, 30, TRUE),
+    AGEGR1 = sample(c("<65", ">=65"), 30, TRUE),
+    SEX = sample(c("F", "M"), 30, TRUE),
+    stringsAsFactors = FALSE
+  )
+  ard <- cards::ard_stack(
+    DF,
+    cards::ard_summary(variables = AGE),
+    cards::ard_tabulate(variables = c(AGEGR1, SEX)),
+    .by = TR01AG1, .total_n = TRUE
+  )
+  rec <- ars_params_recover(.prefiltered_src(), ard, output_id = "out_dm")
+  expect_true(all(rec$analyses$population == "ALL"))
+  expect_true(all(rec$analyses$dataset == "DF"))
+  # the code side resolved the dataset, so the UNKNOWN alarm must be gone
+  expect_false(any(grepl("'UNKNOWN' on every analysis", rec$notes)))
+  tmp <- withr::local_tempfile(fileext = ".xlsx")
+  expect_no_warning(write_ars_params(rec, tmp, overwrite = TRUE))
+  ars <- build_ars(tmp)
+  expect_equal(nrow(ars$AnalysisSets), 0)
+  expect_true(all(ars$Analyses$analysisSetId == ""))
+})
+
+test_that("an unconvertible condition keeps population blank + write warns", {
+  src <- withr::local_tempfile(fileext = ".R")
+  writeLines('
+    library(cards); library(dplyr)
+    adsl <- ADSL %>% filter(strange_fn(USUBJID))
+    ard <- adsl %>%
+      ard_stack(
+        ard_summary(variables = AGE),
+        ard_tabulate(variables = c(AGEGR1, SEX)),
+        .by = TRT01A, .total_n = TRUE)', src)
+  rec <- ars_params_from_code(src, output_id = "out_dm")
+  # "no filter found" is NOT certain here: a condition failed to convert
+  expect_true(all(rec$analyses$population == ""))
+  expect_true(any(grepl("set `population` manually", rec$notes)))
+  # ... and the gap is announced when the draft is written, not at build time
+  tmp <- withr::local_tempfile(fileext = ".xlsx")
+  expect_warning(write_ars_params(rec, tmp, overwrite = TRUE),
+                 "will not build as-is")
+})

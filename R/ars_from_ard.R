@@ -34,11 +34,16 @@
 #'     per-group count.
 #' }
 #'
-#' An ARD carries no data provenance, so \code{dataset} (unless supplied),
-#' \code{population} and \code{where} conditions cannot be recovered -- they
-#' are surfaced as REVIEW notes, and the observed levels of the first
-#' grouping are emitted as the pre-defined \code{groups} with an ASSUMED
-#' note.  Like [ars_params_from_code()], the result is a DRAFT to review.
+#' An ARD carries no data provenance, so \code{dataset} (unless supplied)
+#' and \code{where} conditions cannot be recovered and are surfaced as
+#' REVIEW notes.  \code{population} is set to \code{"ALL"} on the output
+#' row: the ARD's numbers were computed from the analysed data as-is, so
+#' "no further analysis-set filter" is the faithful recovery -- an ASSUMED
+#' note reminds you to change it to a flag condition (e.g. \code{SAFFL})
+#' if the built ARS will run on unfiltered source data.  The observed
+#' levels of the first grouping are emitted as the pre-defined
+#' \code{groups} with an ASSUMED note.  Like [ars_params_from_code()],
+#' the result is a DRAFT to review.
 #'
 #' @param ard An ARD data frame, or the path of a flattened ARD file
 #'   (\code{.csv} or \code{.xlsx}).  Must carry at least the
@@ -164,15 +169,17 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
                 "'UNKNOWN' on every analysis; set the `dataset` argument ",
                 "or edit the column."))
   }
-  note(paste0("REVIEW: an ARD carries no population or subset conditions - ",
-              "`population` and `where` are blank; set them from the ",
-              "source programme or the SAP (use population = 'ALL' when ",
-              "the analysed data were already the intended analysis set)."))
+  note(paste0("ASSUMED: an ARD carries no analysis-set provenance - ",
+              "`population` was set to 'ALL' (the ARD was computed from ",
+              "the analysed data as-is); change it to a flag condition ",
+              "(e.g. SAFFL) if the ARS will run on unfiltered source data. ",
+              "`where` subsets cannot be recovered either - set them from ",
+              "the source programme or the SAP."))
 
   outputs <- data.frame(
     output_id  = names(ard_of),
     name       = output_name,
-    population = "",
+    population = "ALL",
     group_by   = vapply(parts, `[[`, character(1), "group_by"),
     groups     = vapply(parts, `[[`, character(1), "groups"),
     stringsAsFactors = FALSE

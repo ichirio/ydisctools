@@ -62,11 +62,16 @@ analyses use as their grouping (e.g. \code{.by_stats = TRUE} output), and
 the ydisctools \code{.flag_} pattern maps to a flat per-group count.
 }
 
-An ARD carries no data provenance, so \code{dataset} (unless supplied),
-\code{population} and \code{where} conditions cannot be recovered -- they
-are surfaced as REVIEW notes, and the observed levels of the first grouping
-are emitted as the pre-defined \code{groups} with an ASSUMED note.  Like
-\code{\link{ars_params_from_code}}, the result is a DRAFT to review.
+An ARD carries no data provenance, so \code{dataset} (unless supplied)
+and \code{where} conditions cannot be recovered and are surfaced as REVIEW
+notes.  \code{population} is set to \code{"ALL"} on the output row: the
+ARD's numbers were computed from the analysed data as-is, so "no further
+analysis-set filter" is the faithful recovery -- an ASSUMED note reminds
+you to change it to a flag condition (e.g. \code{SAFFL}) if the built ARS
+will run on unfiltered source data.  The observed levels of the first
+grouping are emitted as the pre-defined \code{groups} with an ASSUMED
+note.  Like \code{\link{ars_params_from_code}}, the result is a DRAFT to
+review.
 }
 \examples{
 # a minimal flattened ARD: per-arm N, Age summary, Sex n (\%)

@@ -57,6 +57,13 @@ pre-defined group levels are recovered from the groupId-stamping
 a code -> params -> ARS -> code loop keeps \code{groups} too.  When only
 the ARD itself is available, see \code{\link{ars_params_from_ard}}.
 
+When a fully resolved data pipeline carries no analysis-set filter,
+\code{population} is set to \code{"ALL"} -- the data are used as-is, the
+common shape when the analysis data were filtered upstream -- with an
+ASSUMED note (issue #44).  It stays blank, with a REVIEW note, only when
+the population is genuinely unknowable: the data context could not be
+resolved, or a filter condition could not be converted.
+
 The result is a DRAFT: review the \code{notes} element (and the
 \code{Notes} sheet written by \code{\link{write_ars_params}}) before
 building an ARS from it.

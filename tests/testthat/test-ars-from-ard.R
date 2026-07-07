@@ -32,9 +32,12 @@ test_that("a cards-style ARD drafts total_n / continuous / categorical", {
   expect_equal(an$group_by, c("TRT01A", "TRT01A", "TRT01A, SEX"))
   expect_equal(an$denominator, c("", "", "auto"))
   expect_true(all(an$dataset == "ADSL"))
-  # provenance the ARD cannot carry -> blank + REVIEW note
+  # the ARD was computed from the data as-is -> output-level "ALL" default
+  # (analysis rows stay blank and inherit it) + ASSUMED note (issue #44)
   expect_true(all(an$population == ""))
-  expect_true(any(grepl("no population or subset conditions", rec$notes)))
+  expect_equal(rec$outputs$population, "ALL")
+  expect_true(any(grepl("`population` was set to 'ALL'", rec$notes,
+                        fixed = TRUE)))
   # observed levels of the first grouping -> pre-defined groups (ASSUMED)
   expect_equal(rec$outputs$groups, "Placebo | Active")
   expect_true(any(grepl("observed levels", rec$notes)))

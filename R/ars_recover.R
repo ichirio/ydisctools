@@ -186,9 +186,18 @@ ars_params_recover <- function(paths = NULL, ard = NULL,
     if (length(g) == 1) outputs$groups[i] <- g
     p <- unique(merged$population[merged$output_id == oid])
     p <- p[!is.na(p) & nzchar(p)]
-    if (length(p) == 1 && !nzchar(outputs$population[i])) {
+    # a unanimous analysis-level population (e.g. the code's SAFFL) beats a
+    # blank output default and the ARD route's assumed "ALL"
+    if (length(p) == 1 && (!nzchar(outputs$population[i]) ||
+                           toupper(trimws(outputs$population[i])) == "ALL")) {
       outputs$population[i] <- p
     }
+  }
+
+  # the ARD side flags what it alone cannot know; drop the alarm when the
+  # code side filled it in for every analysis
+  if (!any(is.na(merged$dataset) | merged$dataset == "UNKNOWN")) {
+    notes <- notes[!grepl("`dataset` is 'UNKNOWN'", notes, fixed = TRUE)]
   }
 
   list(outputs = outputs, analyses = merged,

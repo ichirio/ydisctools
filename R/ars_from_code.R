@@ -56,6 +56,13 @@
 #' so a code -> params -> ARS -> code loop keeps \code{groups} too.  When
 #' only the ARD itself is available, see [ars_params_from_ard()].
 #'
+#' When a fully resolved data pipeline carries no analysis-set filter,
+#' \code{population} is set to \code{"ALL"} -- the data are used as-is,
+#' the common shape when the analysis data were filtered upstream -- with
+#' an ASSUMED note (issue #44).  It stays blank, with a REVIEW note, only
+#' when the population is genuinely unknowable: the data context could not
+#' be resolved, or a filter condition could not be converted.
+#'
 #' The result is a DRAFT: review the \code{notes} element (and the
 #' \code{Notes} sheet written by [write_ars_params()]) before building an ARS
 #' from it.
@@ -129,6 +136,12 @@ ars_params_from_code <- function(paths, output_id = NULL, output_name = NULL) {
 #' review notes on an extra \code{Notes} sheet.  The file can be edited and
 #' read back with [read_ars_params()], then expanded with [build_ars()].
 #'
+#' When the draft is missing a value [build_ars()] requires -- a
+#' \code{population} or \code{group_by} with neither an analysis-row value
+#' nor an output-row default -- the file is still written (it is a draft),
+#' but a warning lists the gaps immediately instead of leaving them to
+#' surface as a later \code{build_ars()} error.
+#'
 #' @param params Named list with \code{outputs} and \code{analyses} data
 #'   frames; optional \code{study}, \code{displays} and \code{notes}.
 #' @param path File path of the workbook to write (\code{.xlsx}).
@@ -157,6 +170,31 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
   if (file.exists(path) && !overwrite) {
     stop("File already exists: '", path, "'. Set overwrite = TRUE to replace.",
          call. = FALSE)
+  }
+  # surface build-blocking gaps at WRITE time: a blank `population` /
+  # `group_by` (no analysis-row value, no output-row default) is exactly
+  # what build_ars() rejects, and deferring that error to the build step
+  # has proven easy to miss (issue #44)
+  out <- as.data.frame(params$outputs, stringsAsFactors = FALSE)
+  an <- as.data.frame(params$analyses, stringsAsFactors = FALSE)
+  blank <- function(x) is.na(x) | !nzchar(trimws(as.character(x)))
+  need <- c("output_id", "population", "group_by")
+  if (all(need %in% names(out)) && all(need %in% names(an)) &&
+      nrow(an) > 0 && nrow(out) > 0) {
+    idx <- match(an$output_id, out$output_id)
+    bad <- character(0)
+    for (col in c("population", "group_by")) {
+      eff <- ifelse(blank(an[[col]]), out[[col]][idx], an[[col]])
+      if (any(blank(eff))) bad <- c(bad, col)
+    }
+    if (length(bad) > 0) {
+      warning("this draft will not build as-is: `",
+              paste(bad, collapse = "` and `"),
+              "` is blank on some analyses (no analysis-row value, no ",
+              "output-row default). Fill the blanks in before build_ars() ",
+              "- use population = \"ALL\" when the data are already the ",
+              "intended analysis set (see the Notes sheet).", call. = FALSE)
+    }
   }
   sheets <- list()
   if (!is.null(params$study)) sheets$Study <- as.data.frame(params$study)
@@ -502,12 +540,14 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
                     "COMPLFL")
 
 .apc_split_conds <- function(conds, group_vars, st) {
-  out <- list(population = character(0), where = character(0), groups = "")
+  out <- list(population = character(0), where = character(0), groups = "",
+              unconvertible = FALSE)
   for (cnd in conds) {
     mini <- .apc_cond_mini(cnd, st)
     if (is.na(mini)) {
       st$note(paste0("REVIEW: condition not convertible: `",
                      paste(deparse(cnd), collapse = " "), "`"))
+      out$unconvertible <- TRUE
       next
     }
     var <- strsplit(mini, " ", fixed = TRUE)[[1]][1]
@@ -538,14 +578,26 @@ write_ars_params <- function(params, path, overwrite = FALSE) {
                       denominator = "", options = "") {
   info <- .apc_null_default(info, list(dataset = "UNKNOWN", conds = list()))
   sp <- .apc_split_conds(info$conds, group_vars, st)
-  if (length(sp$population) == 0) {
-    st$note(paste0("REVIEW: no population flag found for '", name,
-                   "' - set `population` manually."))
+  pop <- if (length(sp$population)) sp$population[1] else ""
+  if (!nzchar(pop)) {
+    if (!identical(info$dataset, "UNKNOWN") && !isTRUE(sp$unconvertible)) {
+      # the data pipeline was fully resolved and carries no analysis-set
+      # filter: the data are used as-is, which build_ars() spells "ALL"
+      pop <- "ALL"
+      st$note(paste0("ASSUMED: no analysis-set filter in the code for '",
+                     name, "' - `population` was set to \"ALL\" (the data ",
+                     "are used as-is); change it to a flag condition (e.g. ",
+                     "SAFFL) if the data are not already the intended ",
+                     "analysis set."))
+    } else {
+      st$note(paste0("REVIEW: no population flag found for '", name,
+                     "' - set `population` manually."))
+    }
   }
   st$rows[[length(st$rows) + 1L]] <- list(
     name = name, method = method, dataset = info$dataset,
     variable = variable,
-    population = if (length(sp$population)) sp$population[1] else "",
+    population = pop,
     group_by = paste(group_vars, collapse = ", "),
     groups = sp$groups,
     where = paste(unique(sp$where), collapse = "; "),
