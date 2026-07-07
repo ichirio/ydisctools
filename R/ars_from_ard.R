@@ -31,7 +31,15 @@
 #'     \code{..total_n..} rows, an ungrouped tabulation of a variable that
 #'     other analyses use as their grouping (e.g. \code{.by_stats = TRUE}
 #'     output), and the ydisctools \code{.flag_} pattern maps to a flat
-#'     per-group count.
+#'     per-group count;
+#'   \item \code{ard_stack_hierarchical()} ARDs are flattened the same way
+#'     [ars_params_from_code()] flattens the call: the
+#'     \code{over_variables} rows become \emph{Subjects with at least one
+#'     event, n (\%)}, deeper levels drop their hierarchy parents from the
+#'     groupings (LIMITATION note), and cards sentinel markers
+#'     (\code{..ard_hierarchical_overall..} etc.) never leak into
+#'     \code{variable} / \code{group_by} (issue #46) -- an unrecognised
+#'     sentinel is skipped with a REVIEW note.
 #' }
 #'
 #' An ARD carries no data provenance, so \code{dataset} (unless supplied)
@@ -242,12 +250,17 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
   NA_character_
 }
 
-# grouping variables of one unit, in group1..groupN order
+# cards internal sentinel variables ("..total_n..", "..ard_total_n..",
+# "..ard_hierarchical_overall..", ...) - never real dataset variables
+.apfa_is_sentinel <- function(v) grepl("^\\.\\..+\\.\\.$", v)
+
+# grouping variables of one unit, in group1..groupN order (cards sentinel
+# values are dropped - they are markers, not variables)
 .apfa_grp_vars <- function(d) {
   out <- character(0)
   for (g in intersect(paste0("group", 1:9), names(d))) {
     v <- unique(d[[g]][!is.na(d[[g]])])
-    if (length(v) > 0) out <- c(out, v[1])
+    if (length(v) > 0 && !.apfa_is_sentinel(v[1])) out <- c(out, v[1])
   }
   out
 }
@@ -308,6 +321,17 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
   all_grp_vars <- unique(unlist(lapply(facts, `[[`, "grp_vars")))
   common_grp <- if (length(all_grp_vars) > 0) all_grp_vars[1] else ""
 
+  # hierarchy parents (ard_stack_hierarchical): a variable analysed by one
+  # GROUPED unit that also appears as a grouping of another unit (AEBODSYS:
+  # its own by-SOC unit + group3 of the by-PT unit). The ungrouped big-N
+  # idiom (a tabulation of the by-variable) has no groupings, so it never
+  # qualifies.
+  parent_vars <- unique(unlist(lapply(facts, function(f) {
+    if (!is.na(f$var) && !.apfa_is_sentinel(f$var) &&
+        length(f$grp_vars) > 0) f$var else NULL
+  })))
+  hier_noted <- FALSE
+
   for (ft in facts) {
     var <- ft$var
     if (is.na(var)) next
@@ -340,6 +364,24 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
       # ydisctools flat pattern: subject count per group
       emit("Subjects, n (%)", "categorical_summary", "USUBJID",
            ft$grp_vars, denominator = "auto")
+      next
+    }
+    if (.apfa_is_sentinel(var)) {
+      # cards internal markers are never dataset variables - they must not
+      # leak into `variable` / `group_by` (issue #46)
+      if (identical(var, "..ard_hierarchical_overall..")) {
+        # ard_stack_hierarchical(over_variables = TRUE): the any-event row,
+        # same mapping as ars_params_from_code() uses for over_variables
+        emit("Subjects with at least one event, n (%)",
+             "categorical_summary", "USUBJID", ft$grp_vars,
+             denominator = "auto")
+        note(paste0("ASSUMED: the hierarchical overall rows ",
+                    "(`..ard_hierarchical_overall..`) were emitted as ",
+                    "'Subjects with at least one event, n (%)'."))
+      } else {
+        note(paste0("REVIEW: cards internal rows ('", var, "') were not ",
+                    "mapped to a catalog method and were skipped."))
+      }
       next
     }
     # proportion with CI (cardx::ard_categorical_ci / the ydisctools
@@ -376,8 +418,25 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
         emit("Number of subjects", "total_n", "USUBJID", var)
         next
       }
+      # a nested display's deeper level (the by-PT unit) carries its
+      # hierarchy parent (AEBODSYS) as a grouping; flatten it away, the
+      # same way ars_params_from_code() flattens ard_stack_hierarchical()
+      grp <- ft$grp_vars
+      hier <- intersect(grp, parent_vars)
+      hier <- setdiff(hier, var)
+      if (length(hier) > 0) {
+        grp <- setdiff(grp, hier)
+        if (!hier_noted) {
+          hier_noted <- TRUE
+          note(paste0("LIMITATION: the ARD is hierarchical (nested ",
+                      "groupings incl. ", paste(hier, collapse = ", "),
+                      "); the compact format supports 2 simultaneous ",
+                      "groupings, so FLAT per-level analyses were ",
+                      "generated instead (ydisctools #6)."))
+        }
+      }
       emit(paste0(var, ", n (%)"), "categorical_summary", "USUBJID",
-           c(ft$grp_vars, var), denominator = "auto")
+           c(grp, var), denominator = "auto")
       next
     }
     note(paste0("REVIEW: analysis of '", var, "' with statistic(s) ",
@@ -402,6 +461,21 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
     # read the denominator's data frame - it must already exist (issue #37)
     is_totn <- is_totn[!dup]
     rows <- c(rows[is_totn], rows[!is_totn])
+
+    # the compact format / build_ars() cap at 2 simultaneous groupings -
+    # keep the faithful group list (as ars_params_from_code() does for a
+    # multi-`by` tabulation, #40) but say so up front
+    n_grp <- vapply(rows, function(r) {
+      length(strsplit(r$group_by, ",", fixed = TRUE)[[1]])
+    }, integer(1))
+    if (any(n_grp > 2)) {
+      over <- vapply(rows[n_grp > 2], `[[`, character(1), "name")
+      note(paste0("LIMITATION: ", sum(n_grp > 2), " analysis/analyses use ",
+                  "3+ simultaneous groupings (",
+                  paste(over, collapse = "; "), "); the compact format ",
+                  "supports at most 2, so build_ars() will reject them - ",
+                  "split the display or drop a grouping (ydisctools #6)."))
+    }
   }
 
   # observed levels of the common first grouping -> pre-defined groups

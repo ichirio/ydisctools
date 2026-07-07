@@ -25,10 +25,11 @@ with the review notes on an extra \code{Notes} sheet.  The file can be
 edited and read back with \code{\link{read_ars_params}}, then expanded with
 \code{\link{build_ars}}.
 
-When the draft is missing a value \code{\link{build_ars}} requires -- a
+When the draft carries a value \code{\link{build_ars}} will reject -- a
 \code{population} or \code{group_by} with neither an analysis-row value
-nor an output-row default -- the file is still written (it is a draft),
-but a warning lists the gaps immediately instead of leaving them to
+nor an output-row default, an unparseable \code{group_by} entry, or 3+
+simultaneous groupings -- the file is still written (it is a draft),
+but a warning lists the problems immediately instead of leaving them to
 surface as a later \code{\link{build_ars}} error.
 }
 \examples{
