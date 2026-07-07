@@ -36,12 +36,17 @@ siera-generated subject-count and big-N idioms), \code{ard_stack()}
 (\code{.by}, \code{.total_n}, \code{.by_stats}),
 \code{cardx::ard_categorical_ci()} (mapped to the \code{proportion_ci}
 method with its CI options recovered onto the \code{options} column),
-\code{ard_stack_hierarchical()} (including
-\code{over_variables = TRUE}; a nested hierarchy is flattened with a
-LIMITATION note), and the cardx tests
+\code{ard_stack_hierarchical()} (\code{over_variables = TRUE} adds the
+any-event analysis on top of the per-level ones; a nested hierarchy is
+flattened with a LIMITATION note), and the cardx tests
 \code{ard_stats_fisher_test/chisq_test/aov/anova/oneway_test/prop_test()}
-(mapped onto the bundled method catalog).  Anything else is skipped with a
-note.
+-- both the \code{variables =} and the formula (\code{AGE ~ ARM}) call
+forms -- mapped onto the bundled method catalog: \code{chisq} rides the
+category-as-second-grouping idiom its template tests; for
+\code{fishers_exact} / \code{risk_difference} (subject-flag idiom) a
+plain \code{variables = <column>} call gets a REVIEW note spelling out
+the manual \code{variable} / \code{where} completion.  Anything else is
+skipped with a note.
 
 Variable lists are resolved through the indirections real programmes use
 (issue #32): a character vector assigned earlier in the file

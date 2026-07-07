@@ -60,6 +60,38 @@ not versioned for release; this changelog tracks notable changes only.
   cannot do the cross-dataset merge). Mock shells label it "All Subjects"
   (#37).
 
+## New features
+
+* **Verification matrix over the official cards / cardx examples** (#48,
+  after the #37/#44/#46 sequence): `tests/testthat/test-ars-function-matrix.R`
+  now pushes the reference-documentation examples (`ard_summary`,
+  `ard_tabulate`, `ard_stack`, `ard_stack_hierarchical`,
+  `ard_categorical_ci`, `ard_stats_chisq_test`, `ard_stats_aov` /
+  `ard_stats_oneway_test`, `ard_stats_fisher_test`, `ard_stats_prop_test`,
+  on `cards::ADSL` / `cards::ADAE`) through the whole
+  code -> params -> ARS -> generated-programme -> executed-ARD chain and
+  compares every variable's every statistic against a direct run of the
+  same code -- including a mixed continuous + categorical DM display
+  checked per variable, both recovery routes. Fixes that fell out:
+
+  - `ars_params_from_code()`: `ard_stack_hierarchical(over_variables =
+    TRUE)` no longer swallows the per-level analyses and the
+    `denominator=` total_n (an early return emitted ONLY the any-event
+    row); the cardx `ard_stats_*` handlers now also read the FORMULA call
+    form the official examples use (`ard_stats_aov(AGE ~ ARM, data =
+    ADSL)` used to recover nothing, silently); `chisq` is emitted in the
+    category-as-second-grouping shape its catalog template actually tests;
+    a `variables = <column>` fisher / prop_test call gets a REVIEW note
+    spelling out the subject-flag completion (`variable = USUBJID`,
+    `where = <condition>`) instead of silently generating a test of the
+    wrong thing.
+  - `ars_params_from_ard()`: real hierarchical ARDs carry their
+    denominator only as per-row `N` stats -- when percentage analyses
+    need a denominator and no subject-count unit exists, the missing
+    `total_n` analysis is added (ASSUMED note; review its `dataset`).
+    Such synthesized analyses are marked internally and do NOT count as
+    evidence in `ars_params_recover()`'s mismatched-pairing check.
+
 ## Bug fixes
 
 * Hierarchical ARDs (`cards::ard_stack_hierarchical()`) no longer leak the

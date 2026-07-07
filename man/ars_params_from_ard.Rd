@@ -67,7 +67,11 @@ n (\%)}, deeper levels drop their hierarchy parents from the groupings
 (LIMITATION note), and cards sentinel markers
 (\code{..ard_hierarchical_overall..} etc.) never leak into
 \code{variable} / \code{group_by} (issue #46) -- an unrecognised sentinel
-is skipped with a REVIEW note.
+is skipped with a REVIEW note.  When the n (\%) analyses need a
+denominator but the ARD carries no subject-count unit (real hierarchical
+ARDs keep the denominator only as per-row \code{N} stats), the missing
+\code{total_n} analysis is added with an ASSUMED note -- an ARD cannot
+name the denominator dataset, so review its \code{dataset} (issue #48).
 }
 
 An ARD carries no data provenance, so \code{dataset} (unless supplied)

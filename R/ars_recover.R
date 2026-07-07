@@ -131,6 +131,10 @@ ars_params_recover <- function(paths = NULL, ard = NULL,
   merged <- from_ard$analyses
   code_an <- from_code$analyses
   sig <- function(df) paste(df$method, df$variable, df$group_by, sep = "\r")
+  # analyses the ARD route invented (e.g. the denominator total_n) are not
+  # evidence that the two sources describe the same display
+  synthetic <- attr(from_ard$analyses, "synthetic")
+  if (is.null(synthetic)) synthetic <- rep(FALSE, nrow(merged))
 
   for (oid in from_ard$outputs$output_id) {
     a_idx <- which(merged$output_id == oid)
@@ -146,7 +150,7 @@ ars_params_recover <- function(paths = NULL, ard = NULL,
       j <- which(c_sig == a_sig[k] & !c_used)
       if (length(j) == 0) next
       j <- j[1]; c_used[j] <- TRUE
-      n_match <- n_match + 1L
+      if (!synthetic[a_idx[k]]) n_match <- n_match + 1L
       src <- code_an[c_idx[j], ]
       for (col in c("population", "where", "dataset", "groups", "name",
                     "options")) {

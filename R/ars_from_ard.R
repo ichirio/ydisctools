@@ -170,6 +170,9 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
     stop("No analyses could be recovered from the ARD (no recognisable ",
          "statistic rows).", call. = FALSE)
   }
+  synthetic <- analyses$.synthetic
+  analyses$.synthetic <- NULL
+  attr(analyses, "synthetic") <- synthetic
   analyses$analysis_id <- sprintf("An_%02d", seq_len(nrow(analyses)))
   analyses$dataset <- dataset
   if (identical(dataset, "UNKNOWN")) {
@@ -278,6 +281,9 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
       group_by = paste(group_by, collapse = ", "),
       groups = "", groups2 = "", where = "",
       denominator = denominator, options = options,
+      # TRUE for analyses this function invented (not observed in the ARD);
+      # moved into attr(analyses, "synthetic") before returning
+      .synthetic = FALSE,
       stringsAsFactors = FALSE
     )
   }
@@ -445,6 +451,24 @@ ars_params_from_ard <- function(ard, output_id = NULL, output_name = NULL,
   }
 
   if (length(rows) > 0) {
+    # percentage analyses reference their denominator via 'auto', but a
+    # real hierarchical ARD carries the denominator only as per-row N
+    # stats - no subject-count unit exists to recover. Add the total_n
+    # analysis the generated code will need (issue #48).
+    has_auto <- any(vapply(rows, function(r) identical(r$denominator,
+                                                       "auto"), logical(1)))
+    has_totn <- any(vapply(rows, function(r) identical(r$method, "total_n"),
+                           logical(1)))
+    if (has_auto && !has_totn && nzchar(common_grp)) {
+      emit("Number of subjects", "total_n", "USUBJID", common_grp)
+      rows[[length(rows)]]$.synthetic <- TRUE
+      note(paste0("ASSUMED: the n (%) analyses need a denominator but the ",
+                  "ARD carries no subject-count unit - a total_n analysis ",
+                  "on '", common_grp, "' was added. An ARD cannot name the ",
+                  "denominator DATASET: point the total_n `dataset` at the ",
+                  "population data (e.g. ADSL) if it is not the analysis ",
+                  "dataset."))
+    }
     note(paste0("ASSUMED: n (%) tabulations were mapped to the ARS idiom ",
                 "(variable = USUBJID, the category variable as the second ",
                 "grouping, denominator = 'auto')."))
