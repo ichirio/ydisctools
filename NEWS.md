@@ -1,5 +1,10 @@
 # ydisctools (development version)
 
+## Bug fixes
+
+* `build_ars()` no longer makes a lowercase `dataset` (e.g. `adsl`) produce two ADaM reads in the generated programme. siera's `.generate_adam_loading_code()` collects the datasets to read case-sensitively across `Analyses$dataset`, `AnalysisSets$condition_dataset` and `DataSubsets$condition_dataset`; a bare-flag population baked in the fixed spelling `"ADSL"` while the user's `dataset` stayed `adsl`, so the same file was read twice. `build_ars()` now folds every dataset reference to one spelling per case-insensitive key (the user-authored `Analyses$dataset` spelling wins); a genuinely different dataset (an AE output's `ADAE` events + `ADSL` population) folds to different keys and correctly stays two reads (#53).
+
+
 ## New features
 
 * **`ars_generate_ard()` reads the real ADaM files, in any common format,

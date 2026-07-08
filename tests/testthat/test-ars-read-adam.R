@@ -86,6 +86,66 @@ test_that("ars_generate_ard(run = FALSE) generates code with NO data present", {
   expect_false(any(grepl("readr::read_csv", code)))
 })
 
+test_that("a lowercase `dataset` yields ONE read, not adsl + ADSL (#53)", {
+  # build_ars must fold the dataset casing across the sheets siera reads:
+  # the user's `adsl` vs the "ADSL" a bare-flag population bakes in
+  p <- list(
+    outputs = data.frame(output_id = "Out_dm", name = "DM",
+                         population = "SAFFL", group_by = "ARM", groups = "",
+                         stringsAsFactors = FALSE),
+    analyses = data.frame(
+      output_id = "Out_dm", analysis_id = sprintf("An_%02d", 1:3),
+      name = c("N", "AGE", "AGEGR1"),
+      method = c("total_n", "continuous_summary", "categorical_summary"),
+      dataset = "adsl", variable = c("USUBJID", "AGE", "USUBJID"),
+      population = "SAFFL", group_by = c("ARM", "ARM", "ARM, AGEGR1"),
+      groups = "", groups2 = "",
+      where = c("APHASE EQ P2", "APHASE EQ P2", "APHASE EQ P2"),
+      denominator = c("", "", "auto"), options = "",
+      stringsAsFactors = FALSE)
+  )
+  ars <- build_ars(p)
+  spellings <- unique(c(
+    ars$Analyses$dataset,
+    ars$AnalysisSets$condition_dataset,
+    ars$DataSubsets$condition_dataset[
+      !is.na(ars$DataSubsets$condition_dataset)]))
+  spellings <- spellings[nzchar(spellings)]
+  expect_equal(spellings, "adsl")               # one spelling, the user's
+
+  # end to end: exactly one read line in the generated programme
+  skip_if_not_installed("siera")
+  skip_if_not_installed("cards")
+  skip_on_cran()
+  scripts <- ars_generate_ard(ars, run = FALSE)
+  code <- paste(readLines(scripts[1]), collapse = "\n")
+  expect_equal(lengths(regmatches(code, gregexpr("read_adam\\(", code))), 1L)
+})
+
+test_that("a genuine cross-dataset output keeps its two reads (#53)", {
+  # AE: events on adae, population/denominator on adsl -> two DISTINCT reads
+  p <- list(
+    outputs = data.frame(output_id = "Out_ae", name = "AE",
+                         population = "SAFFL", group_by = "TRTA", groups = "",
+                         stringsAsFactors = FALSE),
+    analyses = data.frame(
+      output_id = "Out_ae", analysis_id = sprintf("An_%02d", 1:3),
+      name = c("N", "SOC", "PT"),
+      method = c("total_n", "categorical_summary", "categorical_summary"),
+      dataset = c("adsl", "adae", "adae"),
+      variable = c("USUBJID", "USUBJID", "USUBJID"),
+      population = "SAFFL",
+      group_by = c("TRTA", "TRTA, AEBODSYS", "TRTA, AEDECOD"),
+      groups = "", groups2 = "", where = "",
+      denominator = c("", "auto", "auto"), options = "",
+      stringsAsFactors = FALSE)
+  )
+  ars <- build_ars(p)
+  expect_setequal(unique(ars$Analyses$dataset), c("adsl", "adae"))
+  # the population (bare SAFFL) folds onto the authored adsl, not "ADSL"
+  expect_equal(unique(ars$AnalysisSets$condition_dataset), "adsl")
+})
+
 test_that("ars_generate_ard reads .xpt and matches the .csv result (#50)", {
   skip_if_not_installed("siera")
   skip_if_not_installed("cards")
