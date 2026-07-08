@@ -63,12 +63,22 @@ not attach packages to the caller's search path.  The packages the generated
 code actually calls (\pkg{cards}, \pkg{dplyr}, \pkg{readr}, and \pkg{cardx}
 for test methods) must be installed.
 
-\strong{Reading the ADaM data.}  siera 0.5.6 hardcodes
-\code{readr::read_csv('<adam_path>/<DATASET>.csv')} in every programme.
-This wrapper rewrites that reader to \code{\link{read_adam}}, so the actual
-file present in \code{adam_path} is read by format priority (\code{.xpt} >
-\code{.sas7bdat} > \code{.rds} > \code{.rda} > \code{.csv}) -- real
-transport / SAS / R datasets work without a manual conversion to csv.
+\strong{Post-processing the generated programmes.}  Each generated
+programme is rewritten in place (so the saved code matches what runs):
+\itemize{
+\item siera 0.5.6 hardcodes
+  \code{readr::read_csv('<adam_path>/<DATASET>.csv')}; this wrapper
+  rewrites the reader to \code{\link{read_adam}}, so the actual file
+  present in \code{adam_path} is read by format priority (\code{.xpt} >
+  \code{.sas7bdat} > \code{.rds} > \code{.rda} > \code{.csv}) -- real
+  transport / SAS / R datasets work without a manual conversion to csv;
+\item siera combines the per-analysis ARDs with \code{dplyr::bind_rows()},
+  which orders the columns from the first analysis (\code{total_n}, with
+  no grouping columns) and so pushes \code{group1..} to the back; a
+  trailing \code{cards::tidy_ard_column_order()} is appended to restore
+  the canonical ARD column order (grouping columns first), so even a
+  standalone run of the saved programme yields the tidy layout.
+}
 
 \strong{Generating without data.}  siera bakes only a \emph{path} into the
 code at generation time; the data are read when the programmes \emph{run}.

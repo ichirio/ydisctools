@@ -120,3 +120,40 @@ test_that("combining two outputs with identical stats drops no rows (#55)", {
                as.integer(table(ard$OutputId)[["Out_b"]]))
   expect_equal(names(ard)[1], "group1")
 })
+
+test_that("the generated programme itself carries tidy_ard_column_order (#57)", {
+  skip_if_not_installed("siera")
+  skip_if_not_installed("cards")
+  skip_on_cran()
+  adam <- withr::local_tempdir()
+  adsl <- as.data.frame(cards::ADSL[, c("USUBJID", "ARM", "AGE", "SEX",
+                                        "SAFFL")])
+  utils::write.csv(adsl, file.path(adam, "ADSL.csv"), row.names = FALSE,
+                   na = "")
+  p <- list(
+    outputs = data.frame(output_id = "Out_dm", name = "DM",
+                         population = "SAFFL", group_by = "ARM", groups = "",
+                         stringsAsFactors = FALSE),
+    analyses = data.frame(
+      output_id = "Out_dm", analysis_id = sprintf("An_%02d", 1:3),
+      name = c("N", "AGE", "SEX"),
+      method = c("total_n", "continuous_summary", "categorical_summary"),
+      dataset = "ADSL", variable = c("USUBJID", "AGE", "USUBJID"),
+      population = "SAFFL", group_by = c("ARM", "ARM", "ARM, SEX"),
+      groups = "", groups2 = "", where = "",
+      denominator = c("", "", "auto"), options = "",
+      stringsAsFactors = FALSE))
+
+  scripts <- ars_generate_ard(build_ars(p), adam_path = adam, run = FALSE)
+  code <- readLines(scripts[1])
+  # the reordering is baked into the saved code exactly once
+  expect_equal(sum(grepl("cards::tidy_ard_column_order(ARD)", code,
+                         fixed = TRUE)), 1L)
+
+  # executing the SAVED programme yields the group1-first order from its own
+  # tidy call (the runner neutralises library() lines; the statements are
+  # namespace-qualified, so cards::tidy_ard_column_order still runs)
+  ard <- suppressWarnings(suppressMessages(
+    ydisctools:::.ars_run_script(scripts[1])))
+  expect_equal(names(ard)[1:2], c("group1", "group1_level"))
+})
