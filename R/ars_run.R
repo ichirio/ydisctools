@@ -234,10 +234,22 @@ ars_generate_ard <- function(ars, adam_path = if (run) NULL else "adam",
   ards <- lapply(scripts, .ars_run_script)
   names(ards) <- sub("^ARD_", "", sub("[.]R$", "", basename(scripts)))
 
+  # siera's generated programmes build each output's ARD with
+  # dplyr::bind_rows(df3_An_01, ...), which fixes the column order from the
+  # FIRST analysis -- and total_n (usually first) carries no grouping
+  # columns, so group1.. get appended at the back. Restore the canonical
+  # ARD column order (group1 first) with cards::tidy_ard_column_order().
+  # (Not bind_ard(): it de-duplicates on group/variable/stat and ignores
+  # OutputId, so identical stats across two displays would be dropped.)
+  .tidy_cols <- function(a) {
+    if (!requireNamespace("cards", quietly = TRUE)) return(a)
+    tryCatch(cards::tidy_ard_column_order(a), error = function(e) a)
+  }
+
   result <- if (combine) {
-    dplyr::bind_rows(ards)
+    .tidy_cols(dplyr::bind_rows(ards))
   } else {
-    ards
+    lapply(ards, .tidy_cols)
   }
   attr(result, "scripts") <- scripts
   result
