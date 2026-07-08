@@ -2,6 +2,8 @@
 
 ## Bug fixes
 
+* `ars_generate_ard()` now returns the combined ARD in the canonical column order (`group1`, `group1_level`, ... first). siera's generated programmes combine the per-analysis ARDs with `dplyr::bind_rows()`, which takes the column order from the first analysis -- usually `total_n`, which has no grouping columns -- so `group1*` were appended at the back. The runner now applies `cards::tidy_ard_column_order()` after combining (not `bind_ard()`, which de-duplicates on group/variable/stat ignoring `OutputId` and would drop identical stats shared by two displays) (#55).
+
 * `build_ars()` no longer makes a lowercase `dataset` (e.g. `adsl`) produce two ADaM reads in the generated programme. siera's `.generate_adam_loading_code()` collects the datasets to read case-sensitively across `Analyses$dataset`, `AnalysisSets$condition_dataset` and `DataSubsets$condition_dataset`; a bare-flag population baked in the fixed spelling `"ADSL"` while the user's `dataset` stayed `adsl`, so the same file was read twice. `build_ars()` now folds every dataset reference to one spelling per case-insensitive key (the user-authored `Analyses$dataset` spelling wins); a genuinely different dataset (an AE output's `ADAE` events + `ADSL` population) folds to different keys and correctly stays two reads (#53).
 
 
