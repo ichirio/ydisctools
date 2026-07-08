@@ -116,6 +116,37 @@
   )
 }
 
+# Fold every ARS dataset reference (Analyses$dataset,
+# AnalysisSets$condition_dataset, DataSubsets$condition_dataset) to a single
+# spelling per case-insensitive key. siera reads one file per distinct
+# spelling, so mixed casing for one logical dataset would read it twice; the
+# first spelling seen -- Analyses$dataset comes first, i.e. the user's own --
+# wins. Datasets that only differ by name (AE's ADAE vs an ADSL population)
+# fold to different keys and stay separate, as they should.
+.ars_canonicalize_datasets <- function(Analyses, AnalysisSets, DataSubsets) {
+  spellings <- c(Analyses$dataset,
+                 AnalysisSets$condition_dataset,
+                 DataSubsets$condition_dataset)
+  spellings <- spellings[!is.na(spellings) & nzchar(spellings)]
+  if (length(spellings) == 0) {
+    return(list(Analyses = Analyses, AnalysisSets = AnalysisSets,
+                DataSubsets = DataSubsets))
+  }
+  canon <- spellings[!duplicated(toupper(spellings))]
+  names(canon) <- toupper(canon)
+  fold <- function(x) {
+    if (is.null(x)) return(x)
+    hit <- !is.na(x) & nzchar(x)
+    x[hit] <- canon[toupper(x[hit])]
+    x
+  }
+  Analyses$dataset <- fold(Analyses$dataset)
+  AnalysisSets$condition_dataset <- fold(AnalysisSets$condition_dataset)
+  DataSubsets$condition_dataset <- fold(DataSubsets$condition_dataset)
+  list(Analyses = Analyses, AnalysisSets = AnalysisSets,
+       DataSubsets = DataSubsets)
+}
+
 # Friendly population names for common ADaM flags.
 .ars_population_name <- function(expr, cond) {
   if (identical(toupper(trimws(as.character(expr))), "ALL")) {
@@ -1052,6 +1083,18 @@ build_ars <- function(params) {
                   "Reporting Event", get_study("study_title")),
     stringsAsFactors = FALSE
   )
+
+  # siera's .generate_adam_loading_code() collects the datasets to read as
+  # unique(c(Analyses$dataset, AnalysisSets$condition_dataset,
+  # DataSubsets$condition_dataset)) CASE-SENSITIVELY, so one logical dataset
+  # spelled two ways (e.g. the user's `adsl` in `dataset` vs the "ADSL"
+  # default a bare-flag population bakes in) becomes two reads of the same
+  # file. Fold every dataset reference to one spelling per case-insensitive
+  # key, preferring the user-authored Analyses$dataset spelling.
+  ds_canon <- .ars_canonicalize_datasets(Analyses, AnalysisSets, DataSubsets)
+  Analyses <- ds_canon$Analyses
+  AnalysisSets <- ds_canon$AnalysisSets
+  DataSubsets <- ds_canon$DataSubsets
 
   # --- Display metadata (optional Displays params sheet) ----------------------
   disp <- .ars_display_sheets(params$displays, outputs)
