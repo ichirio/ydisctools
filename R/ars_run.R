@@ -104,6 +104,19 @@ read_adam <- function(path) {
        "ydisctools::read_adam('\\1')", code, perl = TRUE)
 }
 
+# siera combines the per-analysis ARDs with dplyr::bind_rows(), which takes
+# the column order from the first analysis (total_n, no grouping columns),
+# so group1.. end up at the back. Append a reassignment that restores the
+# canonical order, so the SAVED programme yields the same layout as the
+# runtime result. Idempotent, and a no-op if the programme has no `ARD`.
+.ars_add_tidy_order <- function(code) {
+  if (grepl("tidy_ard_column_order", code, fixed = TRUE)) return(code)
+  if (!grepl("(^|\n)\\s*ARD\\s*<-", code, perl = TRUE)) return(code)
+  paste0(sub("[[:space:]]+$", "", code),
+         "\n\n# canonical ARD column order (group1 first)\n",
+         "ARD <- cards::tidy_ard_column_order(ARD)\n")
+}
+
 #' Generate and run ARD programmes, returning one combined ARD
 #'
 #' A thin driver around \code{siera::readARS()}: generates the per-output ARD
@@ -121,13 +134,23 @@ read_adam <- function(path) {
 #' generated code actually calls (\pkg{cards}, \pkg{dplyr}, \pkg{readr}, and
 #' \pkg{cardx} for test methods) must be installed.
 #'
-#' \strong{Reading the ADaM data.}  siera 0.5.6 hardcodes
-#' \code{readr::read_csv('<adam_path>/<DATASET>.csv')} in every programme.
-#' This wrapper rewrites that reader to [read_adam()], so the actual file
-#' present in \code{adam_path} is read by format priority
-#' (\code{.xpt} > \code{.sas7bdat} > \code{.rds} > \code{.rda} >
-#' \code{.csv}) -- real transport / SAS / R datasets work without a manual
-#' conversion to csv.
+#' \strong{Post-processing the generated programmes.}  Each generated
+#' programme is rewritten in place (so the saved code matches what runs):
+#' \itemize{
+#'   \item siera 0.5.6 hardcodes
+#'     \code{readr::read_csv('<adam_path>/<DATASET>.csv')}; this wrapper
+#'     rewrites the reader to [read_adam()], so the actual file present in
+#'     \code{adam_path} is read by format priority (\code{.xpt} >
+#'     \code{.sas7bdat} > \code{.rds} > \code{.rda} > \code{.csv}) -- real
+#'     transport / SAS / R datasets work without a manual conversion to csv;
+#'   \item siera combines the per-analysis ARDs with
+#'     \code{dplyr::bind_rows()}, which orders the columns from the first
+#'     analysis (\code{total_n}, with no grouping columns) and so pushes
+#'     \code{group1..} to the back; a trailing
+#'     \code{cards::tidy_ard_column_order()} is appended to restore the
+#'     canonical ARD column order (grouping columns first), so even a
+#'     standalone run of the saved programme yields the tidy layout.
+#' }
 #'
 #' \strong{Generating without data.}  siera bakes only a \emph{path} into
 #' the code at generation time; the data are read when the programmes
@@ -218,12 +241,15 @@ ars_generate_ard <- function(ars, adam_path = if (run) NULL else "adam",
          "'.", call. = FALSE)
   }
 
-  # rewrite siera's hardcoded read_csv() preamble to read_adam() (format
-  # priority, resolved at run time) and persist it, so the saved programmes
-  # match what actually runs
+  # post-process each generated programme and persist it, so the saved code
+  # matches what actually runs: (1) rewrite siera's hardcoded read_csv()
+  # preamble to read_adam() (format priority, resolved at run time), and
+  # (2) append tidy_ard_column_order() so the ARD carries the canonical
+  # column order (group1 first) even when the programme is run standalone
+  # (siera's dplyr::bind_rows() otherwise pushes group1.. to the back).
   for (s in scripts) {
     code <- paste(readLines(s, warn = FALSE), collapse = "\n")
-    new_code <- .ars_csv_to_read_adam(code)
+    new_code <- .ars_add_tidy_order(.ars_csv_to_read_adam(code))
     if (!identical(code, new_code)) writeLines(new_code, s)
   }
 
