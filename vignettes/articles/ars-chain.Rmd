@@ -273,6 +273,55 @@ ard <- read_ars_params("params.xlsx") |>
   ars_generate_ard(adam_path = "path/to/adam")
 ```
 
+### Your ADaM data: `.xpt`, `.sas7bdat`, `.rds`, `.rda` or `.csv`
+
+siera's generated programmes read the analysis data from `adam_path`. On
+its own, `siera::readARS()` (0.5.6) hardcodes a `readr::read_csv()` call
+pointing at `<adam_path>/<DATASET>.csv`, so out of the box it only finds
+csv. `ars_generate_ard()` rewrites that reader to `read_adam()`, which reads
+**whatever real dataset file is actually in the folder**, choosing by format
+priority when several coexist:
+
+```
+.xpt  >  .sas7bdat  >  .rds  >  .rda / .rdata  >  .csv
+```
+
+So a typical submission library of transport files just works -- point
+`adam_path` at the folder that holds `ADSL.xpt` (and `ADAE.xpt`, ...):
+
+```{r, eval = FALSE}
+# real study data as SAS transport files
+ard <- ars_generate_ard(ars_file, adam_path = "path/to/adam_xpt")
+```
+
+The dataset **name** in your parameters (the `dataset` column, e.g. `ADSL`)
+is the file stem siera bakes into the code, so the folder must contain a
+file named for it (`ADSL.xpt`, `ADSL.sas7bdat`, ...); the extension is
+resolved for you. You can also call the reader directly:
+
+```{r, eval = FALSE}
+adsl <- read_adam("path/to/adam_xpt/ADSL")   # picks .xpt over .csv, etc.
+```
+
+### No data yet? Generate the code alone
+
+siera bakes only a *path* into the programmes at generation time -- the data
+are read when the programmes **run**. So you do not need the ADaM to produce
+the R code: pass `run = FALSE` to get the generated (and reader-rewritten)
+programme files back without executing them, and without needing `adam_path`
+to contain -- or even be -- any data:
+
+```{r, eval = FALSE}
+scripts <- ars_generate_ard(ars_file, run = FALSE)
+scripts                       # the generated ARD_<OutputId>.R paths
+readLines(scripts[1]) |> head(20)
+```
+
+Point them at the real data later (edit `adam_path`, or just drop the files
+in place and re-run with `run = TRUE`). Producing the *numbers*, of course,
+does require the real data -- column names alone are not enough, because the
+ARD is the computed result.
+
 ## 6. Where this fits
 
 - **Upstream**, the parameter workbook is the study's analysis intent -- and

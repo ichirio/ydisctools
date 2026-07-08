@@ -241,6 +241,13 @@ programmes; run them from the pipeline folder) and
 `sap-pipeline/05_ard/ARD_STUDY01.csv` (the combined ARD, flattened for
 inspection).
 
+The bundled ADaM here are csv, but `adam_path` can hold your real study
+data in any of `.xpt`, `.sas7bdat`, `.rds`, `.rda` or `.csv` -- the reader
+resolves the actual file present by format priority (see [The ARS
+chain](ars-chain.html#your-adam-data)). And with `run = FALSE` the ten
+programmes are generated without any data, so you can produce the code
+first and point it at the real datasets later.
+
 ## 7. The table programme
 
 The last leg is a **study table programme**: ARD numbers in, submission
