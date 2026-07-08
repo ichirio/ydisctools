@@ -1,5 +1,21 @@
 # ydisctools (development version)
 
+## New features
+
+* **`ars_generate_ard()` reads the real ADaM files, in any common format,
+  and can generate code without data** (#50). siera 0.5.6 hardcodes
+  `readr::read_csv('<adam_path>/<DATASET>.csv')` in every programme, so a
+  study whose ADaM are `.xpt` (or `.sas7bdat` / `.rds` / `.rda`) could not
+  be read. The wrapper now rewrites that reader to the new exported helper
+  **`read_adam()`**, which resolves the actual file present by format
+  priority **`.xpt` > `.sas7bdat` > `.rds` > `.rda` > `.csv`** (haven for
+  the SAS/transport formats, with value labels zapped so downstream logic
+  matches the csv path; case-insensitive file matching). A new
+  **`run = FALSE`** argument generates and rewrites the programmes without
+  executing them, so the R code can be produced with no data present
+  (`adam_path` then only sets the path baked into the code). Fixes the
+  roxygen that wrongly claimed `adam_path` already read `.csv` / `.xpt`.
+
 `ydisctools` is a Proof-of-Concept collection of small CDISC tools and is
 not versioned for release; this changelog tracks notable changes only.
 

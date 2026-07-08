@@ -142,6 +142,7 @@ reference:
       - ars_from_toc
       - ars_mock
       - ars_generate_ard
+      - read_adam
       - read_sap_toc
       - read_csr_map
 
