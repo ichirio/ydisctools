@@ -5,9 +5,9 @@
 #'
 #' A key feature of this implementation is that nodes are laid out from the node
 #' table rather than inferred from the links, so a node with **no links at all**
-#' is still drawn, sized by its `node_value`. For example, a "Line1: No
-#' Treatment" group that no patients enter or leave still appears in the diagram
-#' as a standalone node (see the example).
+#' is still drawn, sized by its `node_value`. For example, a "L1: No Treatment"
+#' group that no patients enter or leave still appears in the diagram as a
+#' standalone node (see the example).
 #'
 #' @param nodes A data frame of nodes.
 #' @param links A data frame of links.
@@ -54,6 +54,14 @@
 #' @param label_size Label size.
 #' @param label_color Label color.
 #' @param label_nudge Label offset from node edge.
+#' @param label_position Side of the node the labels are drawn on, along the
+#'   stage axis: `"right"` (default) or `"left"`. For
+#'   `orientation = "vertical"` this maps to above (`"right"`) / below
+#'   (`"left"`) the nodes. When labels are shown, the panel is extended on the
+#'   label side of the terminal stage by the span a link occupies between two
+#'   adjacent stages (`1 - node_width`) plus `label_nudge`, so terminal-stage
+#'   labels get the same room as the ones drawn between stages instead of
+#'   being clipped at the device edge.
 #' @param use_link_color_by_source If `TRUE`, link fill uses source node color.
 #' @param use_link_color_by_target If `TRUE`, link fill uses target node color.
 #'
@@ -63,7 +71,7 @@
 #' #
 #' # Highlighted feature: nodes are laid out from the node table, so a node with
 #' # NO links at all is still drawn, sized by `node_value`. Here every
-#' # "No Treatment" node (e.g. "Line1: No Treatment") is such an isolated node --
+#' # "No Treatment" node (e.g. "L1: No Treatment") is such an isolated node --
 #' # no patients flow into or out of it -- yet it appears in the diagram. Linked
 #' # nodes are left as NA and are sized from the link values.
 #' trt <- c("Chemo", "Immunotherapy", "Targeted", "No Treatment")
@@ -74,7 +82,7 @@
 #'   stage     = paste0("Line", rep(1:5, each = 4)),
 #'   line      = paste0("Line", rep(1:5, each = 4)),
 #'   treatment = rep(trt, 5),
-#'   label     = paste0("Line", rep(1:5, each = 4), ": ", rep(trt, 5)),
+#'   label     = paste0("L", rep(1:5, each = 4), ": ", rep(trt, 5)),
 #'   node_n    = NA_real_,
 #'   stringsAsFactors = FALSE
 #' )
@@ -165,6 +173,7 @@ plot_sankey <- function(
     label_size = 3,
     label_color = "#1F2A30",
     label_nudge = 0.03,
+    label_position = c("right", "left"),
     use_link_color_by_source = FALSE,
     use_link_color_by_target = FALSE
 ) {
@@ -172,6 +181,7 @@ plot_sankey <- function(
   baseline <- match.arg(baseline)
   scale_mode <- match.arg(scale_mode)
   treatment_color_mode <- match.arg(treatment_color_mode)
+  label_position <- match.arg(label_position)
 
   if (!is.data.frame(nodes) || nrow(nodes) == 0) {
     stop("`nodes` must be a non-empty data.frame.")
@@ -497,15 +507,39 @@ plot_sankey <- function(
     polygons <- do.call(rbind, poly_list)
   }
 
+  # Labels sit `label_nudge` off the node on the `label_position` side of the
+  # stage axis. `geom_text()` does not contribute to the panel range, so the
+  # panel is extended on the label side of the terminal stage by the span a
+  # link occupies between two adjacent stages (stage centers are 1 apart) plus
+  # the nudge; otherwise terminal-stage labels are clipped at the device edge.
+  if (label_position == "right") {
+    label_p <- node_df$pmax + label_nudge
+    label_just <- 0
+  } else {
+    label_p <- node_df$pmin - label_nudge
+    label_just <- 1
+  }
+
+  p_lower <- min(node_df$pmin)
+  p_upper <- max(node_df$pmax)
+  if (show_labels) {
+    label_span <- (1 - node_width) + label_nudge
+    if (label_position == "right") {
+      p_upper <- p_upper + label_span
+    } else {
+      p_lower <- p_lower - label_span
+    }
+  }
+
   if (orientation == "horizontal") {
     node_rect <- data.frame(
       xmin = node_df$pmin,
       xmax = node_df$pmax,
       ymin = node_df$smin,
       ymax = node_df$smax,
-      label_x = node_df$pmax + label_nudge,
+      label_x = label_p,
       label_y = (node_df$smin + node_df$smax) / 2,
-      hjust = 0,
+      hjust = label_just,
       vjust = 0.5,
       label = node_df$label,
       .node_fill = node_df$.node_fill,
@@ -518,9 +552,9 @@ plot_sankey <- function(
       ymin = node_df$pmin,
       ymax = node_df$pmax,
       label_x = (node_df$smin + node_df$smax) / 2,
-      label_y = node_df$pmax + label_nudge,
+      label_y = label_p,
       hjust = 0.5,
-      vjust = 0,
+      vjust = label_just,
       label = node_df$label,
       .node_fill = node_df$.node_fill,
       stringsAsFactors = FALSE
@@ -550,9 +584,9 @@ plot_sankey <- function(
     ggplot2::scale_fill_identity() +
     {
       if (orientation == "horizontal") {
-        ggplot2::coord_cartesian(ylim = c(0, panel_span), clip = "off")
+        ggplot2::coord_cartesian(xlim = c(p_lower, p_upper), ylim = c(0, panel_span), clip = "off")
       } else {
-        ggplot2::coord_cartesian(xlim = c(0, panel_span), clip = "off")
+        ggplot2::coord_cartesian(xlim = c(0, panel_span), ylim = c(p_lower, p_upper), clip = "off")
       }
     } +
     ggplot2::theme_void()
