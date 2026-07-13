@@ -119,6 +119,72 @@ test_that("plot_sankey keeps input order as top-to-bottom when baseline is top",
   expect_equal(which.min(l1$ymin), 3)
 })
 
+test_that("plot_sankey reserves link-width space on the label side of the last stage", {
+  nodes <- data.frame(
+    id = c("A", "B"),
+    stage = c("S1", "S2"),
+    label = c("A", "B"),
+    stringsAsFactors = FALSE
+  )
+  links <- data.frame(source = "A", target = "B", value = 10, stringsAsFactors = FALSE)
+
+  node_width <- 0.18
+  label_nudge <- 0.03
+  reserve <- (1 - node_width) + label_nudge
+
+  # Default: labels on the right; panel extends past the last stage.
+  p_right <- plot_sankey(nodes, links, node_label = "label")
+  expect_equal(
+    p_right$coordinates$limits$x,
+    c(0 - node_width / 2, 1 + node_width / 2 + reserve),
+    tolerance = 1e-8
+  )
+
+  # label_position = "left": space is reserved before the first stage instead.
+  p_left <- plot_sankey(nodes, links, node_label = "label", label_position = "left")
+  expect_equal(
+    p_left$coordinates$limits$x,
+    c(0 - node_width / 2 - reserve, 1 + node_width / 2),
+    tolerance = 1e-8
+  )
+
+  # No labels: no extra space on either side.
+  p_off <- plot_sankey(nodes, links, node_label = "label", show_labels = FALSE)
+  expect_equal(
+    p_off$coordinates$limits$x,
+    c(0 - node_width / 2, 1 + node_width / 2),
+    tolerance = 1e-8
+  )
+
+  # Vertical orientation reserves the space along y.
+  p_vert <- plot_sankey(nodes, links, node_label = "label", orientation = "vertical")
+  expect_equal(
+    p_vert$coordinates$limits$y,
+    c(0 - node_width / 2, 1 + node_width / 2 + reserve),
+    tolerance = 1e-8
+  )
+})
+
+test_that("plot_sankey places labels on the requested side", {
+  nodes <- data.frame(
+    id = c("A", "B"),
+    stage = c("S1", "S2"),
+    label = c("A", "B"),
+    stringsAsFactors = FALSE
+  )
+  links <- data.frame(source = "A", target = "B", value = 10, stringsAsFactors = FALSE)
+
+  p_right <- plot_sankey(nodes, links, node_label = "label")
+  txt_right <- ggplot2::layer_data(p_right, length(p_right$layers))
+  # Anchored just right of each node edge (pmax + nudge).
+  expect_equal(sort(txt_right$x), c(0.09 + 0.03, 1.09 + 0.03), tolerance = 1e-8)
+
+  p_left <- plot_sankey(nodes, links, node_label = "label", label_position = "left")
+  txt_left <- ggplot2::layer_data(p_left, length(p_left$layers))
+  # Anchored just left of each node edge (pmin - nudge).
+  expect_equal(sort(txt_left$x), c(-0.09 - 0.03, 0.91 - 0.03), tolerance = 1e-8)
+})
+
 test_that("plot_sankey validates shared scale input", {
   nodes <- data.frame(id = c("A", "B"), stage = c("S1", "S2"), stringsAsFactors = FALSE)
   links <- data.frame(source = "A", target = "B", value = 1, stringsAsFactors = FALSE)

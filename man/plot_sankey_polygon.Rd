@@ -38,6 +38,7 @@ plot_sankey(
   label_size = 3,
   label_color = "#1F2A30",
   label_nudge = 0.03,
+  label_position = c("right", "left"),
   use_link_color_by_source = FALSE,
   use_link_color_by_target = FALSE
 )
@@ -76,6 +77,14 @@ plot_sankey(
 \item{label_size}{Label size.}
 \item{label_color}{Label color.}
 \item{label_nudge}{Label offset from node edge.}
+\item{label_position}{Side of the node the labels are drawn on, along the
+stage axis: \code{"right"} (default) or \code{"left"}. For
+\code{orientation = "vertical"} this maps to above (\code{"right"}) / below
+(\code{"left"}) the nodes. When labels are shown, the panel is extended on
+the label side of the terminal stage by the span a link occupies between two
+adjacent stages (\code{1 - node_width}) plus \code{label_nudge}, so
+terminal-stage labels get the same room as the ones drawn between stages
+instead of being clipped at the device edge.}
 \item{use_link_color_by_source}{If \code{TRUE}, link fill uses source node color.}
 \item{use_link_color_by_target}{If \code{TRUE}, link fill uses target node color.}
 }
@@ -87,7 +96,7 @@ nodes and \code{geom_polygon} for links).
 A key feature of this implementation is that nodes are laid out from the node
 table rather than inferred from the links, so a node with \strong{no links at
 all} is still drawn, sized by its \code{node_value}. For example, a
-\dQuote{Line1: No Treatment} group that no patients enter or leave still
+\dQuote{L1: No Treatment} group that no patients enter or leave still
 appears in the diagram as a standalone node (see the example below).
 }
 \examples{
@@ -95,7 +104,7 @@ appears in the diagram as a standalone node (see the example below).
 #
 # Highlighted feature: nodes are laid out from the node table, so a node with
 # NO links at all is still drawn, sized by `node_value`. Here every
-# "No Treatment" node (e.g. "Line1: No Treatment") is such an isolated node --
+# "No Treatment" node (e.g. "L1: No Treatment") is such an isolated node --
 # no patients flow into or out of it -- yet it appears in the diagram. Linked
 # nodes are left as NA and are sized from the link values.
 trt <- c("Chemo", "Immunotherapy", "Targeted", "No Treatment")
@@ -106,7 +115,7 @@ nodes <- data.frame(
   stage     = paste0("Line", rep(1:5, each = 4)),
   line      = paste0("Line", rep(1:5, each = 4)),
   treatment = rep(trt, 5),
-  label     = paste0("Line", rep(1:5, each = 4), ": ", rep(trt, 5)),
+  label     = paste0("L", rep(1:5, each = 4), ": ", rep(trt, 5)),
   node_n    = NA_real_,
   stringsAsFactors = FALSE
 )
