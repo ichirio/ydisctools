@@ -165,6 +165,24 @@ test_that("plot_sankey reserves link-width space on the label side of the last s
   )
 })
 
+test_that("plot_sankey draws links in a single light grey by default", {
+  nodes <- data.frame(
+    id = c("A", "B", "C"),
+    stage = c("S1", "S2", "S2"),
+    stringsAsFactors = FALSE
+  )
+  links <- data.frame(
+    source = c("A", "A"),
+    target = c("B", "C"),
+    value = c(6, 4),
+    stringsAsFactors = FALSE
+  )
+
+  p <- plot_sankey(nodes, links, show_labels = FALSE)
+  link_fill <- unique(ggplot2::layer_data(p, 1)$fill)
+  expect_equal(link_fill, "#CCCCCC")
+})
+
 test_that("plot_sankey places labels on the requested side", {
   nodes <- data.frame(
     id = c("A", "B"),

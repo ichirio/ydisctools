@@ -1,5 +1,10 @@
 url: https://ichirio.github.io/ydisctools/
 
+# Wider example figures so the sankey node labels drawn between the stage
+# columns keep clear of the link ribbons (pkgdown default is ~7.3in wide).
+figures:
+  fig.width: 9
+
 template:
   bootstrap: 5
   bootswatch: cosmo
