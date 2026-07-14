@@ -2,6 +2,8 @@
 
 ## Bug fixes
 
+* The `plot_sankey_subgroups_batch()` example now uses the same five-line 200-patient cohort as the `plot_sankey()` example for the "All patients" panel, adds three subgroups (Age < 65 N=120, Age >= 65 N=80, Biomarker positive N=20), colours the nodes by treatment with the shared palette, and combines the four plots into a single 2x2 page per scale strategy with `patchwork::wrap_plots()` (new `Suggests: patchwork`); each panel's title states the subgroup condition (#67).
+
 * `plot_sankey_subgroups_batch()` now has a runnable example on its reference page, rendering the same two subgroups (Overall N=200 vs Biomarker+ N=20) under `scale_strategy = "shared_max"` (same scale everywhere; node heights directly comparable) and `"first_stage_normalized"` (each subgroup magnified so the first-line column spans the same height; shapes comparable). The `first_stage_max_multiplier` default was raised from 3 to 100, so first-stage normalization now equalises the first line in practice unless a subgroup is extremely small (#65).
 
 * `plot_sankey()` link ribbons now respect `baseline`: with `baseline = "top"` they stack from the node top downward, ordered by the counterpart node's position (top-most first); with `"bottom"` from the node bottom upward. Previously the offsets always accumulated from the node bottom (the bottom-aligned logic) and the within-node order was alphabetical on the node id. The example flows were also corrected: a new line implies a change of therapy, so same-treatment links (e.g. "L1: Chemo" -> "L2: Chemo") are gone, and every treated node now also feeds the next line's "No Treatment" node — only "L1: No Treatment" remains the link-less isolated-node showcase (#63).

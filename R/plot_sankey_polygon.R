@@ -299,6 +299,9 @@ plot_sankey <- function(
     value = suppressWarnings(as.numeric(links[[link_value]])),
     stringsAsFactors = FALSE
   )
+  # Resolve the fill while link_df still has one row per input link, so the
+  # colors survive the zero-value / unknown-node filtering below.
+  link_df$.link_fill <- resolve_style(links, link_fill, "#CCCCCC")
   link_df$value[is.na(link_df$value)] <- 0
   link_df <- link_df[link_df$value > 0, , drop = FALSE]
 
@@ -499,8 +502,6 @@ plot_sankey <- function(
       links_for_plot$s1_min <- node_df$smin[tgt_idx] + links_for_plot$target_offset
       links_for_plot$s1_max <- links_for_plot$s1_min + links_for_plot$value
     }
-
-    links_for_plot$.link_fill <- resolve_style(links, link_fill, "#CCCCCC")
 
     if (use_link_color_by_source) {
       src_fill_map <- stats::setNames(node_df$.node_fill, node_df$node_id)

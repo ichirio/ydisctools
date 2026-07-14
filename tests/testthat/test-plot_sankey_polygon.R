@@ -197,6 +197,29 @@ test_that("plot_sankey stacks ribbons from the baseline side in counterpart orde
   expect_equal(min(link_z_bot$y), 0, tolerance = 1e-8)
 })
 
+test_that("plot_sankey drops zero-value links without breaking link fills", {
+  nodes <- data.frame(
+    id = c("A", "B", "C"),
+    stage = c("S1", "S2", "S2"),
+    stringsAsFactors = FALSE
+  )
+  links <- data.frame(
+    source = c("A", "A"),
+    target = c("B", "C"),
+    value = c(6, 0),
+    fill = c("#123456", "#654321"),
+    stringsAsFactors = FALSE
+  )
+
+  # The zero-value link is dropped; the surviving link must keep its own
+  # fill (the fills were previously resolved against the unfiltered links,
+  # which errored on the row-count mismatch).
+  p <- plot_sankey(nodes, links, link_fill = "fill", show_labels = FALSE)
+  poly <- ggplot2::layer_data(p, 1)
+  expect_equal(length(unique(poly$group)), 1)
+  expect_equal(unique(poly$fill), "#123456")
+})
+
 test_that("plot_sankey draws links in a single light grey by default", {
   nodes <- data.frame(
     id = c("A", "B", "C"),
