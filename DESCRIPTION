@@ -1,7 +1,7 @@
 Package: ydisctools
 Type: Package
 Title: Your CDISC Related Tools
-Version: 0.0.258
+Version: 0.0.259
 Author: Yoichi Masui
 Maintainer: Yoichi Masui <masui.yoichi@gmail.com>
 Description: A collection of small, focused tools for CDISC programming
@@ -23,6 +23,7 @@ Suggests:
     testthat (>= 3.0.0),
     tibble,
     magrittr,
+    patchwork,
     siera,
     cards,
     cardx,
