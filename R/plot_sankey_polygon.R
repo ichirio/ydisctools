@@ -55,7 +55,8 @@
 #'   `"by_line"` reassigns colors per line.
 #' @param treatment_palette Optional color palette (character vector). Named
 #'   vectors are matched by treatment names.
-#' @param node_color Node border color.
+#' @param node_color Node border color (default black). Use any color, or
+#'   `NA` for no border.
 #' @param node_alpha Node alpha.
 #' @param link_fill Link fill color, or a column name in `links` containing
 #'   colors. The default is a single light grey; use
@@ -202,7 +203,7 @@ plot_sankey <- function(
     node_line = NULL,
     treatment_color_mode = c("across_lines", "by_line"),
     treatment_palette = NULL,
-    node_color = "white",
+    node_color = "black",
     node_alpha = 1,
     link_fill = "#CCCCCC",
     link_color = NA,

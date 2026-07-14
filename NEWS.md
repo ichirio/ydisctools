@@ -1,6 +1,12 @@
 # ydisctools (development version)
 
+## New features
+
+* New **`plot_sunburst()`**: a fully static treatment-pattern sunburst drawn with ggplot2 primitives only (`geom_rect` + `coord_polar`; no sunburstR/plotly, so it renders to PNG/PDF for publications). Rings are treatment lines (inner = first line), arc length = patients, child arcs nest from the parent's start angle and the remainder of the parent's span stays empty = attrition (the sunburst counterpart of `plot_sankey()`'s unlinked node part). Input is a path table (one row per sequence + count; `NA` = the path stops); radial labels auto-flip on the left half and sliver labels are suppressed via `label_min_frac`; shares the treatment-palette convention with `plot_sankey()`. The reference example reproduces the `plot_sankey()` example's transition matrices exactly (#71).
+
 ## Bug fixes
+
+* `plot_sankey()` nodes now carry a **black border by default** (`node_color = "black"`, was white); pass any colour or `NA` for no border (#72).
 
 * `plot_sankey()` no longer lets node labels of small nodes collide: `node_gap` now defaults to `NULL` = automatic, resolved as `label_gap_scale * label_size *` the value span the panel is scaled against (at least `shared_scale_max` in `"shared"` mode, so every subgroup plot sharing a scale gets the identical gap). The old fixed default of 0.03 value units was invisible once the scale spanned hundreds of patients, so the centre-anchored labels of tiny adjacent nodes overlapped in shared-scale subgroup figures. Pass a number as `node_gap` for the previous fixed behaviour; a new `label_gap_scale` argument (default 0.03) tunes the proportionality; `show_labels = FALSE` resolves to a hairline separator (#69).
 
