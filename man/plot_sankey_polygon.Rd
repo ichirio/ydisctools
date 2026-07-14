@@ -54,7 +54,10 @@ plot_sankey(
 \item{link_target}{Column name in \code{links} for target node IDs.}
 \item{link_value}{Column name in \code{links} for link values.}
 \item{orientation}{Plot direction: \code{"horizontal"} or \code{"vertical"}.}
-\item{baseline}{Node stacking baseline: \code{"top"} or \code{"bottom"}.}
+\item{baseline}{Node stacking baseline: \code{"top"} or \code{"bottom"}. Link
+ribbons follow it: with \code{"top"} they stack from the node top downward
+(the ribbon toward the top-most counterpart node attaches at the top), with
+\code{"bottom"} from the node bottom upward.}
 \item{scale_mode}{Scale behavior: \code{"auto"}, \code{"shared"}, or \code{"adaptive"}.}
 \item{shared_scale_max}{Shared maximum span used in \code{"shared"} mode and as reference in \code{"adaptive"} mode.}
 \item{adaptive_max_multiplier}{Maximum magnification in \code{"adaptive"} mode. Effective minimum span is \code{shared_scale_max / adaptive_max_multiplier}.}
@@ -111,10 +114,10 @@ appears in the diagram as a standalone node (see the example below).
 # 70 + 45 + 25 = 140 patients and L2 holds 120 in total; the other 20 ended
 # follow-up at L1 without even becoming "L2: No Treatment".
 #
-# Highlighted feature: nodes are laid out from the node table, so a node with
-# NO links at all is still drawn, sized by `node_value`. Every
-# "No Treatment" node (e.g. "L1: No Treatment") is such an isolated node --
-# no patients flow into or out of it -- yet it appears in the diagram.
+# Highlighted feature: nodes are laid out from the node table, so a node
+# with NO links at all is still drawn, sized by `node_value`. Here
+# "L1: No Treatment" is such an isolated node -- no patients flow into or
+# out of it -- yet it appears in the diagram.
 trt <- c("Chemo", "Immunotherapy", "Targeted", "No Treatment")
 key <- c("Chemo", "IO", "Target", "NoTx")
 
@@ -134,19 +137,22 @@ nodes <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Flows between the treated nodes of consecutive lines: one value per
-# source-target pair with the source cycling fastest. Column sums equal the
-# target node sizes and row sums never exceed the source node sizes; the
-# "No Treatment" nodes deliberately have no links.
+# Flows between consecutive lines: a new line implies a CHANGE of therapy,
+# so there are no same-treatment links, and every treated node also feeds
+# the next line's "No Treatment" node (patients who progressed but took no
+# further therapy). One value per source-target pair with the source
+# cycling fastest. Column sums equal the target node sizes and row sums
+# never exceed the source node sizes.
 active <- c("Chemo", "IO", "Target")
 flows <- list(
-  c(24, 9, 5, 8, 16, 4, 4, 5, 9), # L1 -> L2
-  c(13, 5, 2, 5, 9, 3, 2, 4, 6), # L2 -> L3
-  c(7, 3, 1, 3, 5, 2, 1, 2, 4), # L3 -> L4
-  c(4, 1, 1, 1, 3, 1, 1, 1, 2) # L4 -> L5
+  c(28, 10, 20, 8, 14, 4, 24, 8, 4), # L1 -> L2
+  c(15, 5, 13, 4, 9, 3, 12, 6, 3), # L2 -> L3
+  c(8, 3, 8, 2, 5, 2, 6, 4, 2), # L3 -> L4
+  c(4, 2, 4, 1, 2, 2, 3, 2, 2) # L4 -> L5
 )
 links <- do.call(rbind, lapply(1:4, function(k) {
-  g <- expand.grid(s = active, t = active, stringsAsFactors = FALSE)
+  g <- expand.grid(s = active, t = c(active, "NoTx"), stringsAsFactors = FALSE)
+  g <- g[g$s != g$t, , drop = FALSE]
   data.frame(
     source = paste0("L", k, "_", g$s),
     target = paste0("L", k + 1, "_", g$t),

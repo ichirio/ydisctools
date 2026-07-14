@@ -165,6 +165,38 @@ test_that("plot_sankey reserves link-width space on the label side of the last s
   )
 })
 
+test_that("plot_sankey stacks ribbons from the baseline side in counterpart order", {
+  # Target ids chosen so alphabetical order (Y < Z) differs from the input
+  # stacking order (Z above Y): the ribbon layout must follow the node
+  # positions, not the ids.
+  nodes <- data.frame(
+    id = c("A", "Z", "Y"),
+    stage = c("S1", "S2", "S2"),
+    stringsAsFactors = FALSE
+  )
+  links <- data.frame(
+    source = c("A", "A"),
+    target = c("Z", "Y"),
+    value = c(6, 4),
+    stringsAsFactors = FALSE
+  )
+
+  # Top-aligned: the ribbon to the top-most target (Z, input-first) leaves
+  # from the very top of A and enters the very top of Z (= panel top).
+  p_top <- plot_sankey(nodes, links, baseline = "top", show_labels = FALSE)
+  poly_top <- ggplot2::layer_data(p_top, 1)
+  rect_top <- ggplot2::layer_data(p_top, 2)
+  link_z <- poly_top[poly_top$group == 1, ] # poly_id "link_1" = A -> Z
+  expect_equal(max(link_z$y), max(rect_top$ymax), tolerance = 1e-8)
+
+  # Bottom-aligned: input-first Z sits at the bottom of S2 and the ribbon to
+  # it leaves from the very bottom of A (= 0).
+  p_bot <- plot_sankey(nodes, links, baseline = "bottom", show_labels = FALSE)
+  poly_bot <- ggplot2::layer_data(p_bot, 1)
+  link_z_bot <- poly_bot[poly_bot$group == 1, ]
+  expect_equal(min(link_z_bot$y), 0, tolerance = 1e-8)
+})
+
 test_that("plot_sankey draws links in a single light grey by default", {
   nodes <- data.frame(
     id = c("A", "B", "C"),
