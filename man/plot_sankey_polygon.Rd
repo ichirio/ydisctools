@@ -20,7 +20,7 @@ plot_sankey(
   shared_scale_max = NULL,
   adaptive_max_multiplier = 3,
   node_width = 0.18,
-  node_gap = 0.03,
+  node_gap = NULL,
   node_min_size = 0.015,
   link_curvature = 0.45,
   bezier_n = 60,
@@ -38,6 +38,7 @@ plot_sankey(
   label_size = 3,
   label_color = "#1F2A30",
   label_nudge = 0.03,
+  label_gap_scale = 0.03,
   label_position = c("right", "left"),
   use_link_color_by_source = FALSE,
   use_link_color_by_target = FALSE
@@ -62,7 +63,15 @@ ribbons follow it: with \code{"top"} they stack from the node top downward
 \item{shared_scale_max}{Shared maximum span used in \code{"shared"} mode and as reference in \code{"adaptive"} mode.}
 \item{adaptive_max_multiplier}{Maximum magnification in \code{"adaptive"} mode. Effective minimum span is \code{shared_scale_max / adaptive_max_multiplier}.}
 \item{node_width}{Width of each node along stage axis.}
-\item{node_gap}{Gap between nodes in the same stage.}
+\item{node_gap}{Gap between nodes in the same stage, in value units.
+Default \code{NULL} resolves it automatically as
+\code{label_gap_scale * label_size * scale basis} (the value span the panel
+is scaled against), so the centre-anchored node labels keep at least one
+label-sized gap apart no matter how small the nodes are -- plots sharing a
+scale (\code{scale_mode = "shared"}) all get the identical gap. Pass a
+number for a fixed gap (the old default was \code{0.03}). With
+\code{show_labels = FALSE} the automatic gap is a hairline (\code{0.002 *}
+basis).}
 \item{node_min_size}{Minimum visible node size (keeps isolated zero-value nodes visible).}
 \item{link_curvature}{Bezier curvature factor in \code{[0, 1]}.}
 \item{bezier_n}{Number of points used to sample Bezier curves.}
@@ -83,6 +92,10 @@ ribbons by their end nodes instead.}
 \item{label_size}{Label size.}
 \item{label_color}{Label color.}
 \item{label_nudge}{Label offset from node edge.}
+\item{label_gap_scale}{Proportionality constant for the automatic
+\code{node_gap} (see there); the auto gap is
+\code{label_gap_scale * label_size * scale basis}. Ignored when
+\code{node_gap} is given as a number.}
 \item{label_position}{Side of the node the labels are drawn on, along the
 stage axis: \code{"right"} (default) or \code{"left"}. For
 \code{orientation = "vertical"} this maps to above (\code{"right"}) / below

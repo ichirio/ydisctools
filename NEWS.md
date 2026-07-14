@@ -2,6 +2,8 @@
 
 ## Bug fixes
 
+* `plot_sankey()` no longer lets node labels of small nodes collide: `node_gap` now defaults to `NULL` = automatic, resolved as `label_gap_scale * label_size *` the value span the panel is scaled against (at least `shared_scale_max` in `"shared"` mode, so every subgroup plot sharing a scale gets the identical gap). The old fixed default of 0.03 value units was invisible once the scale spanned hundreds of patients, so the centre-anchored labels of tiny adjacent nodes overlapped in shared-scale subgroup figures. Pass a number as `node_gap` for the previous fixed behaviour; a new `label_gap_scale` argument (default 0.03) tunes the proportionality; `show_labels = FALSE` resolves to a hairline separator (#69).
+
 * The `plot_sankey_subgroups_batch()` example now uses the same five-line 200-patient cohort as the `plot_sankey()` example for the "All patients" panel, adds three subgroups (Age < 65 N=120, Age >= 65 N=80, Biomarker positive N=20), colours the nodes by treatment with the shared palette, and combines the four plots into a single 2x2 page per scale strategy with `patchwork::wrap_plots()` (new `Suggests: patchwork`); each panel's title states the subgroup condition (#67).
 
 * `plot_sankey_subgroups_batch()` now has a runnable example on its reference page, rendering the same two subgroups (Overall N=200 vs Biomarker+ N=20) under `scale_strategy = "shared_max"` (same scale everywhere; node heights directly comparable) and `"first_stage_normalized"` (each subgroup magnified so the first-line column spans the same height; shapes comparable). The `first_stage_max_multiplier` default was raised from 3 to 100, so first-stage normalization now equalises the first line in practice unless a subgroup is extremely small (#65).

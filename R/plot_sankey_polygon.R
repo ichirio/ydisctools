@@ -30,7 +30,15 @@
 #' @param adaptive_max_multiplier Maximum magnification in `"adaptive"` mode.
 #'   Effective minimum span is `shared_scale_max / adaptive_max_multiplier`.
 #' @param node_width Width of each node along stage axis.
-#' @param node_gap Gap between nodes in the same stage.
+#' @param node_gap Gap between nodes in the same stage, in value units.
+#'   Default `NULL` resolves it automatically as
+#'   `label_gap_scale * label_size * scale basis` (the value span the panel is
+#'   scaled against), so the centre-anchored node labels keep at least one
+#'   label-sized gap apart no matter how small the nodes are -- plots sharing
+#'   a scale (`scale_mode = "shared"`) all get the identical gap. Pass a
+#'   number for a fixed gap (the old default was `0.03`). With
+#'   `show_labels = FALSE` the automatic gap is a hairline
+#'   (`0.002 *` basis).
 #' @param node_min_size Minimum visible node size (keeps isolated zero-value
 #'   nodes visible).
 #' @param link_curvature Bezier curvature factor in `[0, 1]`.
@@ -59,6 +67,10 @@
 #' @param label_size Label size.
 #' @param label_color Label color.
 #' @param label_nudge Label offset from node edge.
+#' @param label_gap_scale Proportionality constant for the automatic
+#'   `node_gap` (see there); the auto gap is
+#'   `label_gap_scale * label_size * scale basis`. Ignored when `node_gap` is
+#'   given as a number.
 #' @param label_position Side of the node the labels are drawn on, along the
 #'   stage axis: `"right"` (default) or `"left"`. For
 #'   `orientation = "vertical"` this maps to above (`"right"`) / below
@@ -181,7 +193,7 @@ plot_sankey <- function(
     shared_scale_max = NULL,
     adaptive_max_multiplier = 3,
     node_width = 0.18,
-    node_gap = 0.03,
+    node_gap = NULL,
     node_min_size = 0.015,
     link_curvature = 0.45,
     bezier_n = 60,
@@ -199,6 +211,7 @@ plot_sankey <- function(
     label_size = 3,
     label_color = "#1F2A30",
     label_nudge = 0.03,
+    label_gap_scale = 0.03,
     label_position = c("right", "left"),
     use_link_color_by_source = FALSE,
     use_link_color_by_target = FALSE
@@ -252,8 +265,12 @@ plot_sankey <- function(
     stop("`node_width` must be > 0.")
   }
 
-  if (!is.numeric(node_gap) || node_gap < 0) {
-    stop("`node_gap` must be >= 0.")
+  if (!is.null(node_gap) && (!is.numeric(node_gap) || length(node_gap) != 1 || is.na(node_gap) || node_gap < 0)) {
+    stop("`node_gap` must be NULL (automatic) or a single number >= 0.")
+  }
+
+  if (!is.numeric(label_gap_scale) || length(label_gap_scale) != 1 || is.na(label_gap_scale) || label_gap_scale < 0) {
+    stop("`label_gap_scale` must be a single number >= 0.")
   }
 
   if (!is.numeric(bezier_n) || bezier_n < 8) {
@@ -321,6 +338,32 @@ plot_sankey <- function(
 
   node_df$value <- pmax(node_df$value_input, as.numeric(in_flow[node_df$node_id]), as.numeric(out_flow[node_df$node_id]), 0)
   node_df$display_value <- pmax(node_df$value, node_min_size)
+
+  # Automatic node gap: labels are centre-anchored on the nodes, so within a
+  # stage adjacent labels sit at least one gap apart. A fixed gap in value
+  # units is invisible once the scale spans hundreds of patients, so the
+  # automatic gap is proportional to the label text size AND to the value
+  # span the panel is scaled against (in shared/adaptive modes at least the
+  # shared reference, so every plot sharing a scale gets the identical gap).
+  if (is.null(node_gap)) {
+    raw_span <- tapply(node_df$display_value, as.character(node_df$stage), sum)
+    gap_basis <- max(raw_span)
+    if (!is.finite(gap_basis) || gap_basis <= 0) {
+      gap_basis <- 1
+    }
+    shared_ok <- is.numeric(shared_scale_max) && length(shared_scale_max) == 1 &&
+      !is.na(shared_scale_max) && shared_scale_max > 0
+    if (scale_mode == "shared" && shared_ok) {
+      gap_basis <- max(gap_basis, shared_scale_max)
+    } else if (scale_mode == "adaptive" && shared_ok) {
+      gap_basis <- max(gap_basis, shared_scale_max / adaptive_max_multiplier)
+    }
+    node_gap <- if (show_labels) {
+      label_gap_scale * label_size * gap_basis
+    } else {
+      0.002 * gap_basis
+    }
+  }
 
   if (!all(is.na(node_df$treatment))) {
     rotate_palette <- function(x, k) {
