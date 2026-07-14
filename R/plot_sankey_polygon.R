@@ -47,7 +47,9 @@
 #' @param node_color Node border color.
 #' @param node_alpha Node alpha.
 #' @param link_fill Link fill color, or a column name in `links` containing
-#'   colors.
+#'   colors. The default is a single light grey; use
+#'   `use_link_color_by_source` / `use_link_color_by_target` to color ribbons
+#'   by their end nodes instead.
 #' @param link_color Link border color.
 #' @param link_alpha Link alpha.
 #' @param show_labels Whether to draw labels.
@@ -67,13 +69,18 @@
 #'
 #' @return A `ggplot` object.
 #' @examples
-#' # A five-line oncology treatment-sequence cohort (Line 1 -> Line 5).
+#' # A five-line oncology treatment-sequence cohort (L1 -> L5), 200 patients.
+#' #
+#' # The node counts behave like a real cohort: at every line about 30% of the
+#' # patients are "No Treatment", and the total N of a line never exceeds the
+#' # treated (non-"No Treatment") N of the previous line -- L1 treats
+#' # 70 + 45 + 25 = 140 patients and L2 holds 120 in total; the other 20 ended
+#' # follow-up at L1 without even becoming "L2: No Treatment".
 #' #
 #' # Highlighted feature: nodes are laid out from the node table, so a node with
-#' # NO links at all is still drawn, sized by `node_value`. Here every
+#' # NO links at all is still drawn, sized by `node_value`. Every
 #' # "No Treatment" node (e.g. "L1: No Treatment") is such an isolated node --
-#' # no patients flow into or out of it -- yet it appears in the diagram. Linked
-#' # nodes are left as NA and are sized from the link values.
+#' # no patients flow into or out of it -- yet it appears in the diagram.
 #' trt <- c("Chemo", "Immunotherapy", "Targeted", "No Treatment")
 #' key <- c("Chemo", "IO", "Target", "NoTx")
 #'
@@ -83,22 +90,33 @@
 #'   line      = paste0("Line", rep(1:5, each = 4)),
 #'   treatment = rep(trt, 5),
 #'   label     = paste0("L", rep(1:5, each = 4), ": ", rep(trt, 5)),
-#'   node_n    = NA_real_,
+#'   node_n    = c(
+#'     70, 45, 25, 60, # L1: 140 treated + 60 untreated (30% of 200)
+#'     38, 28, 18, 36, # L2: 120 of the 140 L1-treated reach L2 (30% untreated)
+#'     20, 17, 12, 21, # L3:  70 of the  84 L2-treated reach L3 (30% untreated)
+#'     11, 10,  7, 12, # L4:  40 of the  49 L3-treated reach L4 (30% untreated)
+#'      6,  5,  4,  7  # L5:  22 of the  28 L4-treated reach L5 (32% untreated)
+#'   ),
 #'   stringsAsFactors = FALSE
 #' )
-#' # Give the link-less "No Treatment" nodes an explicit size.
-#' nodes$node_n[nodes$treatment == "No Treatment"] <- c(20, 18, 15, 12, 10)
 #'
-#' # Patients flow only among the active treatments between consecutive lines;
-#' # the "No Treatment" nodes deliberately have no links.
+#' # Flows between the treated nodes of consecutive lines: one value per
+#' # source-target pair with the source cycling fastest. Column sums equal the
+#' # target node sizes and row sums never exceed the source node sizes; the
+#' # "No Treatment" nodes deliberately have no links.
 #' active <- c("Chemo", "IO", "Target")
-#' flow <- c(45, 8, 4, 10, 28, 5, 6, 6, 16) # source-by-target, tapering per line
+#' flows <- list(
+#'   c(24, 9, 5, 8, 16, 4, 4, 5, 9), # L1 -> L2
+#'   c(13, 5, 2, 5, 9, 3, 2, 4, 6), # L2 -> L3
+#'   c(7, 3, 1, 3, 5, 2, 1, 2, 4), # L3 -> L4
+#'   c(4, 1, 1, 1, 3, 1, 1, 1, 2) # L4 -> L5
+#' )
 #' links <- do.call(rbind, lapply(1:4, function(k) {
 #'   g <- expand.grid(s = active, t = active, stringsAsFactors = FALSE)
 #'   data.frame(
 #'     source = paste0("L", k, "_", g$s),
 #'     target = paste0("L", k + 1, "_", g$t),
-#'     value  = round(flow * 0.75^(k - 1)),
+#'     value  = flows[[k]],
 #'     stringsAsFactors = FALSE
 #'   )
 #' }))
@@ -110,6 +128,9 @@
 #'   "No Treatment"  = "#7F7F7F"
 #' )
 #'
+#' # Links use the default single light grey; set
+#' # `use_link_color_by_source = TRUE` to color the ribbons by their source
+#' # node instead.
 #' plot_sankey(
 #'   nodes = nodes,
 #'   links = links,
@@ -125,9 +146,8 @@
 #'   treatment_color_mode = "across_lines",
 #'   treatment_palette = treatment_palette,
 #'   baseline = "top",
-#'   use_link_color_by_source = TRUE,
 #'   link_alpha = 0.55,
-#'   label_size = 3
+#'   label_size = 2.5
 #' )
 #' @export
 #' @importFrom rlang .data
@@ -166,7 +186,7 @@ plot_sankey <- function(
     treatment_palette = NULL,
     node_color = "white",
     node_alpha = 1,
-    link_fill = "#8AA1B1",
+    link_fill = "#CCCCCC",
     link_color = NA,
     link_alpha = 0.6,
     show_labels = TRUE,
@@ -460,7 +480,7 @@ plot_sankey <- function(
     links_for_plot$s1_min <- node_df$smin[tgt_idx] + links_for_plot$target_offset
     links_for_plot$s1_max <- links_for_plot$s1_min + links_for_plot$value
 
-    links_for_plot$.link_fill <- resolve_style(links, link_fill, "#8AA1B1")
+    links_for_plot$.link_fill <- resolve_style(links, link_fill, "#CCCCCC")
 
     if (use_link_color_by_source) {
       src_fill_map <- stats::setNames(node_df$.node_fill, node_df$node_id)
