@@ -165,6 +165,49 @@ test_that("plot_sankey reserves link-width space on the label side of the last s
   )
 })
 
+test_that("plot_sankey auto node gap scales with label size and shared scale", {
+  nodes <- data.frame(
+    id = c("A", "B", "C"),
+    stage = c("S1", "S1", "S2"),
+    label = c("A", "B", "C"),
+    stringsAsFactors = FALSE
+  )
+  links <- data.frame(
+    source = c("A", "B"),
+    target = c("C", "C"),
+    value = c(100, 50),
+    stringsAsFactors = FALSE
+  )
+
+  stage_gap <- function(p) {
+    rect <- ggplot2::layer_data(p, 2)
+    s1 <- rect[rect$xmin < 0.5, ]
+    s1 <- s1[order(-s1$ymax), ]
+    s1$ymin[1] - s1$ymax[2]
+  }
+
+  # Local basis: max raw stage span = 150 -> gap = 0.03 * 3 * 150.
+  p_auto <- plot_sankey(nodes, links, node_label = "label")
+  expect_equal(stage_gap(p_auto), 0.03 * 3 * 150, tolerance = 1e-8)
+
+  # Shared scale: the gap follows the shared basis, so every plot drawn
+  # with the same shared_scale_max gets the identical gap.
+  p_shared <- plot_sankey(
+    nodes, links,
+    node_label = "label",
+    scale_mode = "shared", shared_scale_max = 300
+  )
+  expect_equal(stage_gap(p_shared), 0.03 * 3 * 300, tolerance = 1e-8)
+
+  # An explicit numeric node_gap keeps the fixed behaviour.
+  p_fixed <- plot_sankey(nodes, links, node_label = "label", node_gap = 0)
+  expect_equal(stage_gap(p_fixed), 0, tolerance = 1e-8)
+
+  # Without labels the automatic gap is a hairline (0.002 * basis).
+  p_off <- plot_sankey(nodes, links, node_label = "label", show_labels = FALSE)
+  expect_equal(stage_gap(p_off), 0.002 * 150, tolerance = 1e-8)
+})
+
 test_that("plot_sankey stacks ribbons from the baseline side in counterpart order", {
   # Target ids chosen so alphabetical order (Y < Z) differs from the input
   # stacking order (Z above Y): the ribbon layout must follow the node
