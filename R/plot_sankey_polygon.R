@@ -20,7 +20,10 @@
 #' @param link_target Column name in `links` for target node IDs.
 #' @param link_value Column name in `links` for link values.
 #' @param orientation Plot direction: `"horizontal"` or `"vertical"`.
-#' @param baseline Node stacking baseline: `"top"` or `"bottom"`.
+#' @param baseline Node stacking baseline: `"top"` or `"bottom"`. Link
+#'   ribbons follow it: with `"top"` they stack from the node top downward
+#'   (the ribbon toward the top-most counterpart node attaches at the top),
+#'   with `"bottom"` from the node bottom upward.
 #' @param scale_mode Scale behavior: `"auto"`, `"shared"`, or `"adaptive"`.
 #' @param shared_scale_max Shared maximum span used in `"shared"` mode and as
 #'   reference in `"adaptive"` mode.
@@ -77,10 +80,10 @@
 #' # 70 + 45 + 25 = 140 patients and L2 holds 120 in total; the other 20 ended
 #' # follow-up at L1 without even becoming "L2: No Treatment".
 #' #
-#' # Highlighted feature: nodes are laid out from the node table, so a node with
-#' # NO links at all is still drawn, sized by `node_value`. Every
-#' # "No Treatment" node (e.g. "L1: No Treatment") is such an isolated node --
-#' # no patients flow into or out of it -- yet it appears in the diagram.
+#' # Highlighted feature: nodes are laid out from the node table, so a node
+#' # with NO links at all is still drawn, sized by `node_value`. Here
+#' # "L1: No Treatment" is such an isolated node -- no patients flow into or
+#' # out of it -- yet it appears in the diagram.
 #' trt <- c("Chemo", "Immunotherapy", "Targeted", "No Treatment")
 #' key <- c("Chemo", "IO", "Target", "NoTx")
 #'
@@ -100,19 +103,22 @@
 #'   stringsAsFactors = FALSE
 #' )
 #'
-#' # Flows between the treated nodes of consecutive lines: one value per
-#' # source-target pair with the source cycling fastest. Column sums equal the
-#' # target node sizes and row sums never exceed the source node sizes; the
-#' # "No Treatment" nodes deliberately have no links.
+#' # Flows between consecutive lines: a new line implies a CHANGE of therapy,
+#' # so there are no same-treatment links, and every treated node also feeds
+#' # the next line's "No Treatment" node (patients who progressed but took no
+#' # further therapy). One value per source-target pair with the source
+#' # cycling fastest. Column sums equal the target node sizes and row sums
+#' # never exceed the source node sizes.
 #' active <- c("Chemo", "IO", "Target")
 #' flows <- list(
-#'   c(24, 9, 5, 8, 16, 4, 4, 5, 9), # L1 -> L2
-#'   c(13, 5, 2, 5, 9, 3, 2, 4, 6), # L2 -> L3
-#'   c(7, 3, 1, 3, 5, 2, 1, 2, 4), # L3 -> L4
-#'   c(4, 1, 1, 1, 3, 1, 1, 1, 2) # L4 -> L5
+#'   c(28, 10, 20, 8, 14, 4, 24, 8, 4), # L1 -> L2
+#'   c(15, 5, 13, 4, 9, 3, 12, 6, 3), # L2 -> L3
+#'   c(8, 3, 8, 2, 5, 2, 6, 4, 2), # L3 -> L4
+#'   c(4, 2, 4, 1, 2, 2, 3, 2, 2) # L4 -> L5
 #' )
 #' links <- do.call(rbind, lapply(1:4, function(k) {
-#'   g <- expand.grid(s = active, t = active, stringsAsFactors = FALSE)
+#'   g <- expand.grid(s = active, t = c(active, "NoTx"), stringsAsFactors = FALSE)
+#'   g <- g[g$s != g$t, , drop = FALSE]
 #'   data.frame(
 #'     source = paste0("L", k, "_", g$s),
 #'     target = paste0("L", k + 1, "_", g$t),
@@ -461,10 +467,17 @@ plot_sankey <- function(
   if (nrow(links_for_plot) > 0) {
     links_for_plot$row_id <- seq_len(nrow(links_for_plot))
 
-    src_sorted <- links_for_plot[order(links_for_plot$source, links_for_plot$target, links_for_plot$row_id), , drop = FALSE]
+    # Within a node, ribbons are laid out in the stacking order of the
+    # counterpart node (its position in `node_df`, i.e. input order per
+    # stage), and the cumulative offsets are anchored on the `baseline` side:
+    # top-aligned nodes stack their ribbons from the node top downward,
+    # bottom-aligned nodes from the node bottom upward.
+    node_pos <- stats::setNames(seq_len(nrow(node_df)), node_df$node_id)
+
+    src_sorted <- links_for_plot[order(links_for_plot$source, node_pos[links_for_plot$target], links_for_plot$row_id), , drop = FALSE]
     src_sorted$source_offset <- ave(src_sorted$value, src_sorted$source, FUN = function(v) c(0, cumsum(utils::head(v, -1))))
 
-    tgt_sorted <- links_for_plot[order(links_for_plot$target, links_for_plot$source, links_for_plot$row_id), , drop = FALSE]
+    tgt_sorted <- links_for_plot[order(links_for_plot$target, node_pos[links_for_plot$source], links_for_plot$row_id), , drop = FALSE]
     tgt_sorted$target_offset <- ave(tgt_sorted$value, tgt_sorted$target, FUN = function(v) c(0, cumsum(utils::head(v, -1))))
 
     links_for_plot <- merge(src_sorted, tgt_sorted[, c("row_id", "target_offset")], by = "row_id", all.x = TRUE, sort = FALSE)
@@ -475,10 +488,17 @@ plot_sankey <- function(
 
     links_for_plot$p0 <- node_df$pmax[src_idx]
     links_for_plot$p1 <- node_df$pmin[tgt_idx]
-    links_for_plot$s0_min <- node_df$smin[src_idx] + links_for_plot$source_offset
-    links_for_plot$s0_max <- links_for_plot$s0_min + links_for_plot$value
-    links_for_plot$s1_min <- node_df$smin[tgt_idx] + links_for_plot$target_offset
-    links_for_plot$s1_max <- links_for_plot$s1_min + links_for_plot$value
+    if (baseline == "top") {
+      links_for_plot$s0_max <- node_df$smax[src_idx] - links_for_plot$source_offset
+      links_for_plot$s0_min <- links_for_plot$s0_max - links_for_plot$value
+      links_for_plot$s1_max <- node_df$smax[tgt_idx] - links_for_plot$target_offset
+      links_for_plot$s1_min <- links_for_plot$s1_max - links_for_plot$value
+    } else {
+      links_for_plot$s0_min <- node_df$smin[src_idx] + links_for_plot$source_offset
+      links_for_plot$s0_max <- links_for_plot$s0_min + links_for_plot$value
+      links_for_plot$s1_min <- node_df$smin[tgt_idx] + links_for_plot$target_offset
+      links_for_plot$s1_max <- links_for_plot$s1_min + links_for_plot$value
+    }
 
     links_for_plot$.link_fill <- resolve_style(links, link_fill, "#CCCCCC")
 
