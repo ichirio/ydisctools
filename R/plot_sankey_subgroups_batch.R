@@ -25,7 +25,8 @@
 #'   `scale_strategy = "shared_first_stage"`. If `NULL`, the first subgroup in
 #'   `subgroup_specs` is used.
 #' @param first_stage_max_multiplier Magnification cap used when
-#'   `scale_strategy = "first_stage_normalized"`. Use `Inf` (or `NULL`) for no cap.
+#'   `scale_strategy = "first_stage_normalized"` (default 100). Use `Inf` (or
+#'   `NULL`) for no cap.
 #' @param output_dir Optional output directory to save PNG files.
 #' @param save_png Whether to write PNG files.
 #' @param width,height,dpi,bg PNG rendering options for `ggsave()`.
@@ -34,6 +35,84 @@
 #' @return A list with:
 #'   - `plots`: named list of ggplot objects.
 #'   - `metadata`: data frame with subgroup, scales, multipliers, and output file names.
+#' @examples
+#' # A three-line treatment-sequence cohort drawn for two subgroups of very
+#' # different sizes: the overall cohort (N = 200) and a small biomarker-
+#' # positive subgroup (N = 20). Both follow the usual cohort rules: about
+#' # 30% of each line is "No Treatment", a line's total N never exceeds the
+#' # treated N of the previous line, there are no same-treatment
+#' # transitions, and "L1: No Treatment" is an isolated node.
+#' trt <- c("Chemo", "IO", "NoTx")
+#' lab <- c("Chemo", "Immunotherapy", "No Treatment")
+#'
+#' mk_nodes <- function(grp, n) {
+#'   data.frame(
+#'     grp    = grp,
+#'     id     = paste0("L", rep(1:3, each = 3), "_", rep(trt, 3)),
+#'     stage  = paste0("Line", rep(1:3, each = 3)),
+#'     label  = paste0("L", rep(1:3, each = 3), ": ", rep(lab, 3)),
+#'     node_n = n,
+#'     stringsAsFactors = FALSE
+#'   )
+#' }
+#' mk_links <- function(grp, f12, f23) {
+#'   g <- expand.grid(s = c("Chemo", "IO"), t = trt, stringsAsFactors = FALSE)
+#'   g <- g[g$s != g$t, , drop = FALSE]
+#'   do.call(rbind, lapply(1:2, function(k) {
+#'     data.frame(
+#'       grp    = grp,
+#'       source = paste0("L", k, "_", g$s),
+#'       target = paste0("L", k + 1, "_", g$t),
+#'       value  = if (k == 1) f12 else f23,
+#'       stringsAsFactors = FALSE
+#'     )
+#'   }))
+#' }
+#'
+#' nodes <- rbind(
+#'   mk_nodes("Overall", c(80, 60, 60, 45, 39, 36, 25, 24, 21)),
+#'   mk_nodes("Biomarker+", c(8, 6, 6, 4, 4, 4, 2, 2, 2))
+#' )
+#' links <- rbind(
+#'   mk_links("Overall", c(45, 39, 22, 14), c(25, 24, 13, 8)),
+#'   mk_links("Biomarker+", c(4, 4, 2, 2), c(2, 2, 1, 1))
+#' )
+#'
+#' specs <- data.frame(
+#'   subgroup = c("overall", "biomarker"),
+#'   filter   = c('grp == "Overall"', 'grp == "Biomarker+"'),
+#'   title    = c("Overall (N = 200)", "Biomarker+ (N = 20)"),
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' # 1) Shared scale: every plot uses the same axis span, so node heights
+#' #    are directly comparable across subgroups -- the biomarker subgroup
+#' #    is drawn small.
+#' shared <- plot_sankey_subgroups_batch(
+#'   nodes, links, specs,
+#'   node_label = "label", node_value = "node_n",
+#'   scale_strategy = "shared_max",
+#'   save_png = FALSE,
+#'   baseline = "top", label_size = 2.5
+#' )
+#' shared$plots$overall
+#' shared$plots$biomarker
+#'
+#' # 2) First-stage normalization: each subgroup is magnified so its Line 1
+#' #    column spans the same height -- the shapes (proportions) are
+#' #    comparable, the absolute sizes are not. The magnification is capped
+#' #    by `first_stage_max_multiplier` (default 100); here the biomarker
+#' #    subgroup is scaled by about x10.
+#' norm <- plot_sankey_subgroups_batch(
+#'   nodes, links, specs,
+#'   node_label = "label", node_value = "node_n",
+#'   scale_strategy = "first_stage_normalized",
+#'   save_png = FALSE,
+#'   baseline = "top", label_size = 2.5
+#' )
+#' norm$plots$overall
+#' norm$plots$biomarker
+#' norm$metadata[, c("subgroup", "first_stage_span", "multiplier")]
 #' @export
 plot_sankey_subgroups_batch <- function(
     nodes,
@@ -48,7 +127,7 @@ plot_sankey_subgroups_batch <- function(
     link_value = "value",
     scale_strategy = c("shared_max", "shared_first_stage", "first_stage_normalized"),
     scale_reference_subgroup = NULL,
-    first_stage_max_multiplier = 3,
+    first_stage_max_multiplier = 100,
     output_dir = NULL,
     save_png = TRUE,
     width = 14,

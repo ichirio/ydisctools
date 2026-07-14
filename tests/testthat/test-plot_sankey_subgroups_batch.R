@@ -93,6 +93,10 @@ test_that("plot_sankey_subgroups_batch supports first-stage normalization with c
   expect_equal(mul_sub_nocap, 5)
 })
 
+test_that("plot_sankey_subgroups_batch caps first-stage magnification at 100 by default", {
+  expect_equal(formals(plot_sankey_subgroups_batch)$first_stage_max_multiplier, 100)
+})
+
 test_that("plot_sankey_subgroups_batch supports shared first-stage reference scale", {
   nodes <- data.frame(
     id = c("A", "B", "A", "B"),
