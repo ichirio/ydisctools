@@ -279,6 +279,11 @@ test_that("plot_sankey draws links in a single light grey by default", {
   p <- plot_sankey(nodes, links, show_labels = FALSE)
   link_fill <- unique(ggplot2::layer_data(p, 1)$fill)
   expect_equal(link_fill, "#CCCCCC")
+
+  # Nodes carry a black border by default; node_color overrides it.
+  expect_equal(unique(ggplot2::layer_data(p, 2)$colour), "black")
+  p_none <- plot_sankey(nodes, links, show_labels = FALSE, node_color = NA)
+  expect_true(all(is.na(ggplot2::layer_data(p_none, 2)$colour)))
 })
 
 test_that("plot_sankey places labels on the requested side", {

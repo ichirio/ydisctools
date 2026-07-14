@@ -29,7 +29,7 @@ plot_sankey(
   node_line = NULL,
   treatment_color_mode = c("across_lines", "by_line"),
   treatment_palette = NULL,
-  node_color = "white",
+  node_color = "black",
   node_alpha = 1,
   link_fill = "#CCCCCC",
   link_color = NA,
@@ -80,7 +80,8 @@ basis).}
 \item{node_line}{Optional column name in \code{nodes} for line identifier used when \code{treatment_color_mode = "by_line"}.}
 \item{treatment_color_mode}{Treatment color mapping mode: \code{"across_lines"} or \code{"by_line"}.}
 \item{treatment_palette}{Optional color palette (character vector). Named vectors are matched by treatment names.}
-\item{node_color}{Node border color.}
+\item{node_color}{Node border color (default black). Use any color, or
+\code{NA} for no border.}
 \item{node_alpha}{Node alpha.}
 \item{link_fill}{Link fill color, or a column name in \code{links} containing
 colors. The default is a single light grey; use
