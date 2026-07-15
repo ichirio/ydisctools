@@ -74,12 +74,12 @@ ring; once a path has stopped it must stay \code{NA} in all later columns.
 Rows describing the same sequence are summed.
 }
 \examples{
-# Treatment sequences over the first three lines of the same 200-patient
-# cohort as the plot_sankey() example -- the ring totals of this path table
-# reproduce that example's transition matrices exactly (L1 200 -> L2 120 ->
-# L3 70, about 30\% "No Treatment" per line, no same-treatment transitions).
-# A name like "C,IO" is a path that stops after the second line; the
-# missing span outside an arc is the attrition.
+# One shared dataset, two views. This path table is the first three lines
+# of the plot_sankey() example's 200-patient cohort: one row per treatment
+# sequence (C = Chemo, IO = Immunotherapy, T = Targeted, N = No
+# Treatment), `n` patients per path (L1 200 -> L2 120 -> L3 70, about 30\%
+# "No Treatment" per line, no same-treatment transitions). A name like
+# "C,IO" is a path that stops after the second line.
 seq_n <- c(
   "C,IO,C" = 11, "C,IO,T" = 2, "C,IO,N" = 4, "C,IO" = 3,
   "C,T,C" = 4, "C,T,IO" = 3, "C,T,N" = 2, "C,T" = 5,
@@ -101,20 +101,72 @@ paths <- data.frame(
   stringsAsFactors = FALSE
 )
 
-treatment_palette <- c(
-  "C"  = "#2F6C8F",
-  "IO" = "#4B9F7A",
-  "T"  = "#D08C3E",
-  "N"  = "#7F7F7F"
+trt <- c(C = "Chemo", IO = "Immunotherapy", T = "Targeted",
+         N = "No Treatment")
+trt_colors <- c(C = "#2F6C8F", IO = "#4B9F7A", T = "#D08C3E",
+                N = "#7F7F7F")
+
+# The SAME paths feed a sankey: per-line totals give the node sizes
+# (including the link-less "L1: No Treatment" node) and consecutive-line
+# transitions give the links -- exactly the L1-L3 slice of the
+# plot_sankey() example's node and link tables.
+ring <- c("line1", "line2", "line3")
+nodes <- do.call(rbind, lapply(1:3, function(k) {
+  data.frame(
+    id        = paste0("L", k, "_", names(trt)),
+    stage     = paste0("Line", k),
+    line      = paste0("Line", k),
+    treatment = unname(trt),
+    label     = paste0("L", k, ": ", unname(trt)),
+    node_n    = as.vector(tapply(paths$n, paths[[ring[k]]], sum)[names(trt)]),
+    stringsAsFactors = FALSE
+  )
+}))
+links <- do.call(rbind, lapply(1:2, function(k) {
+  move <- !is.na(paths[[ring[k + 1]]])
+  agg <- aggregate(
+    list(value = paths$n[move]),
+    list(s = paths[[ring[k]]][move], t = paths[[ring[k + 1]]][move]),
+    sum
+  )
+  data.frame(
+    source = paste0("L", k, "_", agg$s),
+    target = paste0("L", k + 1, "_", agg$t),
+    value  = agg$value,
+    stringsAsFactors = FALSE
+  )
+}))
+
+# Transition view: who moves where between lines.
+plot_sankey(
+  nodes = nodes,
+  links = links,
+  node_id = "id",
+  node_stage = "stage",
+  node_label = "label",
+  node_value = "node_n",
+  link_source = "source",
+  link_target = "target",
+  link_value = "value",
+  node_treatment = "treatment",
+  node_line = "line",
+  treatment_color_mode = "across_lines",
+  treatment_palette = stats::setNames(trt_colors, trt),
+  baseline = "top",
+  link_alpha = 0.55,
+  label_size = 2.5
 )
 
+# Path view of the very same data: each ring is a treatment line, arc
+# length is patients, and the empty remainder of a parent arc is the
+# attrition (the sunburst counterpart of the sankey's unlinked node span).
 plot_sunburst(
   paths,
-  path_cols = c("line1", "line2", "line3"),
+  path_cols = ring,
   path_value = "n",
-  levels = c("C", "IO", "T", "N"),
+  levels = names(trt),
   segment_labels = c(C = "Chemo", IO = "IO", T = "Target", N = "NoTx"),
-  palette = treatment_palette,
+  palette = trt_colors,
   center_label = "STUDY01\nN = 200"
 )
 }

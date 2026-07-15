@@ -1,5 +1,9 @@
 # ydisctools (development version)
 
+## Documentation
+
+* The `plot_sunburst()` reference example now draws **both a sankey and a sunburst from one shared path table** — the first three lines of the `plot_sankey()` example's 200-patient cohort. The sankey `nodes`/`links` tables are *derived from the paths* in the example (per-line totals -> node sizes including the link-less "L1: No Treatment" node; consecutive-line transitions -> links) and reproduce the `plot_sankey()` example's L1–L3 slice value by value, making the "sunburst answers path questions, sankey answers transition questions" pairing literal (#74).
+
 ## New features
 
 * New **`plot_sunburst()`**: a fully static treatment-pattern sunburst drawn with ggplot2 primitives only (`geom_rect` + `coord_polar`; no sunburstR/plotly, so it renders to PNG/PDF for publications). Rings are treatment lines (inner = first line), arc length = patients, child arcs nest from the parent's start angle and the remainder of the parent's span stays empty = attrition (the sunburst counterpart of `plot_sankey()`'s unlinked node part). Input is a path table (one row per sequence + count; `NA` = the path stops); radial labels auto-flip on the left half and sliver labels are suppressed via `label_min_frac`; shares the treatment-palette convention with `plot_sankey()`. The reference example reproduces the `plot_sankey()` example's transition matrices exactly (#71).
