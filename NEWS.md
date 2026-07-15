@@ -2,6 +2,8 @@
 
 ## Documentation
 
+* Fixed the homepage's `plot_sankey()` reference link, which pointed at a non-existent `reference/plot_sankey.html` (404). pkgdown names a reference page after the **Rd file**, and the sankey topic is documented in `man/plot_sankey_polygon.Rd`, so the published page is `reference/plot_sankey_polygon.html` — the address the reference index uses (#78).
+
 * The README / pkgdown homepage now opens with a **`plot_sankey()` + `plot_sunburst()` image showcase** (both figures drawn from the same treatment-sequence cohort, rendered as committed `man/figures/README-*.png`), replacing the old `catx()` quick example and the stale pointer to the `output/` sankey script. The intro also states the package's positioning explicitly: ydisctools experimentally implements features for clinical reporting and database research, and tools judged useful are reorganized and published as standalone packages, as `rtfreporter` was (#75).
 
 * The `plot_sunburst()` reference example now draws **both a sankey and a sunburst from one shared path table** — the first three lines of the `plot_sankey()` example's 200-patient cohort. The sankey `nodes`/`links` tables are *derived from the paths* in the example (per-line totals -> node sizes including the link-less "L1: No Treatment" node; consecutive-line transitions -> links) and reproduce the `plot_sankey()` example's L1–L3 slice value by value, making the "sunburst answers path questions, sankey answers transition questions" pairing literal (#74).
