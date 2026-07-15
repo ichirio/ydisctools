@@ -73,7 +73,7 @@ the sunburst counterpart of the sankey's unlinked node span:
 
 The full runnable code for both figures — including how the sankey's node and
 link tables are derived from the sunburst's path table — is in the
-[`plot_sankey()`](https://ichirio.github.io/ydisctools/reference/plot_sankey.html)
+[`plot_sankey()`](https://ichirio.github.io/ydisctools/reference/plot_sankey_polygon.html)
 and
 [`plot_sunburst()`](https://ichirio.github.io/ydisctools/reference/plot_sunburst.html)
 reference examples.
