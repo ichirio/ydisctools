@@ -1,5 +1,15 @@
 # ydisctools (development version)
 
+## Documentation
+
+* New article **"Building a clinical listing"** (#82) — a runnable end-to-end
+  walk-through on synthetic ADSL-shaped data: choosing widths with
+  `suggest_listing_widths()`, building with `rtf_listing()` / `listing_col()`,
+  reading the print preview, what the engine does at each step (composition,
+  wrapping priority, record alignment, spacer columns, the hidden record key),
+  paginating via `listing_to_rtftables()`, and rendering the RTF with
+  rtfreporter.
+
 ## New features
 
 * **Clinical listing preparation** (#80). `rtf_listing()` turns a tidy source

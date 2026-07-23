@@ -82,6 +82,8 @@ navbar:
           href: articles/sap-to-ars.html
         - text: "The ARS chain: programme -> params -> ARS -> ARD"
           href: articles/ars-chain.html
+        - text: "Building a clinical listing"
+          href: articles/clinical-listing.html
     news:
       text: Changelog
       href: news/index.html
@@ -104,6 +106,11 @@ articles:
     contents:
       - articles/sap-to-ars
       - articles/ars-chain
+
+  - title: Clinical listings
+    navbar: ~
+    contents:
+      - articles/clinical-listing
 
 reference:
   - title: SDTM / ADaM datasets
