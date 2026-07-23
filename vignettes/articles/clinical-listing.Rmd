@@ -1,0 +1,317 @@
+---
+title: "Building a clinical listing"
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+options(width = 100)
+has_rtf <- requireNamespace("rtfreporter", quietly = TRUE)
+```
+
+A **listing** prints the data itself, one record per subject, rather than a
+summary of it. That sounds simpler than a table -- until you notice that a
+listing record rarely fits on one line:
+
+```
+Unique       Primary Diagnosis/       Stage at
+Subject ID   Any (BRCA) Mutations/    Initial
+             Histology                Diagnosis
+------------------------------------------------
+63016-204    Ovarian cancer/          IIIC
+             BRCA1 mutation/
+             Serous adenocarcinoma
+```
+
+One logical record occupies four physical rows, its cells have to break at
+sensible places, every column of the record has to stay vertically aligned,
+and a page break must never fall *inside* a record. Doing that by hand means
+a pile of string surgery before you ever get to the report.
+
+`rtf_listing()` does that shaping for you. It is a **preparation** step: it
+turns a tidy data frame into a listing-ready table plus the metadata that
+describes it, and hands the actual RTF off to
+[rtfreporter](https://ichirio.github.io/rtfreporter/).
+
+```
+tidy ADSL
+   |  listing_col()  ... declare each display column
+   |  rtf_listing()  ... compose / wrap / align / expand
+   v
+rtflisting  (data + col_header + col_rel_width + col_spec + hidden record key)
+   |  listing_to_rtftables()
+   v
+rtftable pages  ->  rtfreporter::rtf_tables()  ->  RTF
+```
+
+```{r setup}
+library(ydisctools)
+library(dplyr)
+```
+
+## The sample data
+
+A small synthetic baseline-characteristics ADSL, shaped like the oncology
+data a listing of this kind is usually built from. Nothing here is real.
+
+```{r sample-data}
+adsl <- tibble::tribble(
+  ~USUBJID,    ~DISPTPD,                    ~BRCA,             ~HIST,
+  "63016-201", "Ovarian cancer",            "BRCA1 mutation",  "Serous adenocarcinoma",
+  "63016-202", "Fallopian tube cancer",     "BRCA2 mutation",  "Endometrioid carcinoma",
+  "63016-203", "Primary peritoneal cancer", NA,                "Clear cell carcinoma",
+  "63016-204", "Ovarian cancer",            "No mutation",     "Serous adenocarcinoma",
+  "63016-205", "Ovarian cancer",            "BRCA1 mutation",  "Mucinous carcinoma"
+) %>%
+  mutate(
+    INIDGCAT = c("12.5", "38.1", "6.2", "24.9", "51.3"),
+    STAGE    = c("IIIC", "IV", "IIIB", "IIIC", "IIIA"),
+    HISTGRD  = c("Grade 3", "Grade 2", "Grade 3", "Grade 1", "Grade 2"),
+    PRRAD    = c("Yes", "No", "No", "Yes", "No"),
+    PRANTNM2 = c("2 lines", "1 line", "3 lines", "2 lines", "1 line"),
+    CMBRFST  = c("Partial response", "Complete response", "Stable disease",
+                 "Partial response", "Progressive disease"),
+    CMBRLST  = c("Stable disease", "Partial response", "Progressive disease",
+                 "Complete response", "Stable disease"),
+    PRSRG    = c("Yes", "Yes", "No", "Yes", "No"),
+    PPLATFI  = c(8.4321, 14.2087, 3.1234, 21.9876, 5.5555),
+    PLATFI   = c(6.1234, 11.8765, 2.4321, 18.5432, 4.3210),
+    ECOGPS   = c("0", "1", "1", "0", "2"),
+    FOLREVAL = c("2+", "1+", "3+", "2+", "1+")
+  )
+
+glimpse(adsl)
+```
+
+`listing_col()` takes **column names, not expressions**, so any value you need
+to compute -- a rounding, a format, a derived flag -- becomes a column first:
+
+```{r derive}
+adsl <- adsl %>%
+  mutate(
+    PPLATFI_R = round(PPLATFI, 2),
+    PLATFI_R  = round(PLATFI,  2)
+  )
+```
+
+## Choosing the column widths
+
+`width` is the heart of the layout. It is a **display width in characters**
+(a full-width Japanese glyph counts as two) and it does double duty: cells
+wider than it are wrapped, and the widths together become the relative column
+widths the renderer uses.
+
+Picking ten of those by hand is the tedious part, so start from a proposal.
+`suggest_listing_widths()` measures each column's real content, floors it by
+the column's own header, and scales everything to the width budget you have:
+
+```{r suggest-widths}
+suggest_listing_widths(
+  adsl,
+  listing_col(USUBJID,                    header = "Unique\nSubject ID"),
+  listing_col(DISPTPD, BRCA, HIST,        header = "Primary Diagnosis/\nBRCA/\nHistology"),
+  listing_col(INIDGCAT,                   header = "Months since\nInitial Diagnosis"),
+  listing_col(STAGE,                      header = "Stage at\nInitial\nDiagnosis"),
+  listing_col(HISTGRD, PRRAD, PRANTNM2,   header = "Histologic Grade/\nPrior Radiation/\nPrior Lines"),
+  listing_col(CMBRFST, CMBRLST,           header = "Best Response\n1st Line/\nLast Line"),
+  listing_col(PRSRG,                      header = "Prior\nSurgery"),
+  listing_col(PPLATFI_R, PLATFI_R,        header = "Primary Platinum-free/\nPlatinum-free\nInterval (months)"),
+  listing_col(ECOGPS,                     header = "ECOG\nPS"),
+  listing_col(FOLREVAL,                   header = "FRa\nScore"),
+  total_width = 140
+)
+```
+
+Treat the result as a **starting point**, not an answer: render the listing,
+look at it, and nudge the numbers. A column whose cells keep wrapping onto a
+third line wants a few more characters; one with white space to spare can give
+some back.
+
+## Building the listing
+
+```{r build}
+lst <- rtf_listing(
+  adsl,
+  listing_col(USUBJID,
+              header = "Unique\nSubject ID",                             width = 12),
+  listing_col(DISPTPD, BRCA, HIST,
+              header = "Primary Diagnosis/\nBRCA/\nHistology",           width = 24),
+  listing_col(INIDGCAT,
+              header = "Months since\nInitial Diagnosis",                width = 10),
+  listing_col(STAGE,
+              header = "Stage at\nInitial\nDiagnosis",                   width = 9),
+  listing_col(HISTGRD, PRRAD, PRANTNM2,
+              header = "Histologic Grade/\nPrior Radiation/\nPrior Lines", width = 18),
+  listing_col(CMBRFST, CMBRLST,
+              header = "Best Response\n1st Line/\nLast Line",            width = 20),
+  listing_col(PRSRG,
+              header = "Prior\nSurgery",                                 width = 8),
+  listing_col(PPLATFI_R, PLATFI_R,
+              header = "Primary Platinum-free/\nPlatinum-free\nInterval (months)", width = 16),
+  listing_col(ECOGPS,
+              header = "ECOG\nPS",                                       width = 6),
+  listing_col(FOLREVAL,
+              header = "FRa\nScore",                                     width = 7)
+)
+
+lst
+```
+
+The print-out is the quickest feedback loop you have: five source records
+became the physical rows shown, and you can see straight away where the text
+broke.
+
+## What the engine did
+
+Four things, in order.
+
+**Composed** each display column from its source columns, joining with the
+column's `sep` (`"/"` by default) and skipping `NA` -- the
+[`catx()`](../reference/catx.html) convention. Subject `63016-203` has no
+`BRCA` value, and the result is
+`"Primary peritoneal cancer/Clear cell carcinoma"`, not a dangling `//`:
+
+```{r composed}
+lst$data[lst$data[[".record_id"]] == 3L, 3L]
+```
+
+**Wrapped** every cell to its column's width, preferring meaningful breaks.
+The priority is: after the separator first, then at a word boundary
+(whitespace, comma or hyphen), and only then a hard split of a token that is
+too long on its own. So a composed diagnosis breaks between its components
+rather than mid-word.
+
+**Aligned** each record: every cell is padded to the record's tallest cell, so
+a record's lines stay in step across all ten columns. That is why the first
+row of a record carries the subject id and the continuation rows are blank in
+that column:
+
+```{r record-shape}
+rec1 <- lst$data[lst$data[[".record_id"]] == 1L, c(1L, 3L)]
+rec1
+```
+
+**Expanded and framed** the result: one logical record became several physical
+rows, narrow spacer columns were inserted between the content columns, and a
+hidden `.record_id` column was added to mark where each record starts and
+ends.
+
+```{r structure}
+names(lst$data)
+lst$col_rel_width
+```
+
+The header vector, the relative widths and the per-column alignment are all
+derived for you -- including the empty headers and width-1 entries for the
+spacers -- so there is no parallel vector to keep in sync by hand:
+
+```{r header}
+lst$col_header
+```
+
+If you do not want the spacer columns, `spacer_width = 0` leaves them out
+entirely (a zero-width column is not a thing the renderer accepts, so `0`
+means "none" rather than "invisible"):
+
+```{r no-spacers}
+rtf_listing(adsl,
+            listing_col(USUBJID, width = 12),
+            listing_col(STAGE,   width = 9),
+            spacer_width = 0) |>
+  (\(x) names(x$data))()
+```
+
+## Paginating and rendering
+
+`listing_to_rtftables()` is the single point of contact with rtfreporter. It
+passes the hidden record key as both the grouping column and a dropped column,
+which lets rtfreporter's `"group_safe"` split **pack whole records onto a page
+and never cut one in half** -- the behaviour a listing needs, using the
+paginator that already exists rather than a second one:
+
+```{r paginate, eval = has_rtf}
+pages <- listing_to_rtftables(lst, max_rows = 12)
+length(pages)
+```
+
+Each page is an ordinary `rtftable`. The record key is gone, and the
+position-indexed metadata has been reindexed to the columns that remain:
+
+```{r page-shape, eval = has_rtf}
+names(pages[[1]]$data)
+pages[[1]]$col_rel_width
+```
+
+Blank rows -- above the first record, between records, and at the foot of the
+page -- are carried as positions and materialised by the renderer:
+
+```{r blank-rows, eval = has_rtf}
+pages[[1]]$blank_rows
+```
+
+From here it is ordinary rtfreporter. Note that the column headers and widths
+travel **with** the pages, so `rtf_tables()` needs neither:
+
+```{r render, eval = has_rtf}
+library(rtfreporter)
+
+titles <- list(
+  c("Listing 16.2.4.2.1.2"),
+  c("Baseline Characteristics"),
+  c("<Safety Analysis Set>")
+)
+
+footers <- list(
+  c(l = "ECOG: Eastern Cooperative Oncology Group"),
+  c(l = "Note: synthetic data, for illustration only.")
+)
+
+rep <- rtf_document(
+    page = list(
+      orientation     = "landscape",
+      paper_size      = "A4",
+      margin_top_in   = 0.5,
+      margin_left_in  = 0.5,
+      margin_right_in = 0.5,
+      margin_bottom_in = 0.5
+    ),
+    default_format = list(
+      font_size_half_points = 16L,
+      row_height_twips      = 169L
+    )
+  ) |>
+  rtf_section(secinfo = list(
+    header = rtf_header(titles),
+    footer = rtf_footer(footers))) |>
+  rtf_tables(pages)
+
+rtf_path <- file.path(tempdir(), "L_16_2_4_2_1_2.rtf")
+generate_rtfreport(rep, rtf_path, overwrite = TRUE)
+file.exists(rtf_path)
+```
+
+Before writing the file you can eyeball a page in the console -- rtfreporter's
+`print()` lays the table out with its headers, rules and alignment:
+
+```{r preview, eval = has_rtf}
+print(pages[[1]], n = 8)
+```
+
+## Notes
+
+**One set of numbers, not two.** If you are porting hand-written listing code,
+you probably have a wrapping width *and* a separate relative column width for
+each column, kept in step by eye. `width` replaces both: the rendered columns
+come out proportional to the widths you wrapped at, which is almost always
+what the two sets were approximating anyway.
+
+**Widths are display widths.** Japanese and other full-width text counts two
+columns per glyph, so a `width = 20` column holds ten full-width characters.
+Wrapping breaks in the right place without a separate code path.
+
+**Expressions become columns.** `listing_col()` names columns; compute
+anything else in a `mutate()` first, as with the rounded platinum-free
+intervals above.
+
+**One template for now.** `template = "type1"` is the only one implemented.
+The engine underneath -- composition, wrapping, record alignment, spacers,
+metadata -- is what a second template would reuse.
