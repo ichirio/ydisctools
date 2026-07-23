@@ -215,6 +215,20 @@ reference:
       - format_stats
       - pivot_stats_wider
 
+  - title: Clinical listings (preparation for rtfreporter)
+    desc: >
+      Turn a tidy source data frame into a listing-ready table: compose display
+      columns from several source columns, wrap each cell to its column width,
+      align every line of a record, and emit the metadata plus a hidden record
+      key so [rtfreporter](https://ichirio.github.io/rtfreporter/) can paginate
+      without ever splitting a record across pages.  Preparation only — the RTF
+      itself is produced by `rtfreporter::as_rtftables()`.
+    contents:
+      - rtf_listing
+      - listing_col
+      - suggest_listing_widths
+      - listing_to_rtftables
+
   - title: Deprecated — RTF output (use rtfreporter)
     desc: >
       The RTF output tools were a Proof of Concept and are now deprecated.

@@ -1,5 +1,24 @@
 # ydisctools (development version)
 
+## New features
+
+* **Clinical listing preparation** (#80). `rtf_listing()` turns a tidy source
+  data frame into a listing-ready table following the `"type1"` template:
+  display columns are composed from several source columns (joined with `/`,
+  skipping `NA`), each cell is wrapped to its column's width, every cell of a
+  record is padded so the record's lines stay aligned, narrow spacer columns
+  separate the content columns, and a hidden record key marks the record
+  boundaries. Columns are described with `listing_col()`;
+  `suggest_listing_widths()` proposes starting widths from the data (widths are
+  hard to pick by hand); `listing_to_rtftables()` hands the result to
+  `rtfreporter::as_rtftables()`, delegating pagination to its `"group_safe"`
+  split so a record is never cut across a page. Preparation only — the RTF is
+  still produced by rtfreporter (origin: ichirio/rtfreporter#241).
+
+  Wrapping is **display-width** aware, so Japanese (double-width) text breaks
+  at the right place; an over-long single token is hard-split rather than
+  overflowing its column.
+
 ## Documentation
 
 * Fixed the homepage's `plot_sankey()` reference link, which pointed at a non-existent `reference/plot_sankey.html` (404). pkgdown names a reference page after the **Rd file**, and the sankey topic is documented in `man/plot_sankey_polygon.Rd`, so the published page is `reference/plot_sankey_polygon.html` — the address the reference index uses (#78).
