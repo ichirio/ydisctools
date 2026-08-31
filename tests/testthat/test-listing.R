@@ -1,5 +1,5 @@
-# Listing preparation: listing_col() / rtf_listing() / suggest_listing_widths()
-# / listing_to_rtftables().
+# Listing preparation: listing_col() / rtf_listing() / auto_listing_widths()
+# / listing_wrap() / listing_to_rtftables().
 
 adsl <- data.frame(
   USUBJID = c("63016-204", "63016-205", "63016-206"),
@@ -9,15 +9,24 @@ adsl <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# ── listing_col() ────────────────────────────────────────────────────────────
+labelled <- local({
+  d <- adsl
+  attr(d$DISPTPD, "label") <- "Primary Diagnosis"
+  attr(d$BRCA,    "label") <- "Any (BRCA) Mutations"
+  d
+})
+
+meta_of <- function(x) attr(x, "rtf_listing", exact = TRUE)
+
+# -- listing_col() -----------------------------------------------------------
 
 test_that("listing_col() accepts bare names and strings, and defaults sensibly", {
   a <- listing_col(USUBJID, width = 15)
   b <- listing_col("USUBJID", width = 15)
-  expect_s3_class(a, "listing_col")
+  expect_s3_class(a, "rtf_listing_col")
   expect_identical(a$vars, "USUBJID")
   expect_identical(a$vars, b$vars)
-  expect_identical(a$header, "USUBJID")     # header defaults to the first var
+  expect_null(a$header)                     # resolved later, from the data
   expect_identical(a$sep, "/")
 
   m <- listing_col(DISPTPD, BRCA, header = "Dx/BRCA")
@@ -33,172 +42,440 @@ test_that("listing_col() validates its arguments", {
   expect_error(listing_col(USUBJID, header = 1), "single string")
 })
 
-# ── wrapping engine ──────────────────────────────────────────────────────────
+# -- listing_wrap() ----------------------------------------------------------
 
-test_that("cells break after the separator first", {
-  expect_identical(.listing_wrap("Ovarian cancer/Negative/Serous", 18),
+test_that("listing_wrap() breaks after the separator first", {
+  expect_identical(listing_wrap("Ovarian cancer/Negative/Serous", 18),
                    c("Ovarian cancer/", "Negative/", "Serous"))
 })
 
-test_that("an over-long first word does not emit a leading empty fragment", {
-  # Regression: the original implementation appended trimws("") first.
-  out <- .listing_wrap("Supercalifragilistic tail", 10)
-  expect_false(any(!nzchar(out)))
-  expect_true(all(.listing_disp_width(out) <= 10))
+test_that("listing_wrap() falls back to word boundaries", {
+  expect_identical(listing_wrap("Partial response", 10),
+                   c("Partial", "response"))
 })
 
-test_that("a single over-long token is hard-split", {
-  out <- .listing_wrap(strrep("A", 24), 8)
-  expect_identical(out, c(strrep("A", 8), strrep("A", 8), strrep("A", 8)))
+test_that("listing_wrap() keeps the space between two words it rejoins", {
+  # "Progressive" alone is wider than the column, so it is hard-split; the
+  # remainder must not be glued to the next word.
+  expect_identical(listing_wrap("Progressive disease", 10),
+                   c("Progressiv", "e disease"))
 })
 
-test_that("wrapping honours display width, not character count", {
-  out <- .listing_wrap("卵巣がん漿液性腺癌", 8)
+test_that("listing_wrap() hard-splits a single over-long token", {
+  out <- listing_wrap("Immunohistochemistry", 8)
+  expect_identical(out, c("Immunohi", "stochemi", "stry"))
   expect_true(all(.listing_disp_width(out) <= 8))
-  expect_gt(length(out), 1L)             # 2-wide glyphs force a break
 })
 
-test_that("width = NULL leaves the cell unwrapped", {
-  long <- strrep("x", 50)
-  expect_identical(.listing_wrap(long, NULL), long)
+test_that("listing_wrap() does not emit a leading empty fragment", {
+  expect_identical(listing_wrap("Supercalifragilistic word", 6)[[1L]], "Superc")
 })
 
-# ── rtf_listing() ────────────────────────────────────────────────────────────
+test_that("listing_wrap() honours display width, not character count", {
+  # Five full-width glyphs = display width 10, so a width of 6 must split them.
+  cjk <- intToUtf8(c(0x6F3F, 0x6DB2, 0x6027, 0x817A, 0x7648))
+  out <- listing_wrap(cjk, 6)
+  expect_true(all(.listing_disp_width(out) <= 6))
+  expect_gt(length(out), 1L)
+  expect_identical(paste(out, collapse = ""), cjk)
+})
+
+test_that("an unset width stops wrapping but not the layout", {
+  # "stack" still breaks at the separator -- that is layout, not wrapping.
+  expect_identical(listing_wrap("Ovarian cancer/Negative", NULL),
+                   c("Ovarian cancer/", "Negative"))
+  expect_identical(listing_wrap("Ovarian cancer/Negative", NA),
+                   c("Ovarian cancer/", "Negative"))
+  # "flow" has no width to fill to, so nothing breaks at all.
+  expect_identical(listing_wrap("Ovarian cancer/Negative", NULL,
+                                layout = "flow"),
+                   "Ovarian cancer/Negative")
+})
+
+test_that("listing_wrap() stacks at every separator by default", {
+  # Short enough to fit on one line, but "stack" breaks anyway.
+  expect_identical(listing_wrap("40/F", 20), c("40/", "F"))
+})
+
+test_that("listing_wrap(layout = \"flow\") keeps short parts side by side", {
+  expect_identical(listing_wrap("40/F", 20, layout = "flow"), "40/F")
+  # ... and still breaks once the line is full.
+  expect_identical(listing_wrap("40/F/Screening/Completed", 12, layout = "flow"),
+                   c("40/F/", "Screening/", "Completed"))
+})
+
+test_that("layout decides what an unset width means", {
+  expect_identical(listing_wrap("40/F", NULL), c("40/", "F"))
+  expect_identical(listing_wrap("40/F", NULL, layout = "flow"), "40/F")
+  expect_error(listing_wrap("40/F", 10, layout = "nope"), "'arg'")
+})
+
+test_that("listing_wrap() vectorises over text and validates sep", {
+  out <- listing_wrap(c("Partial response", "Progressive disease"), 10)
+  expect_type(out, "list")
+  expect_length(out, 2L)
+  expect_identical(out[[1L]], c("Partial", "response"))
+  expect_error(listing_wrap("x", 5, sep = c("a", "b")), "single string")
+})
+
+# -- rtf_listing(): shaping --------------------------------------------------
+
+test_that("rtf_listing() returns a plain data.frame carrying its layout", {
+  lst <- rtf_listing(adsl,
+                     listing_col(USUBJID, width = 12),
+                     listing_col(STAGE, width = 8))
+  expect_s3_class(lst, "data.frame")
+  expect_false(inherits(lst, "rtflisting"))
+  m <- meta_of(lst)
+  expect_identical(m$type, "type1")
+  expect_identical(m$n_records, 3L)
+  expect_identical(m$record_id, ".record_id")
+  # Every column is a row heading -- rtfreporter's way of saying "left-align".
+  expect_identical(m$row_title, names(lst))
+})
 
 test_that("rtf_listing() expands records and aligns their lines", {
-  lst <- rtf_listing(
-    adsl,
-    listing_col(USUBJID, width = 12),
-    listing_col(DISPTPD, BRCA, width = 18),
-    listing_col(STAGE, width = 8)
-  )
-  expect_s3_class(lst, "rtflisting")
-  expect_identical(lst$n_records, 3L)
-  # Every record contributes as many rows as its tallest cell.
-  expect_gt(nrow(lst$data), 3L)
-  # The record key numbers the source rows.
-  expect_identical(sort(unique(lst$data[[lst$record_id]])), 1:3)
-  # A record's first row carries the subject; continuation rows are blank.
-  first <- lst$data[[1L]][lst$data[[lst$record_id]] == 1L]
-  expect_identical(first[[1L]], "63016-204")
-  expect_true(all(!nzchar(first[-1L])))
+  lst <- rtf_listing(adsl,
+                     listing_col(USUBJID, width = 12),
+                     listing_col(DISPTPD, BRCA, width = 12),
+                     spacer_rel_width = 0)
+  # Record 3 has no BRCA, so it composes to one long value; each record's
+  # columns must occupy the same number of physical rows.
+  n <- table(lst$.record_id)
+  expect_identical(nrow(lst), sum(as.integer(n)))
+  expect_true(all(n >= 1L))
+  for (r in unique(lst$.record_id)) {
+    blk <- lst[lst$.record_id == r, , drop = FALSE]
+    expect_identical(nrow(blk), as.integer(n[[as.character(r)]]))
+  }
+  expect_identical(lst$USUBJID[lst$.record_id == 1L][[1L]], "63016-204")
 })
 
-test_that("NA / empty source values are skipped when composing", {
-  lst <- rtf_listing(adsl, listing_col(DISPTPD, BRCA, width = 40))
-  # Record 3 has BRCA = NA -> no trailing separator.
-  r3 <- lst$data[[1L]][lst$data[[lst$record_id]] == 3L]
-  expect_false(any(grepl("//", r3, fixed = TRUE)))
-  expect_true(any(grepl("Primary peritoneal cancer", r3, fixed = TRUE)))
+test_that("rtf_listing() skips NA / empty source values when composing", {
+  lst <- rtf_listing(adsl, listing_col(DISPTPD, BRCA, width = 40),
+                     spacer_rel_width = 0)
+  third <- lst$DISPTPD_BRCA[lst$.record_id == 3L]
+  expect_false(any(grepl("/$", third)))          # no dangling separator
+  expect_true(any(grepl("Primary peritoneal", third)))
 })
+
+test_that("rtf_listing() accepts type = 1 as well as \"type1\"", {
+  a <- rtf_listing(adsl, listing_col(USUBJID, width = 12), type = "type1")
+  b <- rtf_listing(adsl, listing_col(USUBJID, width = 12), type = 1)
+  expect_identical(meta_of(a)$type, meta_of(b)$type)
+  expect_error(rtf_listing(adsl, listing_col(USUBJID), type = "type9"),
+               "only layout implemented")
+})
+
+test_that("rtf_listing() validates its arguments", {
+  expect_error(rtf_listing(1, listing_col(USUBJID)), "must be a data.frame")
+  expect_error(rtf_listing(adsl), "listing_col\\(\\) specifications")
+  expect_error(rtf_listing(adsl, listing_col(USUBJID), spacer_rel_width = -1),
+               "non-negative")
+  expect_error(rtf_listing(adsl, listing_col(USUBJID), record_id = "USUBJID"),
+               "already names a column")
+  expect_error(rtf_listing(adsl, listing_col(USUBJID), listing_col(USUBJID)),
+               "names must be unique")
+  expect_error(rtf_listing(adsl, listing_col(NOPE)), "not found in `data`")
+  expect_error(rtf_listing(adsl, listing_col(USUBJID), header = NA),
+               "TRUE or FALSE")
+})
+
+test_that("a zero-row input yields a zero-row listing", {
+  lst <- rtf_listing(adsl[0, ], listing_col(USUBJID, width = 12),
+                     listing_col(STAGE, width = 8))
+  expect_identical(nrow(lst), 0L)
+  expect_identical(meta_of(lst)$n_records, 0L)
+  expect_true(".record_id" %in% names(lst))
+})
+
+# -- rtf_listing(): headers --------------------------------------------------
+
+test_that("an automatic header uses labels, falling back to names", {
+  lst <- rtf_listing(labelled,
+                     listing_col(USUBJID, width = 12),
+                     listing_col(DISPTPD, BRCA, width = 30),
+                     spacer_rel_width = 0)
+  hdr <- meta_of(lst)$col_header
+  expect_identical(hdr[[1L]], "USUBJID")                  # no label -> name
+  expect_identical(hdr[[2L]], "Primary Diagnosis/\nAny (BRCA) Mutations")
+})
+
+test_that("an automatic header is wrapped to the column width", {
+  lst <- rtf_listing(labelled, listing_col(DISPTPD, BRCA, width = 12))
+  lines <- strsplit(meta_of(lst)$col_header[[1L]], "\n", fixed = TRUE)[[1L]]
+  expect_true(all(.listing_disp_width(lines) <= 12))
+  expect_gt(length(lines), 2L)
+})
+
+test_that("an explicit header is used exactly as written", {
+  hand <- "Primary Diagnosis/\nBRCA"
+  lst  <- rtf_listing(labelled,
+                      listing_col(DISPTPD, BRCA, header = hand, width = 5))
+  expect_identical(meta_of(lst)$col_header[[1L]], hand)
+})
+
+test_that("header = FALSE suppresses the header with an empty row list", {
+  lst <- rtf_listing(adsl, listing_col(USUBJID, width = 12), header = FALSE)
+  expect_identical(meta_of(lst)$col_header, list())
+})
+
+# -- rtf_listing(): layout and repeat suppression ----------------------------
+
+visits <- data.frame(
+  USUBJID = c(rep("63016-201", 3), rep("63016-202", 2)),
+  VISIT   = c("Screening", "Cycle 1", "Cycle 2", "Screening", "Cycle 1"),
+  AGE     = c(rep("64", 3), rep("58", 2)),
+  SEX     = c(rep("F", 3), rep("M", 2)),
+  AETERM  = c("Nausea", "Fatigue and general malaise", "Headache",
+              "Vomiting", "Neutropenia"),
+  stringsAsFactors = FALSE
+)
+
+test_that("layout = \"flow\" costs one physical row where \"stack\" costs two", {
+  st <- rtf_listing(visits, listing_col(AGE, SEX, width = 8),
+                    spacer_rel_width = 0)
+  fl <- rtf_listing(visits, listing_col(AGE, SEX, width = 8, layout = "flow"),
+                    spacer_rel_width = 0)
+  expect_identical(nrow(st), 10L)                 # 5 records x 2 lines
+  expect_identical(nrow(fl), 5L)                  # 5 records x 1 line
+  expect_identical(fl$AGE_SEX[[1L]], "64/F")
+  expect_identical(st$AGE_SEX[1:2], c("64/", "F"))
+})
+
+test_that("layout is per column, not per listing", {
+  lst <- rtf_listing(visits,
+                     listing_col(AGE, SEX, width = 8, layout = "flow"),
+                     listing_col(VISIT, AETERM, width = 30),   # stacked
+                     spacer_rel_width = 0)
+  first <- lst[lst$.record_id == 1L, , drop = FALSE]
+  expect_identical(first$AGE_SEX[[1L]], "64/F")
+  expect_identical(first$VISIT_AETERM[1:2], c("Screening/", "Nausea"))
+})
+
+test_that("collapse_repeats carries the value down its record", {
+  lst <- rtf_listing(visits,
+                     listing_col(USUBJID, width = 11, collapse_repeats = TRUE),
+                     listing_col(AETERM,  width = 18),
+                     spacer_rel_width = 0)
+  # Record 2's AETERM wraps onto two rows; the subject is repeated, not blanked,
+  # so rtfreporter sees one constant value per record.
+  rec2 <- lst[lst$.record_id == 2L, , drop = FALSE]
+  expect_gt(nrow(rec2), 1L)
+  expect_true(all(rec2$USUBJID == "63016-201"))
+  # An unmarked column is still wrapped and blank-padded, not carried down.
+  expect_false(identical(rec2$AETERM[[1L]], rec2$AETERM[[2L]]))
+  expect_identical(meta_of(lst)$collapse_repeats, "USUBJID")
+})
+
+test_that("collapse_repeats keeps the declaration order for hierarchy", {
+  lst <- rtf_listing(visits,
+                     listing_col(USUBJID, width = 11, collapse_repeats = TRUE),
+                     listing_col(VISIT,   width = 10, collapse_repeats = TRUE),
+                     listing_col(AETERM,  width = 18))
+  expect_identical(meta_of(lst)$collapse_repeats, c("USUBJID", "VISIT"))
+})
+
+test_that("no collapse_repeats column means the argument is not passed", {
+  lst <- rtf_listing(visits, listing_col(USUBJID, width = 11))
+  expect_null(meta_of(lst)$collapse_repeats)
+})
+
+test_that("a multi-line cell is printed in full, not carried down", {
+  lst <- rtf_listing(visits,
+                     listing_col(AETERM, width = 8, collapse_repeats = TRUE),
+                     spacer_rel_width = 0)
+  rec2 <- lst$AETERM[lst$.record_id == 2L]
+  expect_gt(length(rec2), 1L)
+  expect_false(all(rec2 == rec2[[1L]]))          # wrapped lines, not repeats
+})
+
+test_that("listing_col() validates layout and collapse_repeats", {
+  expect_error(listing_col(USUBJID, layout = "sideways"), "'arg'")
+  expect_error(listing_col(USUBJID, collapse_repeats = NA), "TRUE or FALSE")
+  expect_identical(listing_col(USUBJID)$layout, "stack")
+  expect_false(listing_col(USUBJID)$collapse_repeats)
+})
+
+test_that("a suppressed value reappears at the top of the next page", {
+  skip_if_not_installed("rtfreporter")
+  lst <- rtf_listing(visits,
+                     listing_col(USUBJID, header = "Subject", width = 11,
+                                 collapse_repeats = TRUE),
+                     listing_col(VISIT,   header = "Visit", width = 10),
+                     listing_col(AETERM,  header = "AE", width = 18))
+  pages <- listing_to_rtftables(lst, max_rows = 6)
+  expect_gt(length(pages), 1L)
+  for (p in pages) {
+    subj <- p$data[[1L]]
+    expect_false(is.na(subj[[1L]]))              # first row of a page prints
+    expect_true(nzchar(subj[[1L]]))
+  }
+  # Within a page the run is suppressed: record 1 spans rows but shows once.
+  first <- pages[[1L]]$data[[1L]]
+  expect_true(any(is.na(first)))
+})
+
+# -- rtf_listing(): widths and spacers ---------------------------------------
 
 test_that("spacer columns are inserted and reflected in the metadata", {
   lst <- rtf_listing(adsl,
                      listing_col(USUBJID, width = 12),
-                     listing_col(STAGE, width = 8))
-  # 2 content + 1 spacer + 1 hidden key
-  expect_identical(ncol(lst$data), 4L)
-  expect_true(any(grepl("^\\.spacer", names(lst$data))))
-  expect_identical(length(lst$col_header), ncol(lst$data))
-  expect_identical(length(lst$col_rel_width), ncol(lst$data))
-  expect_identical(lst$col_rel_width[[2L]], 1)      # the spacer
+                     listing_col(STAGE, width = 8),
+                     spacer_rel_width = 1)
+  expect_identical(names(lst),
+                   c("USUBJID", ".spacer01", "STAGE", ".record_id"))
+  expect_identical(meta_of(lst)$col_rel_width, c(12, 1, 8, 1))
+  expect_true(all(lst$.spacer01 == ""))
 })
 
-test_that("spacer_width = 0 inserts no spacer columns", {
+test_that("spacer_rel_width = 0 inserts no spacer columns", {
   lst <- rtf_listing(adsl,
                      listing_col(USUBJID, width = 12),
                      listing_col(STAGE, width = 8),
-                     spacer_width = 0)
-  expect_false(any(grepl("^\\.spacer", names(lst$data))))
-  expect_identical(ncol(lst$data), 3L)              # 2 content + hidden key
-  expect_identical(length(lst$col_header), 3L)
+                     spacer_rel_width = 0)
+  expect_identical(names(lst), c("USUBJID", "STAGE", ".record_id"))
+  expect_identical(meta_of(lst)$col_rel_width, c(12, 8, 1))
 })
 
-test_that("all columns are left-aligned and the header carries through", {
-  lst <- rtf_listing(adsl, listing_col(USUBJID, header = "Unique\nSubject ID",
-                                       width = 12))
-  expect_true(all(vapply(lst$col_spec, function(s) s$align, character(1L)) == "left"))
-  expect_identical(lst$col_header[[1L]], "Unique\nSubject ID")
+test_that("an unset width is measured from the data", {
+  lst <- rtf_listing(adsl, listing_col(STAGE), spacer_rel_width = 0)
+  # "IIIC" is 4 wide, the header "STAGE" is 5.
+  expect_identical(meta_of(lst)$col_rel_width[[1L]], 5)
 })
 
-test_that("rtf_listing() validates its arguments", {
-  expect_error(rtf_listing(list(a = 1), listing_col(a)), "must be a data.frame")
-  expect_error(rtf_listing(adsl), "listing_col")
-  expect_error(rtf_listing(adsl, listing_col(USUBJID), template = "nope"),
-               "type1")
-  expect_error(rtf_listing(adsl, listing_col(USUBJID), spacer_width = -1),
-               "non-negative")
-  expect_error(rtf_listing(adsl, listing_col(NOPE)), "not found")
+test_that("total_width fits the unset widths into what is left", {
+  lst <- rtf_listing(adsl,
+                     listing_col(USUBJID, width = 12),   # pinned
+                     listing_col(DISPTPD, BRCA),         # fitted
+                     listing_col(STAGE),                 # fitted
+                     total_width = 60, spacer_rel_width = 0)
+  w <- meta_of(lst)$col_rel_width
+  expect_identical(w[[1L]], 12)                          # pinned, untouched
+  expect_equal(sum(w[1:3]), 60, tolerance = 1)
+  expect_error(
+    rtf_listing(adsl, listing_col(USUBJID, width = 80), listing_col(STAGE),
+                total_width = 60),
+    "already used up")
 })
 
-test_that("a zero-row input yields a zero-row listing", {
-  lst <- rtf_listing(adsl[0L, ], listing_col(USUBJID, width = 12),
-                     listing_col(STAGE, width = 8))
-  expect_identical(nrow(lst$data), 0L)
-  expect_identical(lst$n_records, 0L)
-  expect_identical(length(lst$col_header), ncol(lst$data))
+test_that("spacer_twips promotes the whole table to absolute widths", {
+  skip_if_not_installed("rtfreporter")
+  lst <- rtf_listing(adsl,
+                     listing_col(USUBJID, width = 12),
+                     listing_col(STAGE, width = 8),
+                     spacer_twips = 1)
+  m <- meta_of(lst)
+  expect_null(m$col_rel_width)
+  expect_type(m$column_widths_twips, "integer")
+  expect_identical(m$column_widths_twips[[2L]], 1L)      # the divider
+  expect_gt(m$column_widths_twips[[1L]], 100L)           # 12 characters
 })
 
-# ── suggest_listing_widths() ─────────────────────────────────────────────────
-
-test_that("suggest_listing_widths() proposes widths that fit the budget", {
-  w <- suggest_listing_widths(
-    adsl,
-    listing_col(USUBJID, header = "Unique\nSubject ID"),
-    listing_col(DISPTPD, header = "Primary Diagnosis"),
-    listing_col(STAGE,   header = "Stage"),
-    total_width = 60
-  )
-  expect_named(w, c("USUBJID", "DISPTPD", "STAGE"))
-  expect_true(all(w >= 6L))                      # min_width respected
-  expect_lte(abs(sum(w) - 60L), 3L)              # scaled to the budget
-  # The widest content gets the widest column.
-  expect_identical(names(w)[which.max(w)], "DISPTPD")
+test_that("table_width_twips scales the content columns only", {
+  skip_if_not_installed("rtfreporter")
+  lst <- rtf_listing(adsl,
+                     listing_col(USUBJID, width = 12),
+                     listing_col(DISPTPD, BRCA, width = 24),
+                     listing_col(STAGE, width = 8),
+                     spacer_twips = 1, table_width_twips = 12960)
+  tw <- meta_of(lst)$column_widths_twips
+  # The last entry is the hidden record key, which is dropped before render.
+  expect_identical(sum(head(tw, -1L)), 12960L)
+  # Both dividers stayed at exactly one twip.
+  expect_identical(tw[c(2L, 4L)], c(1L, 1L))
 })
 
-test_that("suggest_listing_widths() validates its arguments", {
-  expect_error(suggest_listing_widths(adsl), "listing_col")
-  expect_error(suggest_listing_widths(adsl, listing_col(USUBJID),
-                                      total_width = 0), "positive number")
-  expect_error(suggest_listing_widths(adsl, listing_col(USUBJID), probs = 2),
-               "\\[0, 1\\]")
+test_that("table_width_twips needs spacer_twips, and must leave room", {
+  skip_if_not_installed("rtfreporter")
+  expect_error(
+    rtf_listing(adsl, listing_col(USUBJID, width = 12),
+                table_width_twips = 12960),
+    "needs `spacer_twips`")
+  expect_error(
+    rtf_listing(adsl, listing_col(USUBJID, width = 12),
+                listing_col(STAGE, width = 8),
+                spacer_twips = 5000, table_width_twips = 100),
+    "leaves no room")
 })
 
-# ── listing_to_rtftables() ───────────────────────────────────────────────────
+# -- listing_to_rtftables() --------------------------------------------------
 
 test_that("listing_to_rtftables() paginates without splitting a record", {
   skip_if_not_installed("rtfreporter")
-
-  many <- adsl[rep(seq_len(3L), 2L), ]
-  many$USUBJID <- sprintf("63016-%03d", 201:206)
-  lst <- rtf_listing(many,
-                     listing_col(USUBJID, width = 12),
-                     listing_col(DISPTPD, BRCA, width = 16),
-                     listing_col(STAGE, width = 8))
-
-  pages <- listing_to_rtftables(lst, max_rows = 8)
+  lst   <- rtf_listing(adsl,
+                       listing_col(USUBJID, width = 12),
+                       listing_col(DISPTPD, BRCA, width = 12))
+  pages <- listing_to_rtftables(lst, max_rows = 6)
   expect_gt(length(pages), 1L)
-
-  # The hidden key never reaches a rendered page, and the position-indexed
-  # metadata is reindexed to the remaining columns.
-  for (p in pages) {
-    expect_false(lst$record_id %in% names(p$data))
-    expect_identical(length(p$col_rel_width), ncol(p$data))
-  }
+  for (p in pages) expect_s3_class(p, "rtftable")
+  # The record key is dropped, so no page carries it.
+  expect_false(".record_id" %in% names(pages[[1L]]$data))
 })
 
-test_that("listing_to_rtftables() records blank rows around and between records", {
+test_that("listing_to_rtftables() renders a single page and an RTF", {
   skip_if_not_installed("rtfreporter")
+  lst   <- rtf_listing(adsl, listing_col(USUBJID, width = 12),
+                       listing_col(STAGE, width = 8))
+  pages <- listing_to_rtftables(lst)
+  expect_length(pages, 1L)
 
-  lst <- rtf_listing(adsl, listing_col(USUBJID, width = 12),
-                     listing_col(STAGE, width = 8))
-  p <- listing_to_rtftables(lst)[[1L]]
-  # Blank rows are carried as positions (materialised by the renderer):
-  # 0 = above the first row, then one after each record, then the page end.
-  expect_true(0L %in% p$blank_rows)
-  expect_true(nrow(p$data) %in% p$blank_rows)
+  f <- withr::local_tempfile(fileext = ".rtf")
+  rtfreporter::generate_rtfreport(
+    rtfreporter::rtf_tables(rtfreporter::rtf_document(), pages),
+    f, overwrite = TRUE)
+  expect_true(file.exists(f))
+  expect_gt(file.size(f), 0)
 })
 
-test_that("listing_to_rtftables() rejects a non-rtflisting", {
-  expect_error(listing_to_rtftables(adsl), "must be an rtflisting")
+test_that("listing_to_rtftables() passes absolute widths through", {
+  skip_if_not_installed("rtfreporter")
+  lst <- rtf_listing(adsl,
+                     listing_col(USUBJID, width = 12),
+                     listing_col(STAGE, width = 8),
+                     spacer_twips = 1, table_width_twips = 9000)
+  p <- listing_to_rtftables(lst)[[1L]]
+  expect_identical(sum(p$column_widths_twips), 9000L)
+})
+
+test_that("listing_to_rtftables() lets the caller override a default", {
+  skip_if_not_installed("rtfreporter")
+  lst <- rtf_listing(adsl, listing_col(USUBJID, width = 12))
+  p   <- listing_to_rtftables(lst, blank_row_first = FALSE)
+  expect_s3_class(p[[1L]], "rtftable")
+})
+
+test_that("listing_to_rtftables() rejects input without the attribute", {
+  skip_if_not_installed("rtfreporter")
+  lst <- rtf_listing(adsl, listing_col(USUBJID, width = 12))
+  expect_error(listing_to_rtftables(lst[, 1, drop = FALSE]),
+               "\"rtf_listing\" attribute")
+  expect_error(listing_to_rtftables(adsl), "\"rtf_listing\" attribute")
+})
+
+# -- auto_listing_widths() ---------------------------------------------------
+
+test_that("auto_listing_widths() proposes widths that fit the budget", {
+  w <- auto_listing_widths(adsl,
+                           listing_col(USUBJID),
+                           listing_col(DISPTPD, BRCA),
+                           listing_col(STAGE),
+                           total_width = 60)
+  expect_named(w, c("USUBJID", "DISPTPD_BRCA", "STAGE"))
+  expect_true(all(w >= 6))
+  expect_lte(abs(sum(w) - 60), 6)
+})
+
+test_that("auto_listing_widths() floors a column by its automatic header", {
+  w <- auto_listing_widths(labelled, listing_col(DISPTPD, BRCA),
+                           total_width = 5, min_width = 1)
+  # The header line "Any (BRCA) Mutations" is 20 wide and cannot be ignored.
+  expect_gte(attr(w, "demand")[["DISPTPD_BRCA"]], 20)
+})
+
+test_that("auto_listing_widths() validates its arguments", {
+  expect_error(auto_listing_widths(1, listing_col(USUBJID)), "data.frame")
+  expect_error(auto_listing_widths(adsl), "listing_col\\(\\) specifications")
+  expect_error(auto_listing_widths(adsl, listing_col(USUBJID), probs = 2),
+               "in \\[0, 1\\]")
 })

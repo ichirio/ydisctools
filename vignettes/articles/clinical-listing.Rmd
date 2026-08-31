@@ -37,7 +37,7 @@ tidy ADSL
    |  listing_col()  ... declare each display column
    |  rtf_listing()  ... compose / wrap / align / expand
    v
-rtflisting  (data + col_header + col_rel_width + col_spec + hidden record key)
+data.frame  +  attr "rtf_listing"  (headers + widths + hidden record key)
    |  listing_to_rtftables()
    v
 rtftable pages  ->  rtfreporter::rtf_tables()  ->  RTF
@@ -101,11 +101,11 @@ wider than it are wrapped, and the widths together become the relative column
 widths the renderer uses.
 
 Picking ten of those by hand is the tedious part, so start from a proposal.
-`suggest_listing_widths()` measures each column's real content, floors it by
+`auto_listing_widths()` measures each column's real content, floors it by
 the column's own header, and scales everything to the width budget you have:
 
 ```{r suggest-widths}
-suggest_listing_widths(
+auto_listing_widths(
   adsl,
   listing_col(USUBJID,                    header = "Unique\nSubject ID"),
   listing_col(DISPTPD, BRCA, HIST,        header = "Primary Diagnosis/\nBRCA/\nHistology"),
@@ -153,12 +153,26 @@ lst <- rtf_listing(
               header = "FRa\nScore",                                     width = 7)
 )
 
-lst
+str(lst, max.level = 1, give.attr = FALSE)
+head(lst[, c("USUBJID", "DISPTPD_BRCA_HIST", "STAGE")], 8)
 ```
 
-The print-out is the quickest feedback loop you have: five source records
-became the physical rows shown, and you can see straight away where the text
-broke.
+The result is a plain data frame, so every ordinary tool works on it. Five
+source records became the physical rows above, and you can see straight away
+where the text broke.
+
+There is no listing-specific object to learn: the layout rides along in an
+`"rtf_listing"` attribute, exactly as `rtfreporter::stub_cols()` leaves its
+label rows in an `"rtf_label_rows"` attribute. One consequence worth knowing:
+**subsetting a data frame drops its attributes**, so make any edits before
+handing the result to `listing_to_rtftables()`.
+
+For a real preview -- cells, headers and rules as they will print -- render it
+and let rtfreporter draw it:
+
+```{r build-preview, eval = has_rtf}
+print(listing_to_rtftables(lst)[[1]])
+```
 
 ## What the engine did
 
@@ -171,7 +185,7 @@ column's `sep` (`"/"` by default) and skipping `NA` -- the
 `"Primary peritoneal cancer/Clear cell carcinoma"`, not a dangling `//`:
 
 ```{r composed}
-lst$data[lst$data[[".record_id"]] == 3L, 3L]
+lst[lst$.record_id == 3L, 3L]
 ```
 
 **Wrapped** every cell to its column's width, preferring meaningful breaks.
@@ -186,7 +200,7 @@ row of a record carries the subject id and the continuation rows are blank in
 that column:
 
 ```{r record-shape}
-rec1 <- lst$data[lst$data[[".record_id"]] == 1L, c(1L, 3L)]
+rec1 <- lst[lst$.record_id == 1L, c(1L, 3L)]
 rec1
 ```
 
@@ -196,8 +210,9 @@ hidden `.record_id` column was added to mark where each record starts and
 ends.
 
 ```{r structure}
-names(lst$data)
-lst$col_rel_width
+names(lst)
+meta <- attr(lst, "rtf_listing")
+meta$col_rel_width
 ```
 
 The header vector, the relative widths and the per-column alignment are all
@@ -205,10 +220,10 @@ derived for you -- including the empty headers and width-1 entries for the
 spacers -- so there is no parallel vector to keep in sync by hand:
 
 ```{r header}
-lst$col_header
+meta$col_header
 ```
 
-If you do not want the spacer columns, `spacer_width = 0` leaves them out
+If you do not want the spacer columns, `spacer_rel_width = 0` leaves them out
 entirely (a zero-width column is not a thing the renderer accepts, so `0`
 means "none" rather than "invisible"):
 
@@ -216,9 +231,162 @@ means "none" rather than "invisible"):
 rtf_listing(adsl,
             listing_col(USUBJID, width = 12),
             listing_col(STAGE,   width = 9),
-            spacer_width = 0) |>
-  (\(x) names(x$data))()
+            spacer_rel_width = 0) |>
+  names()
 ```
+
+## Letting the listing write its own headers
+
+Every `listing_col()` above spells its header out, which is the right thing
+when the wording is prescribed by the shell. When it is not, leave `header`
+unset and the header is built from the source columns themselves: each
+column's `label` attribute when it has one, otherwise its name, joined with
+the column's separator and a newline.
+
+```{r auto-header}
+adsl_lab <- adsl
+attr(adsl_lab$DISPTPD, "label") <- "Primary Diagnosis"
+attr(adsl_lab$BRCA,    "label") <- "Any (BRCA) Mutations"
+attr(adsl_lab$HIST,    "label") <- "Histology"
+
+auto <- rtf_listing(
+  adsl_lab,
+  listing_col(USUBJID, header = "Unique\nSubject ID", width = 12),
+  listing_col(DISPTPD, BRCA, HIST,                    width = 24)
+)
+cat(attr(auto, "rtf_listing")$col_header[[3]])
+```
+
+This is deliberately the same rule `rtfreporter::stub_cols(label = NULL)` uses
+to name a merged stub column, so a listing header and a table stub label are
+derived the same way rather than by two similar-but-different conventions.
+
+An automatic header is wrapped to the column width, so it can never be wider
+than the column it sits over. A header you wrote yourself is used **exactly as
+written** -- you laid the lines out, and re-wrapping would fight you.
+
+You can also skip the headers entirely, for a continuation or sub-listing that
+borrows the header above it:
+
+```{r no-header}
+str(attr(rtf_listing(adsl, listing_col(USUBJID, width = 12), header = FALSE),
+         "rtf_listing")$col_header)
+```
+
+`list()` -- an empty set of header rows -- is what suppresses a header in
+rtfreporter. `NULL` does not: it falls back to the data frame's column names.
+
+## Widths in characters, or in twips
+
+By default the widths are **relative**: a column's `width` in characters is
+also its share of the table, and each spacer takes `spacer_rel_width` (`1`).
+That is `rtfreporter::rtftable(col_rel_width = )`, and it is what you want
+almost always -- the divider comes out about a character wide.
+
+Sometimes you want the divider to be a real, measured thing instead. Give
+`spacer_twips` and the whole width vector becomes **absolute**, with the
+character widths converted through `rtfreporter::text_width_in()`:
+
+```{r twips, eval = has_rtf}
+abs_lst <- rtf_listing(
+  adsl,
+  listing_col(USUBJID, header = "Unique\nSubject ID", width = 12),
+  listing_col(DISPTPD, BRCA, HIST,                    width = 24),
+  listing_col(STAGE,   header = "Stage",              width = 9),
+  spacer_twips = 1, table_width_twips = 12960
+)
+tw <- attr(abs_lst, "rtf_listing")$column_widths_twips
+tw
+sum(head(tw, -1))     # the last entry is the hidden record key, dropped later
+```
+
+The dividers stayed at exactly one twip and the content columns absorbed the
+scaling to 12960. That is the point of holding them fixed: scaling the spacers
+along with everything else would have inflated a 1-twip divider into something
+visible and quietly discarded the width you asked for.
+
+## Skipping the width tuning
+
+`auto_listing_widths()` is a measurement to read and paste. If you would rather
+not paste, hand `total_width` to `rtf_listing()` instead and leave the columns
+you do not care about without a `width`: the pinned ones keep theirs and the
+rest share what is left.
+
+```{r total-width}
+attr(
+  rtf_listing(adsl,
+              listing_col(USUBJID, width = 12),   # pinned
+              listing_col(DISPTPD, BRCA, HIST),   # fitted
+              listing_col(STAGE),                 # fitted
+              total_width = 60, spacer_rel_width = 0),
+  "rtf_listing")$col_rel_width
+```
+
+## Two things that are decided per column
+
+Two listing habits are properties of a *column*, not of the layout, so they sit
+on `listing_col()` rather than on a separate `type`.
+
+### Stacked, or side by side
+
+By default a multi-source column breaks after **every** separator, however
+short the parts are: `listing_col(AGE, SEX)` puts `40` on one line and `F` on
+the next. That is right for a diagnosis and wasteful for an age and a sex, so
+`layout = "flow"` fills the line instead and breaks only when it runs out of
+room.
+
+```{r layout}
+visits <- data.frame(
+  USUBJID = c(rep("63016-201", 3), rep("63016-202", 2)),
+  VISIT   = c("Screening", "Cycle 1", "Cycle 2", "Screening", "Cycle 1"),
+  AGE     = c(rep("64", 3), rep("58", 2)),
+  SEX     = c(rep("F", 3), rep("M", 2)),
+  AETERM  = c("Nausea", "Fatigue and general malaise", "Headache",
+              "Vomiting", "Neutropenia"),
+  stringsAsFactors = FALSE
+)
+
+nrow(rtf_listing(visits, listing_col(AGE, SEX, width = 8)))
+nrow(rtf_listing(visits, listing_col(AGE, SEX, width = 8, layout = "flow")))
+```
+
+Ten physical rows against five, for the same five records. The choice is per
+column, so one listing can stack its diagnosis and flow its demographics.
+
+### Printing a sort key once
+
+In a listing sorted by subject and visit, the subject belongs on the first row
+of its run and nowhere else. `collapse_repeats = TRUE` marks a column for that,
+and the suppression is **hierarchical in declaration order**: a change in the
+subject restarts the visit's run.
+
+```{r collapse, eval = has_rtf}
+lst_ae <- rtf_listing(
+  visits,
+  listing_col(USUBJID, header = "Subject", width = 11, collapse_repeats = TRUE),
+  listing_col(VISIT,   header = "Visit",   width = 10, collapse_repeats = TRUE),
+  listing_col(AGE, SEX, header = "Age/Sex", width = 8, layout = "flow"),
+  listing_col(AETERM,  header = "Adverse Event", width = 20)
+)
+print(listing_to_rtftables(lst_ae)[[1]])
+```
+
+The value is not blanked here. It is carried down every physical row of its
+record, and the blanking is done by
+`rtfreporter::as_rtftables(collapse_repeats = )`. That is deliberate, and it is
+the whole point: rtfreporter suppresses **per page, after the split**, so a run
+continued across a page break shows its subject again at the top of the new
+page. Blanking at composition time could not know where the page breaks fall.
+
+```{r collapse-page, eval = has_rtf}
+pages <- listing_to_rtftables(lst_ae, max_rows = 6)
+length(pages)
+print(pages[[2]])      # the subject is printed again, not inherited
+```
+
+A cell that wraps onto several lines is left alone -- printed in full rather
+than suppressed, which is never wrong, only less tidy. Repeat suppression is
+for short key columns.
 
 ## Paginating and rendering
 
@@ -312,6 +480,16 @@ Wrapping breaks in the right place without a separate code path.
 anything else in a `mutate()` first, as with the rounded platinum-free
 intervals above.
 
-**One template for now.** `template = "type1"` is the only one implemented.
+**One layout for now.** `type = "type1"` is the only one implemented.
 The engine underneath -- composition, wrapping, record alignment, spacers,
-metadata -- is what a second template would reuse.
+layout metadata -- is what a second layout would reuse.
+
+**A listing is a table.** There is no listing page object, and there does not
+need to be one: `row_title` already says which columns are row headings (a
+listing makes them all row headings, which is "left-align everything"),
+`col_header = list()` already suppresses the header, and pagination that never
+cuts a record is `group_col` + `split = "group_safe"`. `listing_to_rtftables()`
+exists only because `as_rtftables()` does not yet read an `"rtf_listing"`
+attribute; if this machinery moves into rtfreporter it becomes
+`as_rtftables(x, listing = ...)` -- the shape `stub = stub_spec(...)` already
+has -- and the bridge disappears rather than being ported.

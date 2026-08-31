@@ -1,5 +1,109 @@
 # ydisctools (development version)
 
+## Breaking changes
+
+* **The listing API is reshaped to match rtfreporter's conventions** (#85,
+  closing #84). The listing is a candidate for moving into
+  [rtfreporter](https://ichirio.github.io/rtfreporter/) later, so consistency
+  with that package now outranks everything else here. No backward
+  compatibility is kept.
+
+  * `rtf_listing()` returns a plain **`data.frame`** carrying its layout in an
+    `"rtf_listing"` attribute. The `rtflisting` class and its `print()` method
+    are gone. This follows `rtfreporter::stub_cols()`, which likewise returns a
+    data frame and leaves the rest in an `rtf_*` attribute; rtfreporter gives an
+    S3 class to *settings* objects, not to transformed data. For a console
+    preview, `print()` the `rtftable` that `listing_to_rtftables()` produces --
+    it draws the real cells, headers and rules.
+  * Left-alignment is now expressed with **`row_title`** (rtfreporter's name for
+    the row-heading columns, whose only effect is the default data alignment)
+    instead of a hand-built `col_spec`. A listing is simply "every column is a
+    row heading".
+  * `suggest_listing_widths()` is renamed **`auto_listing_widths()`**, matching
+    its sibling `rtfreporter::auto_col_widths()`.
+  * `rtf_listing(template = )` is now `type = ` and accepts `1` as well as
+    `"type1"`. It stays one entry point rather than one function per type.
+  * `listing_col()` returns class **`rtf_listing_col`** (was `listing_col`),
+    matching rtfreporter's `rtf_`-prefixed class names.
+
+  A listing needs no object of its own: `row_title` already expresses "no row
+  headings", `col_header = list()` already suppresses the column header, and
+  everything else is an `as_rtftables()` argument that exists today. If this
+  moves into rtfreporter it becomes `as_rtftables(x, listing = ...)`, the shape
+  `stub = stub_spec(...)` already has, and `listing_to_rtftables()` disappears
+  rather than being ported.
+
+## New features
+
+* **`listing_wrap()`** (#84) exports the cell-wrapping rule on its own: break
+  after the separator, then at word boundaries, then hard-split an over-long
+  token, all measured in **display width** so a full-width CJK glyph counts as
+  two. #84 also proposed exporting the line-count and padding steps; those stay
+  private, because rtfreporter exports standalone utilities but no pipeline
+  internals, and neither has a job outside `rtf_listing()`. Their tolerant
+  input handling from #84 is folded in.
+
+* **Automatic column headers.** `listing_col(header = NULL)` now builds the
+  header from **every** source column -- each column's `label` attribute, else
+  its name, joined with the column's `sep` and a newline -- so
+  `listing_col(DISPTPD, BRCA, HIST)` yields
+  `"Primary Diagnosis/\nBRCA/\nHistology"` instead of just `"DISPTPD"`. This is
+  the rule `rtfreporter::stub_cols(label = NULL)` already uses for a merged stub
+  label. An automatic header is wrapped to the column width; a header written by
+  hand is used exactly as written.
+
+* **Spacer columns can be relative or absolute.** `spacer_rel_width` (default
+  `1`, the previous behaviour) and `spacer_twips` mirror rtfreporter's own
+  `col_rel_width` / `column_widths_twips` pairing, so a literal one-twip divider
+  is now expressible. Setting `spacer_twips` promotes the whole table to
+  absolute widths via `rtfreporter::text_width_in()`. When `table_width_twips`
+  scales the table to the page, the **spacers are held fixed** and only the
+  content columns absorb the scaling -- otherwise a 1-twip divider would be
+  inflated and the setting silently discarded.
+
+* **`rtf_listing(total_width = )`** fits the columns you left without a `width`
+  into what the pinned ones leave over, so a listing can be built in one call
+  without pasting `auto_listing_widths()` output back in.
+
+* **`rtf_listing(header = FALSE)`** renders a listing with no column header at
+  all, for a continuation or sub-listing. The header rule moves to the top of
+  the body, since the `"tfl"` preset's header top and bottom rules would
+  otherwise collapse onto each other.
+
+* **`listing_col(layout = )`** chooses, per column, between the two ways a
+  multi-source column can print. `"stack"` (default, the previous behaviour)
+  breaks after every separator regardless of length, so `listing_col(AGE, SEX)`
+  gives `40` over `F`. `"flow"` fills each line as far as `width` allows, so the
+  same column gives `40/F` on one line and breaks only when it runs out of room
+  -- for short parts, where a stacked pair wastes two rows on four characters.
+  A listing usually wants both: a long diagnosis stacked, an age and a sex
+  flowed.
+
+  Consequently an **unset `width` no longer suppresses the separator break**:
+  width controls wrapping, `layout` controls the break at the separator. A
+  column's measured width is now taken from the lines it will actually print
+  rather than from the joined value, so a stacked column is no longer sized for
+  a line it never renders.
+
+* **`listing_col(collapse_repeats = )`** prints a sort key only on the first row
+  of each run -- the subject column of a listing sorted by subject and visit.
+  The value is carried down every physical row of its record and the suppression
+  itself is delegated to `rtfreporter::as_rtftables(collapse_repeats = )`, which
+  is what makes the value **reappear at the top of every page**: rtfreporter
+  suppresses per page, after the split, so a run continued across a page break
+  still shows its subject at the top of the new page. Blanking at composition
+  time could not know where the page breaks fall. Suppression is hierarchical in
+  declaration order, so marking the subject and then the visit column restarts
+  the visit run whenever the subject changes.
+
+## Bug fixes
+
+* Cell wrapping no longer glues two words together when the first is longer
+  than the column. `"Progressive disease"` at width 10 gave
+  `"Progressiv"` / `"edisease"`; the space that separated the words was
+  destroyed by trimming the running line before measuring it. It now yields
+  `"Progressiv"` / `"e disease"`.
+
 ## Documentation
 
 * New article **"Building a clinical listing"** (#82) — a runnable end-to-end

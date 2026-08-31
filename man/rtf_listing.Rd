@@ -2,13 +2,19 @@
 % Please edit documentation in R/rtf_listing.R
 \name{rtf_listing}
 \alias{rtf_listing}
-\title{Build a listing-ready table from a source data frame}
+\title{Shape a data frame into a clinical listing}
 \usage{
 rtf_listing(
   data,
   ...,
-  template = "type1",
-  spacer_width = 1,
+  type = "type1",
+  header = TRUE,
+  total_width = NULL,
+  spacer_rel_width = 1,
+  spacer_twips = NULL,
+  table_width_twips = NULL,
+  font = "courier_new",
+  size_half_points = 18L,
   record_id = ".record_id"
 )
 }
@@ -17,19 +23,44 @@ rtf_listing(
 
 \item{...}{\code{\link[=listing_col]{listing_col()}} specifications, in display order.}
 
-\item{template}{Listing template. Currently only \code{"type1"}.}
+\item{type}{Listing layout. Currently only \code{"type1"} (\code{1} is accepted as a
+shorthand).}
 
-\item{spacer_width}{Relative width of the spacer columns inserted between
-content columns (default \code{1}). \code{0} inserts no spacer columns at all.}
+\item{header}{Whether to emit a column-header row. \code{TRUE} (default) uses
+each column's header; \code{FALSE} renders the listing with no header at all,
+for a continuation or sub-listing that borrows the header above it.}
+
+\item{total_width}{Total display width, in characters, to fit the columns
+into. \code{NULL} (default) leaves every unset \code{width} to be measured from the
+data. When given, columns with an explicit \code{width} keep it and the
+remaining budget is shared out among the rest.}
+
+\item{spacer_rel_width}{Relative width of the spacer columns inserted
+between content columns (default \code{1}). \code{0} inserts no spacer columns at
+all.}
+
+\item{spacer_twips}{Absolute width of the spacer columns, in twips.
+\code{NULL} (default) uses \code{spacer_rel_width}. Setting it switches the whole
+table to absolute widths.}
+
+\item{table_width_twips}{Total table width in twips, used only with
+\code{spacer_twips}. \code{NULL} (default) leaves the content columns at their
+natural width.}
+
+\item{font, size_half_points}{Font and size used to convert character widths
+to twips, matching \code{rtfreporter::auto_col_widths()}. Only consulted with
+\code{spacer_twips}.}
 
 \item{record_id}{Name of the hidden record-key column added to the output
 (default \code{".record_id"}). It is used for grouping / pagination and is
 dropped before rendering.}
 }
 \value{
-An \code{rtflisting} object: a list with \code{data} (the expanded data
-frame), \code{col_header}, \code{col_rel_width}, \code{col_spec}, \code{record_id},
-\code{template} and \code{n_records}.
+A \code{data.frame} of physical listing rows, carrying an
+\code{"rtf_listing"} attribute: a list with \code{type}, \code{col_header},
+\code{col_rel_width} or \code{column_widths_twips}, \code{row_title}, \code{record_id} and
+\code{n_records}. Subsetting the frame drops that attribute, so make any edits
+before handing it to \code{\link[=listing_to_rtftables]{listing_to_rtftables()}}.
 }
 \description{
 \code{rtf_listing()} turns a tidy source data frame into the shape a clinical
@@ -40,22 +71,41 @@ and a hidden record key marks the record boundaries so the renderer can
 paginate without ever splitting a record across pages.
 }
 \details{
-The result is an \code{rtflisting} object carrying the expanded data frame plus
-the position-indexed metadata (\code{col_header}, \code{col_rel_width}, \code{col_spec}).
-Hand it to \code{\link[=listing_to_rtftables]{listing_to_rtftables()}} to render it with
-\pkg{rtfreporter}; this function itself only prepares data and does not
-produce RTF.
+The result is a plain \strong{\code{data.frame}} you can inspect, edit or write out,
+with the layout it implies carried in an \code{"rtf_listing"} attribute.
+\code{\link[=listing_to_rtftables]{listing_to_rtftables()}} reads that attribute and renders it; this function
+itself only prepares data and needs no renderer.
 }
-\section{The \code{"type1"} template}{
+\section{A listing is a table, not a new kind of object}{
 
-The one template implemented today reproduces the conventional G-MEDAS
+Everything a listing needs is something \code{rtfreporter::as_rtftables()}
+already accepts, so no listing-specific page object exists:
+\itemize{
+\item \strong{no row headings.} \code{row_title} selects the row-heading columns and its
+only effect is the default data alignment. A listing sets \emph{every} column
+as a row heading, which is exactly "left-align everything";
+\code{row_title = integer(0)} would mean the opposite, no row heading at all.
+\item \strong{records that never split.} The hidden record key is passed as
+\code{group_col} and \code{drop_cols}, and \code{split = "group_safe"} packs whole
+records onto a page.
+\item \strong{blank lines between records.} \code{blank_rows = "between_groups"} with
+\code{count_blank_rows = TRUE}, so they are charged to the page budget.
+}
+
+This mirrors \code{rtfreporter::stub_cols()}, which likewise returns a
+\code{data.frame} and leaves the extra information in an \verb{rtf_*} attribute.
+}
+
+\section{The \code{"type1"} layout}{
+
+The one layout implemented today reproduces the conventional G-MEDAS
 listing style:
 \enumerate{
 \item each display column is composed from its source columns, joined with the
 column's \code{sep} and skipping \code{NA} / empty values;
 \item each cell is wrapped to the column's \code{width} -- breaking after the
 separator first, then at word boundaries, then hard-splitting an
-over-long token;
+over-long token (see \code{\link[=listing_wrap]{listing_wrap()}});
 \item every cell of a record is padded to the record's tallest cell, so the
 record's lines stay aligned across columns;
 \item a narrow spacer column is inserted between neighbouring content columns;
@@ -65,6 +115,24 @@ record's lines stay aligned across columns;
 Blank separator rows between records are \strong{not} baked in here -- they are
 added at render time by \code{\link[=listing_to_rtftables]{listing_to_rtftables()}}, which lets the paginator
 count them against the page budget.
+}
+
+\section{Column widths, relative or absolute}{
+
+By default the column widths are \strong{relative}: a column's \code{width} in
+characters is also its share of the table, and the spacers take
+\code{spacer_rel_width} each. This is \code{rtfreporter::rtftable(col_rel_width = )}.
+
+Give \code{spacer_twips} instead and the whole width vector becomes \strong{absolute}
+(\code{column_widths_twips}), with the character widths converted through
+\code{rtfreporter::text_width_in()} at \code{font} / \code{size_half_points}. That is what
+a literal one-twip divider needs -- a relative width of 1 among content
+widths of 12 to 24 is about a character wide, not a twip.
+
+When \code{table_width_twips} scales the table to the page, the \strong{spacers are
+held fixed} and only the content columns absorb the scaling. Scaling them
+too would inflate a 1-twip divider into a visible gap and quietly discard
+the width you asked for.
 }
 
 \examples{
@@ -82,9 +150,26 @@ lst <- rtf_listing(
   listing_col(DISPTPD, BRCA, header = "Primary Diagnosis/\nBRCA", width = 18),
   listing_col(STAGE,   header = "Stage at\nInitial Diagnosis", width = 10)
 )
-lst
+head(lst)
+attr(lst, "rtf_listing")$col_header
+
+# Headers built from the data: labels when present, names otherwise.
+attr(adsl$DISPTPD, "label") <- "Primary Diagnosis"
+attr(adsl$BRCA,    "label") <- "BRCA Mutation"
+auto <- rtf_listing(adsl, listing_col(USUBJID, width = 12),
+                    listing_col(DISPTPD, BRCA, width = 20))
+attr(auto, "rtf_listing")$col_header
+
+# A literal one-twip divider between the content columns.
+\dontrun{
+rtf_listing(adsl,
+            listing_col(USUBJID, width = 12),
+            listing_col(DISPTPD, BRCA, width = 20),
+            spacer_twips = 1, table_width_twips = 12960)
+}
 }
 \seealso{
-\code{\link[=listing_col]{listing_col()}} to describe a column, \code{\link[=suggest_listing_widths]{suggest_listing_widths()}}
-for starting widths, \code{\link[=listing_to_rtftables]{listing_to_rtftables()}} to render.
+\code{\link[=listing_col]{listing_col()}} to describe a column, \code{\link[=auto_listing_widths]{auto_listing_widths()}} for
+starting widths, \code{\link[=listing_wrap]{listing_wrap()}} for the wrapping rule alone,
+\code{\link[=listing_to_rtftables]{listing_to_rtftables()}} to render.
 }

@@ -1,7 +1,7 @@
 Package: ydisctools
 Type: Package
 Title: Your CDISC Related Tools
-Version: 0.0.266
+Version: 0.0.267
 Author: Yoichi Masui
 Maintainer: Yoichi Masui <masui.yoichi@gmail.com>
 Description: A collection of small, focused tools for CDISC programming
@@ -15,7 +15,7 @@ URL: https://ichirio.github.io/ydisctools/, https://github.com/ichirio/ydisctool
 BugReports: https://github.com/ichirio/ydisctools/issues
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
 Depends:
     R (>= 4.1.0)
