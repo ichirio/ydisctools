@@ -1,5 +1,34 @@
 # ydisctools (development version)
 
+## Documentation
+
+* New article **"A cookbook of clinical listings"** (#87) — one worked listing
+  for each of the three shapes a submission listing takes, each ending in a
+  **downloadable `.rtf`**:
+
+  * **16.2.1 Subject Disposition** — one record per subject. Grouping twelve
+    source columns into five display columns, `layout = "flow"` for the
+    demographics against stacked treatment dates, and an `NA` reason that
+    leaves no dangling separator.
+  * **16.2.7 Adverse Events** — many records per subject. `collapse_repeats`
+    on the subject, and the value **reprinted at the top of page 2**.
+  * **16.2.8 Laboratory Results** — subject × parameter × visit. Two nested
+    `collapse_repeats` keys, restarting the parameter's run when the subject
+    changes.
+
+  The data is deliberately awkward in the ways real data is: `AEOUT` is the
+  CDISC term `RECOVERED/RESOLVED`, which *contains* the default separator and
+  is split in half until `sep` is changed; one event has a missing end date
+  that must read `ONGOING` rather than silently collapsing; and
+  `Alanine Aminotransferase` is longer than a comfortable column, which shows
+  why a `collapse_repeats` column has to fit on one line — the article renders
+  the too-narrow version side by side so the difference is visible.
+
+  The rendered listings live in `pkgdown/assets/listings/` (copied verbatim to
+  `docs/listings/`, so the download links resolve on the published site). The
+  article regenerates them on every knit, so drift shows up in `git status`;
+  `pkgdown/` is `.Rbuildignore`d, so they never enter the package tarball.
+
 ## Breaking changes
 
 * **The listing API is reshaped to match rtfreporter's conventions** (#85,
