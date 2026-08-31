@@ -84,6 +84,8 @@ navbar:
           href: articles/ars-chain.html
         - text: "Building a clinical listing"
           href: articles/clinical-listing.html
+        - text: "A cookbook of clinical listings (with RTF downloads)"
+          href: articles/listing-cookbook.html
     news:
       text: Changelog
       href: news/index.html
@@ -111,6 +113,7 @@ articles:
     navbar: ~
     contents:
       - articles/clinical-listing
+      - articles/listing-cookbook
 
 reference:
   - title: SDTM / ADaM datasets
