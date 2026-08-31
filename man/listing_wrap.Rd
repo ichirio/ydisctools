@@ -4,17 +4,20 @@
 \alias{listing_wrap}
 \title{Wrap a listing cell to a display width}
 \usage{
-listing_wrap(text, width, sep = "/")
+listing_wrap(text, width, sep = "/", layout = c("stack", "flow"))
 }
 \arguments{
 \item{text}{The cell text. A character vector is allowed; each element is
 wrapped independently.}
 
 \item{width}{Maximum display width in characters. \code{NULL}, \code{NA} or a value
-\verb{<= 0} disables wrapping and returns the text unchanged.}
+\verb{<= 0} means "no width limit": \code{"stack"} still breaks at every separator,
+\code{"flow"} returns the text unchanged.}
 
 \item{sep}{The separator to break after (default \code{"/"}). \code{""} or \code{NULL}
 skips priority 1 and wraps on word boundaries only.}
+
+\item{layout}{\code{"stack"} (default) or \code{"flow"} -- see \emph{Stacked or flowed}.}
 }
 \value{
 For a \code{text} of length 1, a character vector of lines. For a longer
@@ -45,6 +48,20 @@ identifier, a URL). Every returned line is then guaranteed to fit.
 }
 }
 
+\section{Stacked or flowed}{
+
+\code{layout} decides what happens to a cell that would \emph{fit} on one line:
+\itemize{
+\item \code{"stack"} (default) breaks after \strong{every} separator regardless of length,
+so \code{"40/F"} becomes two lines. This is the conventional listing look: one
+source column per line, and a column reads down.
+\item \code{"flow"} treats the separator as a break \emph{opportunity} and fills each line
+as far as \code{width} allows, so \code{"40/F"} stays on one line. Use it for
+columns whose parts are short -- an age and a sex, a value and its unit --
+where a stacked pair wastes two rows on four characters.
+}
+}
+
 \examples{
 listing_wrap("Ovarian cancer/BRCA1 mutation/Serous adenocarcinoma", 22)
 
@@ -54,8 +71,12 @@ listing_wrap("Immunohistochemistry", 8)
 # Vectorised: one element in, one character vector out.
 listing_wrap(c("Partial response", "Progressive disease"), 10)
 
-# width = NULL leaves the cell alone.
-listing_wrap("Ovarian cancer/BRCA1 mutation", NULL)
+# Short parts: stacked by default, side by side with layout = "flow".
+listing_wrap("40/F", 20)
+listing_wrap("40/F", 20, layout = "flow")
+
+# "flow" still breaks once the line is full.
+listing_wrap("40/F/Screening/Completed", 12, layout = "flow")
 }
 \seealso{
 \code{\link[=rtf_listing]{rtf_listing()}}, which applies this to every cell;

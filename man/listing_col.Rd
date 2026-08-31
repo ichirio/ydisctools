@@ -4,7 +4,15 @@
 \alias{listing_col}
 \title{Describe one column of a clinical listing}
 \usage{
-listing_col(..., header = NULL, width = NULL, sep = "/", name = NULL)
+listing_col(
+  ...,
+  header = NULL,
+  width = NULL,
+  sep = "/",
+  layout = c("stack", "flow"),
+  collapse_repeats = FALSE,
+  name = NULL
+)
 }
 \arguments{
 \item{...}{Source columns feeding this display column, given as bare names
@@ -23,6 +31,11 @@ measured from the data with no wrapping.}
 also the preferred wrapping point -- a cell breaks after a separator
 before it breaks mid-phrase -- and the separator an automatic header
 carries between its parts.}
+
+\item{layout}{\code{"stack"} (default) or \code{"flow"} -- see \emph{Stacked or flowed}.}
+
+\item{collapse_repeats}{Blank this column on every row but the first of each
+run of equal values (default \code{FALSE}) -- see \emph{Repeat suppression}.}
 
 \item{name}{Output column name. \code{NULL} (default) derives one from the source
 columns.}
@@ -68,6 +81,46 @@ Because the labels live on the data, the header is resolved by
 \code{\link[=rtf_listing]{rtf_listing()}} (which has the data) rather than here.
 }
 
+\section{Stacked or flowed}{
+
+\code{layout} decides what a cell does when its parts would fit side by side:
+\itemize{
+\item \code{"stack"} (default) breaks after every separator regardless of length, so
+\code{listing_col(AGE, SEX)} prints \code{40} and \code{F} on two lines. One source
+column per line is the conventional listing look, and it keeps a column
+readable down the page.
+\item \code{"flow"} fills each line as far as \code{width} allows, so the same column
+prints \code{40/F} on one line and only breaks when it runs out of room. Use it
+where a stacked pair would waste two rows on four characters.
+}
+
+The choice is per column, because a listing usually wants both: a long
+diagnosis stacked, an age and a sex flowed.
+}
+
+\section{Repeat suppression}{
+
+In a listing sorted by subject and visit, the subject belongs on the first
+row of its run and nowhere else. \code{collapse_repeats = TRUE} marks this column
+for that treatment: its value is carried down every physical row of a record
+and then blanked by \code{rtfreporter::as_rtftables(collapse_repeats = )}, which
+keeps only the first row of each run.
+
+Delegating rather than blanking the value here is what makes the value
+\strong{reappear at the top of every page}: rtfreporter suppresses per page,
+after the split, so a run continued across a page break still shows its
+subject at the top of the new page. Blanking at composition time could not
+know where the page breaks fall.
+
+Suppression is hierarchical in the order the columns are declared, so
+marking the subject column and then the visit column restarts the visit run
+whenever the subject changes.
+
+A cell that wraps onto more than one line is left alone -- it is printed in
+full rather than suppressed, which is never wrong, only less tidy. Repeat
+suppression is for short key columns; widen the column if you want it.
+}
+
 \examples{
 listing_col(USUBJID, width = 15)
 
@@ -78,7 +131,13 @@ listing_col(DISPTPD, BRCA, HIST,
 
 # The same column with the header left to rtf_listing().
 listing_col(DISPTPD, BRCA, HIST, width = 22)
+
+# Short parts side by side rather than stacked: "40/F", not "40" over "F".
+listing_col(AGE, SEX, width = 8, layout = "flow")
+
+# A sort key that prints once per run.
+listing_col(USUBJID, width = 12, collapse_repeats = TRUE)
 }
 \seealso{
-\code{\link[=rtf_listing]{rtf_listing()}}, \code{\link[=auto_listing_widths]{auto_listing_widths()}}
+\code{\link[=rtf_listing]{rtf_listing()}}, \code{\link[=auto_listing_widths]{auto_listing_widths()}}, \code{\link[=listing_wrap]{listing_wrap()}}
 }

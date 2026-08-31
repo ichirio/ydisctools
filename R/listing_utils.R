@@ -73,16 +73,22 @@
   }, integer(1L))
 }
 
-# Pad every cell of a column with "" so it occupies exactly `heights[i]` lines.
-.listing_pad <- function(col, heights) {
+# Pad every cell of a column so it occupies exactly `heights[i]` lines.
+#
+# `fill_down = TRUE` repeats a single-line value down the record instead of
+# padding with "".  That is what lets rtfreporter's `collapse_repeats` see one
+# constant value per record and suppress the run -- and, because it suppresses
+# per page, reprint the value at the top of the next page.  A cell that already
+# wraps onto several lines is blank-padded as usual: there is no single value
+# to carry, and printing it in full is never wrong, only less tidy.
+.listing_pad <- function(col, heights, fill_down = FALSE) {
   lapply(seq_along(col), function(i) {
     v <- col[[i]]
     if (!is.list(v) && !is.character(v)) v <- as.character(v)
-    if (length(v) < heights[[i]]) {
-      c(v, rep("", heights[[i]] - length(v)))
-    } else {
-      v
-    }
+    n <- heights[[i]]
+    if (length(v) >= n) return(v)
+    if (fill_down && length(v) == 1L) return(rep(v, n))
+    c(v, rep("", n - length(v)))
   })
 }
 

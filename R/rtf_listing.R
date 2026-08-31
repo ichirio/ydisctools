@@ -224,12 +224,19 @@ rtf_listing <- function(data, ...,
     #    asked for one -- a measured width must not silently start wrapping.
     pieces <- lapply(seq_along(specs), function(j) {
       lapply(composed[[j]], .listing_wrap,
-             width = specs[[j]]$width, sep = specs[[j]]$sep)
+             width = specs[[j]]$width, sep = specs[[j]]$sep,
+             layout = specs[[j]]$layout)
     })
 
     # 4. Align each record's cells to the record's tallest cell, then expand.
+    #    A repeat-suppressed column is carried down its record instead of
+    #    blank-padded, so rtfreporter sees one constant value per record and
+    #    can suppress the run -- and reprint it at the top of the next page.
     heights <- .listing_line_counts(pieces)
-    pieces  <- lapply(pieces, .listing_pad, heights = heights)
+    pieces  <- lapply(seq_along(pieces), function(j) {
+      .listing_pad(pieces[[j]], heights = heights,
+                   fill_down = isTRUE(specs[[j]]$collapse_repeats))
+    })
 
     out <- stats::setNames(
       lapply(pieces, function(col) unlist(col, use.names = FALSE)),
@@ -241,6 +248,8 @@ rtf_listing <- function(data, ...,
 
   .listing_attach_meta(
     out, names_out, headers, widths, spacer_on,
+    collapse = names_out[vapply(specs, function(s) isTRUE(s$collapse_repeats),
+                                logical(1L))],
     type = type, header = header, record_id = record_id,
     spacer_rel_width = spacer_rel_width, spacer_twips = spacer_twips,
     table_width_twips = table_width_twips,
@@ -257,7 +266,13 @@ rtf_listing <- function(data, ...,
 .listing_widths <- function(data, specs, composed, total_width) {
   measured <- vapply(seq_along(specs), function(j) {
     hdr <- .listing_resolve_header(data, specs[[j]], NULL)
-    max(c(1L, .listing_disp_width(composed[[j]]),
+    # Measure the lines the column will actually print, not the joined value:
+    # a "stack" column breaks at every separator, so its widest line is one
+    # component, not the whole composition.
+    lines <- unlist(lapply(composed[[j]], .listing_wrap, width = NULL,
+                           sep = specs[[j]]$sep, layout = specs[[j]]$layout),
+                    use.names = FALSE)
+    max(c(1L, .listing_disp_width(lines),
           .listing_disp_width(strsplit(hdr, "\n", fixed = TRUE)[[1L]])))
   }, numeric(1L))
 
@@ -314,6 +329,7 @@ rtf_listing <- function(data, ...,
 # including the hidden record-key column, which as_rtftables() reindexes away
 # when it drops that column.
 .listing_attach_meta <- function(out, content, headers, widths, spacer_on,
+                                 collapse,
                                  type, header, record_id,
                                  spacer_rel_width, spacer_twips,
                                  table_width_twips, font, size_half_points,
@@ -363,6 +379,9 @@ rtf_listing <- function(data, ...,
     col_header    = if (header) hdr else list(),
     col_rel_width = rel,
     column_widths_twips = twips,
+    # Hierarchical, in declaration order: a change in the subject column
+    # restarts the visit column's run.
+    collapse_repeats = if (length(collapse)) collapse else NULL,
     record_id     = record_id,
     n_records     = as.integer(n_records)
   )

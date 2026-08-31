@@ -70,6 +70,32 @@
   the body, since the `"tfl"` preset's header top and bottom rules would
   otherwise collapse onto each other.
 
+* **`listing_col(layout = )`** chooses, per column, between the two ways a
+  multi-source column can print. `"stack"` (default, the previous behaviour)
+  breaks after every separator regardless of length, so `listing_col(AGE, SEX)`
+  gives `40` over `F`. `"flow"` fills each line as far as `width` allows, so the
+  same column gives `40/F` on one line and breaks only when it runs out of room
+  -- for short parts, where a stacked pair wastes two rows on four characters.
+  A listing usually wants both: a long diagnosis stacked, an age and a sex
+  flowed.
+
+  Consequently an **unset `width` no longer suppresses the separator break**:
+  width controls wrapping, `layout` controls the break at the separator. A
+  column's measured width is now taken from the lines it will actually print
+  rather than from the joined value, so a stacked column is no longer sized for
+  a line it never renders.
+
+* **`listing_col(collapse_repeats = )`** prints a sort key only on the first row
+  of each run -- the subject column of a listing sorted by subject and visit.
+  The value is carried down every physical row of its record and the suppression
+  itself is delegated to `rtfreporter::as_rtftables(collapse_repeats = )`, which
+  is what makes the value **reappear at the top of every page**: rtfreporter
+  suppresses per page, after the split, so a run continued across a page break
+  still shows its subject at the top of the new page. Blanking at composition
+  time could not know where the page breaks fall. Suppression is hierarchical in
+  declaration order, so marking the subject and then the visit column restarts
+  the visit run whenever the subject changes.
+
 ## Bug fixes
 
 * Cell wrapping no longer glues two words together when the first is longer

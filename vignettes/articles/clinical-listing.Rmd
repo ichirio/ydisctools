@@ -322,6 +322,72 @@ attr(
   "rtf_listing")$col_rel_width
 ```
 
+## Two things that are decided per column
+
+Two listing habits are properties of a *column*, not of the layout, so they sit
+on `listing_col()` rather than on a separate `type`.
+
+### Stacked, or side by side
+
+By default a multi-source column breaks after **every** separator, however
+short the parts are: `listing_col(AGE, SEX)` puts `40` on one line and `F` on
+the next. That is right for a diagnosis and wasteful for an age and a sex, so
+`layout = "flow"` fills the line instead and breaks only when it runs out of
+room.
+
+```{r layout}
+visits <- data.frame(
+  USUBJID = c(rep("63016-201", 3), rep("63016-202", 2)),
+  VISIT   = c("Screening", "Cycle 1", "Cycle 2", "Screening", "Cycle 1"),
+  AGE     = c(rep("64", 3), rep("58", 2)),
+  SEX     = c(rep("F", 3), rep("M", 2)),
+  AETERM  = c("Nausea", "Fatigue and general malaise", "Headache",
+              "Vomiting", "Neutropenia"),
+  stringsAsFactors = FALSE
+)
+
+nrow(rtf_listing(visits, listing_col(AGE, SEX, width = 8)))
+nrow(rtf_listing(visits, listing_col(AGE, SEX, width = 8, layout = "flow")))
+```
+
+Ten physical rows against five, for the same five records. The choice is per
+column, so one listing can stack its diagnosis and flow its demographics.
+
+### Printing a sort key once
+
+In a listing sorted by subject and visit, the subject belongs on the first row
+of its run and nowhere else. `collapse_repeats = TRUE` marks a column for that,
+and the suppression is **hierarchical in declaration order**: a change in the
+subject restarts the visit's run.
+
+```{r collapse, eval = has_rtf}
+lst_ae <- rtf_listing(
+  visits,
+  listing_col(USUBJID, header = "Subject", width = 11, collapse_repeats = TRUE),
+  listing_col(VISIT,   header = "Visit",   width = 10, collapse_repeats = TRUE),
+  listing_col(AGE, SEX, header = "Age/Sex", width = 8, layout = "flow"),
+  listing_col(AETERM,  header = "Adverse Event", width = 20)
+)
+print(listing_to_rtftables(lst_ae)[[1]])
+```
+
+The value is not blanked here. It is carried down every physical row of its
+record, and the blanking is done by
+`rtfreporter::as_rtftables(collapse_repeats = )`. That is deliberate, and it is
+the whole point: rtfreporter suppresses **per page, after the split**, so a run
+continued across a page break shows its subject again at the top of the new
+page. Blanking at composition time could not know where the page breaks fall.
+
+```{r collapse-page, eval = has_rtf}
+pages <- listing_to_rtftables(lst_ae, max_rows = 6)
+length(pages)
+print(pages[[2]])      # the subject is printed again, not inherited
+```
+
+A cell that wraps onto several lines is left alone -- printed in full rather
+than suppressed, which is never wrong, only less tidy. Repeat suppression is
+for short key columns.
+
 ## Paginating and rendering
 
 `listing_to_rtftables()` is the single point of contact with rtfreporter. It

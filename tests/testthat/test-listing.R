@@ -80,11 +80,34 @@ test_that("listing_wrap() honours display width, not character count", {
   expect_identical(paste(out, collapse = ""), cjk)
 })
 
-test_that("listing_wrap() leaves the cell alone when width is unset", {
+test_that("an unset width stops wrapping but not the layout", {
+  # "stack" still breaks at the separator -- that is layout, not wrapping.
   expect_identical(listing_wrap("Ovarian cancer/Negative", NULL),
-                   "Ovarian cancer/Negative")
+                   c("Ovarian cancer/", "Negative"))
   expect_identical(listing_wrap("Ovarian cancer/Negative", NA),
+                   c("Ovarian cancer/", "Negative"))
+  # "flow" has no width to fill to, so nothing breaks at all.
+  expect_identical(listing_wrap("Ovarian cancer/Negative", NULL,
+                                layout = "flow"),
                    "Ovarian cancer/Negative")
+})
+
+test_that("listing_wrap() stacks at every separator by default", {
+  # Short enough to fit on one line, but "stack" breaks anyway.
+  expect_identical(listing_wrap("40/F", 20), c("40/", "F"))
+})
+
+test_that("listing_wrap(layout = \"flow\") keeps short parts side by side", {
+  expect_identical(listing_wrap("40/F", 20, layout = "flow"), "40/F")
+  # ... and still breaks once the line is full.
+  expect_identical(listing_wrap("40/F/Screening/Completed", 12, layout = "flow"),
+                   c("40/F/", "Screening/", "Completed"))
+})
+
+test_that("layout decides what an unset width means", {
+  expect_identical(listing_wrap("40/F", NULL), c("40/", "F"))
+  expect_identical(listing_wrap("40/F", NULL, layout = "flow"), "40/F")
+  expect_error(listing_wrap("40/F", 10, layout = "nope"), "'arg'")
 })
 
 test_that("listing_wrap() vectorises over text and validates sep", {
@@ -195,6 +218,102 @@ test_that("an explicit header is used exactly as written", {
 test_that("header = FALSE suppresses the header with an empty row list", {
   lst <- rtf_listing(adsl, listing_col(USUBJID, width = 12), header = FALSE)
   expect_identical(meta_of(lst)$col_header, list())
+})
+
+# -- rtf_listing(): layout and repeat suppression ----------------------------
+
+visits <- data.frame(
+  USUBJID = c(rep("63016-201", 3), rep("63016-202", 2)),
+  VISIT   = c("Screening", "Cycle 1", "Cycle 2", "Screening", "Cycle 1"),
+  AGE     = c(rep("64", 3), rep("58", 2)),
+  SEX     = c(rep("F", 3), rep("M", 2)),
+  AETERM  = c("Nausea", "Fatigue and general malaise", "Headache",
+              "Vomiting", "Neutropenia"),
+  stringsAsFactors = FALSE
+)
+
+test_that("layout = \"flow\" costs one physical row where \"stack\" costs two", {
+  st <- rtf_listing(visits, listing_col(AGE, SEX, width = 8),
+                    spacer_rel_width = 0)
+  fl <- rtf_listing(visits, listing_col(AGE, SEX, width = 8, layout = "flow"),
+                    spacer_rel_width = 0)
+  expect_identical(nrow(st), 10L)                 # 5 records x 2 lines
+  expect_identical(nrow(fl), 5L)                  # 5 records x 1 line
+  expect_identical(fl$AGE_SEX[[1L]], "64/F")
+  expect_identical(st$AGE_SEX[1:2], c("64/", "F"))
+})
+
+test_that("layout is per column, not per listing", {
+  lst <- rtf_listing(visits,
+                     listing_col(AGE, SEX, width = 8, layout = "flow"),
+                     listing_col(VISIT, AETERM, width = 30),   # stacked
+                     spacer_rel_width = 0)
+  first <- lst[lst$.record_id == 1L, , drop = FALSE]
+  expect_identical(first$AGE_SEX[[1L]], "64/F")
+  expect_identical(first$VISIT_AETERM[1:2], c("Screening/", "Nausea"))
+})
+
+test_that("collapse_repeats carries the value down its record", {
+  lst <- rtf_listing(visits,
+                     listing_col(USUBJID, width = 11, collapse_repeats = TRUE),
+                     listing_col(AETERM,  width = 18),
+                     spacer_rel_width = 0)
+  # Record 2's AETERM wraps onto two rows; the subject is repeated, not blanked,
+  # so rtfreporter sees one constant value per record.
+  rec2 <- lst[lst$.record_id == 2L, , drop = FALSE]
+  expect_gt(nrow(rec2), 1L)
+  expect_true(all(rec2$USUBJID == "63016-201"))
+  # An unmarked column is still wrapped and blank-padded, not carried down.
+  expect_false(identical(rec2$AETERM[[1L]], rec2$AETERM[[2L]]))
+  expect_identical(meta_of(lst)$collapse_repeats, "USUBJID")
+})
+
+test_that("collapse_repeats keeps the declaration order for hierarchy", {
+  lst <- rtf_listing(visits,
+                     listing_col(USUBJID, width = 11, collapse_repeats = TRUE),
+                     listing_col(VISIT,   width = 10, collapse_repeats = TRUE),
+                     listing_col(AETERM,  width = 18))
+  expect_identical(meta_of(lst)$collapse_repeats, c("USUBJID", "VISIT"))
+})
+
+test_that("no collapse_repeats column means the argument is not passed", {
+  lst <- rtf_listing(visits, listing_col(USUBJID, width = 11))
+  expect_null(meta_of(lst)$collapse_repeats)
+})
+
+test_that("a multi-line cell is printed in full, not carried down", {
+  lst <- rtf_listing(visits,
+                     listing_col(AETERM, width = 8, collapse_repeats = TRUE),
+                     spacer_rel_width = 0)
+  rec2 <- lst$AETERM[lst$.record_id == 2L]
+  expect_gt(length(rec2), 1L)
+  expect_false(all(rec2 == rec2[[1L]]))          # wrapped lines, not repeats
+})
+
+test_that("listing_col() validates layout and collapse_repeats", {
+  expect_error(listing_col(USUBJID, layout = "sideways"), "'arg'")
+  expect_error(listing_col(USUBJID, collapse_repeats = NA), "TRUE or FALSE")
+  expect_identical(listing_col(USUBJID)$layout, "stack")
+  expect_false(listing_col(USUBJID)$collapse_repeats)
+})
+
+test_that("a suppressed value reappears at the top of the next page", {
+  skip_if_not_installed("rtfreporter")
+  lst <- rtf_listing(visits,
+                     listing_col(USUBJID, header = "Subject", width = 11,
+                                 collapse_repeats = TRUE),
+                     listing_col(VISIT,   header = "Visit", width = 10),
+                     listing_col(AETERM,  header = "AE", width = 18))
+  pages <- listing_to_rtftables(lst, max_rows = 6)
+  expect_gt(length(pages), 1L)
+  for (p in pages) {
+    subj <- p$data[[1L]]
+    expect_false(is.na(subj[[1L]]))              # first row of a page prints
+    expect_true(nzchar(subj[[1L]]))
+  }
+  # Within a page the run is suppressed: record 1 spans rows but shows once.
+  first <- pages[[1L]]$data[[1L]]
+  expect_true(any(is.na(first)))
 })
 
 # -- rtf_listing(): widths and spacers ---------------------------------------

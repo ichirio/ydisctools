@@ -19,7 +19,11 @@
 #'   `count_blank_rows = TRUE` charges those blanks to the page budget, so
 #'   `max_rows` means what it says;
 #' * `col_rel_width` or `column_widths_twips`, whichever [rtf_listing()]
-#'   produced.
+#'   produced;
+#' * `collapse_repeats` for the columns marked
+#'   `listing_col(collapse_repeats = TRUE)`. Delegating the suppression is why
+#'   a suppressed value **reappears at the top of every page**: rtfreporter
+#'   suppresses per page, after the split.
 #'
 #' A record taller than `max_rows` is force-split with rtfreporter's `(Cont.)`
 #' machinery. Note that because the group column is hidden, the `(Cont.)`
@@ -102,6 +106,9 @@ listing_to_rtftables <- function(x, max_rows = NULL,
     args$col_rel_width <- meta$col_rel_width
   }
   if (!is.null(max_rows)) args$max_rows <- max_rows
+  if (!is.null(meta$collapse_repeats)) {
+    args$collapse_repeats <- meta$collapse_repeats
+  }
 
   # With the header suppressed, the "tfl" preset's two rules -- header top and
   # header bottom -- collapse onto each other with nothing between them.  Move

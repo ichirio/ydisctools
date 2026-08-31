@@ -50,7 +50,11 @@ record is never cut across a page boundary;
 \code{count_blank_rows = TRUE} charges those blanks to the page budget, so
 \code{max_rows} means what it says;
 \item \code{col_rel_width} or \code{column_widths_twips}, whichever \code{\link[=rtf_listing]{rtf_listing()}}
-produced.
+produced;
+\item \code{collapse_repeats} for the columns marked
+\code{listing_col(collapse_repeats = TRUE)}. Delegating the suppression is why
+a suppressed value \strong{reappears at the top of every page}: rtfreporter
+suppresses per page, after the split.
 }
 
 A record taller than \code{max_rows} is force-split with rtfreporter's \code{(Cont.)}
