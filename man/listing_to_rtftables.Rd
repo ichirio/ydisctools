@@ -13,7 +13,9 @@ listing_to_rtftables(
 )
 }
 \arguments{
-\item{x}{An \code{rtflisting} from \code{\link[=rtf_listing]{rtf_listing()}}.}
+\item{x}{A \code{data.frame} from \code{\link[=rtf_listing]{rtf_listing()}}, with its \code{"rtf_listing"}
+attribute intact. Subsetting a data frame drops attributes, so make any
+edits before this call.}
 
 \item{max_rows}{Maximum body rows per page, or \code{NULL} (default) for a single
 un-split page.}
@@ -21,40 +23,58 @@ un-split page.}
 \item{blank_row_first, blank_row_end}{Add a blank row at the top / bottom of
 each page (both default \code{TRUE}, the usual listing furniture).}
 
-\item{...}{Further arguments passed to \code{rtfreporter::as_rtftables()}.}
+\item{...}{Further arguments passed to \code{rtfreporter::as_rtftables()}. These
+win over the defaults above, so anything the listing does not decide for
+you -- borders, fonts, \code{paginate_cols()} -- is reachable.}
 }
 \value{
 A list of \code{rtftable} objects -- one per page -- ready for
 \code{rtfreporter::rtf_tables()}.
 }
 \description{
-Converts an \code{\link[=rtf_listing]{rtf_listing()}} result into \pkg{rtfreporter} page objects by
-calling \code{rtfreporter::as_rtftables()} with the listing's metadata and the
-pagination settings a listing needs. This is the only point where
-\pkg{ydisctools} talks to \pkg{rtfreporter}; the dependency runs one way, so
-the listing builders themselves stay renderer-agnostic.
+Renders an \code{\link[=rtf_listing]{rtf_listing()}} result into \pkg{rtfreporter} page objects by
+calling \code{rtfreporter::as_rtftables()} with the layout recorded in the
+listing's \code{"rtf_listing"} attribute and the pagination settings a listing
+needs. This is the only point where \pkg{ydisctools} talks to
+\pkg{rtfreporter}; the dependency runs one way, so \code{\link[=rtf_listing]{rtf_listing()}} itself
+stays renderer-agnostic and needs nothing installed.
 }
 \details{
-Pagination is delegated to \code{as_rtftables()} rather than reimplemented. The
-listing's hidden record key is passed as \code{group_col} (and as \code{drop_cols}, so
-it never prints), and \code{split = "group_safe"} then packs whole records onto a
-page and spills on overflow -- a record is never cut across a page boundary.
-\code{blank_rows = "between_groups"} puts a blank line between records and
+Nothing here is listing-specific machinery -- every setting is an
+\code{as_rtftables()} argument that already exists:
+\itemize{
+\item \code{row_title} = every column, i.e. left-align the lot;
+\item \code{group_col} / \code{drop_cols} = the hidden record key, so \code{split = "group_safe"} packs whole records onto a page and spills on overflow. A
+record is never cut across a page boundary;
+\item \code{blank_rows = "between_groups"} puts a blank line between records and
 \code{count_blank_rows = TRUE} charges those blanks to the page budget, so
-\code{max_rows} means what it says.
+\code{max_rows} means what it says;
+\item \code{col_rel_width} or \code{column_widths_twips}, whichever \code{\link[=rtf_listing]{rtf_listing()}}
+produced.
+}
 
 A record taller than \code{max_rows} is force-split with rtfreporter's \code{(Cont.)}
 machinery. Note that because the group column is hidden, the \code{(Cont.)}
 marker itself is not printed.
 }
+\section{Why this function exists}{
+
+Only because \code{as_rtftables()} does not yet read an \code{"rtf_listing"}
+attribute. If the listing moves into rtfreporter, this collapses into
+\code{as_rtftables(x, listing = ...)} -- the shape \code{stub = stub_spec(...)}
+already has -- and the bridge disappears rather than being ported.
+}
+
 \examples{
 \dontrun{
 lst   <- rtf_listing(adsl, listing_col(USUBJID, width = 15))
 pages <- listing_to_rtftables(lst, max_rows = 40)
 
+print(pages[[1]])          # rtfreporter's own console preview
+
 rtfreporter::rtf_document() |>
-  rtfreporter::rtf_section() |>
-  rtfreporter::rtf_tables(pages)
+  rtfreporter::rtf_tables(pages) |>
+  rtfreporter::generate_rtfreport("listing.rtf", overwrite = TRUE)
 }
 }
 \seealso{

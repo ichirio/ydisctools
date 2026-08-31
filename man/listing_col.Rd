@@ -10,22 +10,25 @@ listing_col(..., header = NULL, width = NULL, sep = "/", name = NULL)
 \item{...}{Source columns feeding this display column, given as bare names
 or strings, in the order they should be joined.}
 
-\item{header}{Column header text, or \code{NULL} (default) to use the first
-source column's name. May contain \verb{\\n} for a multi-line header.}
+\item{header}{Column header text, or \code{NULL} (default) to build one from the
+source columns -- see \emph{Automatic headers}. May contain \verb{\\n} for a
+multi-line header.}
 
 \item{width}{Maximum display width in characters. Cells wider than this are
-wrapped. \code{NULL} (default) disables wrapping for this column; its relative
-width is then measured from the data.}
+wrapped. \code{NULL} (default) leaves the width to \code{\link[=rtf_listing]{rtf_listing()}}: it is
+fitted to that call's \code{total_width} when one is given, and otherwise
+measured from the data with no wrapping.}
 
 \item{sep}{Separator used to join the source columns (default \code{"/"}). It is
 also the preferred wrapping point -- a cell breaks after a separator
-before it breaks mid-phrase.}
+before it breaks mid-phrase -- and the separator an automatic header
+carries between its parts.}
 
 \item{name}{Output column name. \code{NULL} (default) derives one from the source
 columns.}
 }
 \value{
-A \code{listing_col} object (a specification consumed by
+An \code{rtf_listing_col} object (a specification consumed by
 \code{\link[=rtf_listing]{rtf_listing()}}).
 }
 \description{
@@ -42,15 +45,40 @@ missing components dropped rather than leaving empty separators behind.
 \code{width} is a \strong{display width in characters} (wide CJK glyphs count as two),
 and it does double duty: cells longer than it are wrapped onto extra lines,
 and the widths of all columns become the relative column widths handed to
-the renderer. Use \code{\link[=suggest_listing_widths]{suggest_listing_widths()}} to get sensible starting values
+the renderer. Use \code{\link[=auto_listing_widths]{auto_listing_widths()}} to get sensible starting values
 from the data, then tune them by eye.
 }
+\section{Automatic headers}{
+
+With \code{header = NULL} (the default) the header is built from \strong{every} source
+column, not just the first: each column's \code{label} attribute when it has one,
+otherwise its name, joined with the column's \code{sep} and a newline. So
+\code{listing_col(DISPTPD, BRCA, HIST)} over labelled data yields
+\code{"Primary Diagnosis/\\nBRCA/\\nHistology"}.
+
+This is deliberately the same rule \code{rtfreporter::stub_cols(label = NULL)}
+uses for a merged stub column, so a listing header and a table stub label
+are derived the same way.
+
+An automatic header is wrapped to \code{width}, and so can never be wider than
+the column it sits over. A \code{header} you write yourself is used \strong{exactly as
+written} -- you laid the lines out, and re-wrapping would fight you.
+
+Because the labels live on the data, the header is resolved by
+\code{\link[=rtf_listing]{rtf_listing()}} (which has the data) rather than here.
+}
+
 \examples{
 listing_col(USUBJID, width = 15)
+
+# Three source columns in one display column, header written by hand.
 listing_col(DISPTPD, BRCA, HIST,
             header = "Primary Diagnosis/\nAny (BRCA) Mutations/\nHistology",
             width  = 22)
+
+# The same column with the header left to rtf_listing().
+listing_col(DISPTPD, BRCA, HIST, width = 22)
 }
 \seealso{
-\code{\link[=rtf_listing]{rtf_listing()}}, \code{\link[=suggest_listing_widths]{suggest_listing_widths()}}
+\code{\link[=rtf_listing]{rtf_listing()}}, \code{\link[=auto_listing_widths]{auto_listing_widths()}}
 }

@@ -1,10 +1,9 @@
-#' Suggest starting column widths for a listing
+#' Measure and propose column widths for a listing
 #'
 #' Picking the per-column `width` values for [listing_col()] by hand is
 #' tedious: too narrow and cells wrap into a tall, ragged record, too wide and
-#' the listing overflows the page. `suggest_listing_widths()` proposes a
-#' starting set from the data, which you then tune by eye against the rendered
-#' output.
+#' the listing overflows the page. `auto_listing_widths()` proposes a starting
+#' set from the data, which you then tune by eye against the rendered output.
 #'
 #' The proposal is content-driven: each column is composed exactly as
 #' [rtf_listing()] would compose it, its cell widths are measured (display
@@ -13,6 +12,11 @@
 #' than the maximum, so one unusually long value does not dominate the layout.
 #' The header's own longest line is respected as a floor, and the demands are
 #' then scaled to fit `total_width` and rounded, subject to `min_width`.
+#'
+#' This is the listing counterpart of `rtfreporter::auto_col_widths()`, and
+#' plays the same role: a measurement you can read, print and paste. To skip
+#' the paste, hand `total_width` to [rtf_listing()] directly and leave the
+#' columns' `width` unset.
 #'
 #' @param data A data frame, as passed to [rtf_listing()].
 #' @param ... [listing_col()] specifications, in display order.
@@ -36,7 +40,7 @@
 #'   STAGE   = c("IIIC", "IV"),
 #'   stringsAsFactors = FALSE
 #' )
-#' suggest_listing_widths(
+#' auto_listing_widths(
 #'   adsl,
 #'   listing_col(USUBJID, header = "Unique\nSubject ID"),
 #'   listing_col(DISPTPD, header = "Primary Diagnosis"),
@@ -44,14 +48,16 @@
 #'   total_width = 60
 #' )
 #' @export
-suggest_listing_widths <- function(data, ..., total_width = 150,
-                                   min_width = 6, probs = 0.9) {
+auto_listing_widths <- function(data, ..., total_width = 150,
+                                min_width = 6, probs = 0.9) {
   if (!is.data.frame(data)) {
     stop("`data` must be a data.frame.", call. = FALSE)
   }
   specs <- list(...)
-  if (!length(specs) || !all(vapply(specs, inherits, logical(1L), "listing_col"))) {
-    stop("`...` must be one or more listing_col() specifications.", call. = FALSE)
+  if (!length(specs) ||
+      !all(vapply(specs, inherits, logical(1L), "rtf_listing_col"))) {
+    stop("`...` must be one or more listing_col() specifications.",
+         call. = FALSE)
   }
   total_width <- as.numeric(total_width)
   min_width   <- as.integer(min_width)
@@ -75,8 +81,9 @@ suggest_listing_widths <- function(data, ..., total_width = 150,
       as.numeric(stats::quantile(.listing_disp_width(vals), probs = probs,
                                  names = FALSE, type = 7))
     } else 0
+    hdr    <- .listing_resolve_header(data, specs[[j]], NULL)
     head_w <- max(c(0L, .listing_disp_width(
-      strsplit(specs[[j]]$header, "\n", fixed = TRUE)[[1L]])))
+      strsplit(hdr, "\n", fixed = TRUE)[[1L]])))
     max(cell, head_w, min_width)
   }, numeric(1L))
 
