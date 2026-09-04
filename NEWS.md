@@ -1,5 +1,39 @@
 # ydisctools (development version)
 
+## Breaking changes
+
+* **The listing preparation is removed: it has graduated to rtfreporter**
+  (#89).  `rtf_listing()`, `listing_col()`, `auto_listing_widths()`,
+  `listing_wrap()` and `listing_to_rtftables()` are gone, with their tests,
+  their two articles and the cookbook's downloadable RTFs.
+
+  ydisctools is the workshop; a feature that graduates should leave rather
+  than stay behind as a second implementation.  The listing built here in
+  #80 / #85 / #87 now lives in rtfreporter (its #241, #360, #364, #366,
+  #369), and keeping both was actively dangerous: **both packages exported
+  `listing_col()`, and the two are not call-compatible** -- ydisctools took
+  bare column names, rtfreporter takes strings.  Loading both masked one with
+  the other, which does not error; it silently changes what the arguments
+  mean, in a program whose output is a regulatory deliverable.
+
+  Everything worth keeping came across, and some of it was corrected on the
+  way: the wrapping rule gained display-width measurement and a hard split
+  for a token wider than its column; headers are derived from the data's
+  `label` attributes; `layout` and `collapse_repeats` are per column; and the
+  quantile-demand width proposal is now **page-aware** --
+  `fit_listing_widths(page = rtf_page(...), font = , size_half_points = )`
+  computes the character budget from paper, orientation, margins and font
+  rather than taking `total_width = 150` on faith -- and is paired with
+  `listing_code()`, which prints the spec as source to paste and tune.
+
+  To migrate: `library(rtfreporter)`, then `listing_spec(list(listing_col(...)))`
+  and `as_rtftables(data, listing = spec)`.  See
+  <https://ichirio.github.io/rtfreporter/articles/listings.html>.
+
+  `catx()` stays: `conv_iso8601()` uses it, and it is a general string helper
+  rather than a listing feature.  (rtfreporter exports one too, so the same
+  masking caveat applies to it.)
+
 ## Documentation
 
 * New article **"A cookbook of clinical listings"** (#87) — one worked listing
